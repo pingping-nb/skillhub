@@ -67,6 +67,12 @@
       "sha256": "5add401203f323bc1cbb350f306d3a5d3f3b16c2ad6578e7cab55d2c196152ca"
     },
     {
+      "slug": "plugin-scanner",
+      "version": "1.0.0",
+      "url": "https://bjcdn.openstorage.cn/open_res/xfyundoc/2026-09-04/7a848563-4bc4-45fa-9be9-9fdc24b3a6d9/1788508241878/e04f0ef5585075296cb31971e572e3c68541156de9b5e5ae50bff0e6ef78cc38.zip",
+      "sha256": "e04f0ef5585075296cb31971e572e3c68541156de9b5e5ae50bff0e6ef78cc38"
+    },
+    {
       "slug": "retrieval-practice-generator",
       "version": "1.0.0",
       "url": "https://bjcdn.openstorage.cn/open_res/xfyundoc/2026-07-31/ac9086e8-ee32-4baa-bf42-0bc3f5c59558/skillhub-builtin-skills/retrieval-practice-generator/1.0.0/8e1b21f9c02312378da4d5493297d98a2ce40ba03f83a51e24c97ad53f144dc1.zip",

@@ -92,6 +92,16 @@
       }
     },
     {
+      "slug": "plugin-scanner",
+      "version": "1.0.0",
+      "license": "Apache-2.0",
+      "upstream": {
+        "repository": "https://github.com/hashgraph-online/hol-guard-plugin",
+        "commit": "babb69e5681f6778f92dffb676f52eda1ed76f6b",
+        "path": "skills/plugin-scanner"
+      }
+    },
+    {
       "slug": "retrieval-practice-generator",
       "version": "1.0.0",
       "license": "CC-BY-SA-4.0",

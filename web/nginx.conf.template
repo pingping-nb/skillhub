@@ -29,6 +29,7 @@ server {
     include /etc/nginx/skillhub-base-path*.conf;
 
     location / {
+        add_header Cache-Control "no-cache, must-revalidate" always;
         try_files $uri $uri/ /index.html;
     }
 

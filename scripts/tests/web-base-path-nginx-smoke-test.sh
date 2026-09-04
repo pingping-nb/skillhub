@@ -85,6 +85,16 @@ if [ "$index" != 'INDEX_HTML_MARKER' ]; then
   exit 1
 fi
 
+# The SPA shell must revalidate on every navigation so a deployment upgrade
+# cannot leave browsers referencing fingerprinted chunks from the old version.
+cache_control=$(curl -fsS -o /dev/null -D - "$base/skillhub/dashboard" \
+  | awk 'tolower($1) == "cache-control:" { sub(/^[^:]*:[[:space:]]*/, ""); print }' \
+  | tr -d '\r')
+if [ "$cache_control" != 'no-cache, must-revalidate' ]; then
+  echo "SPA routes must require revalidation, got Cache-Control: $cache_control" >&2
+  exit 1
+fi
+
 # Bare prefix redirects to the trailing-slash form.
 code=$(curl -s -o /dev/null -w '%{http_code}' "$base/skillhub")
 if [ "$code" != '301' ]; then
