@@ -22,7 +22,7 @@ describe('syncDocumentLanguage', () => {
 
   it('uses the primary subtag for other locales', () => {
     document.body.innerHTML = '<div id="root"></div>'
-    syncDocumentLanguage('ru-RU')
-    expect(document.documentElement.lang).toBe('ru')
+    syncDocumentLanguage('en-US')
+    expect(document.documentElement.lang).toBe('en')
   })
 })

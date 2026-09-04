@@ -3,7 +3,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import en from '@/i18n/locales/en.json'
-import ru from '@/i18n/locales/ru.json'
 import zh from '@/i18n/locales/zh.json'
 
 const mocks = vi.hoisted(() => ({
@@ -161,7 +160,7 @@ describe('skill reviews', () => {
   })
 
   it('keeps review interaction copy in every supported locale', () => {
-    for (const locale of [en, zh, ru]) {
+    for (const locale of [en, zh]) {
       expect(locale.skillReviews.ratingDisplay).toBeTruthy()
       expect(locale.skillReviews.ratingOption).toBeTruthy()
       expect(locale.skillReviews.reviewTextLabel).toBeTruthy()
@@ -170,10 +169,6 @@ describe('skill reviews', () => {
     }
     expect(en.skillReviews.count_one).toBe('{{count}} review')
     expect(en.skillReviews.count_other).toBe('{{count}} reviews')
-    expect(ru.skillReviews.count_one).toBeTruthy()
-    expect(ru.skillReviews.count_few).toBeTruthy()
-    expect(ru.skillReviews.count_many).toBeTruthy()
-    expect(ru.skillReviews.count_other).toBeTruthy()
   })
 
   it('lets an authenticated author clear existing text when the skill is not interactable', () => {
