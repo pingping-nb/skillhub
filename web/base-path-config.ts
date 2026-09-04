@@ -9,6 +9,7 @@ const RESERVED_FIRST_SEGMENTS = new Set([
   'oauth2',
   'login',
   'assets',
+  'install',
   'registry',
   'nginx-health',
   '.well-known',

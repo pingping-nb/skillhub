@@ -122,12 +122,13 @@
       },
       "agent": {
         "description": "Send a prompt to your Agent to set up the SkillHub Registry",
-        "command": "Read https://www.example.com/registry/skill.md and follow the instructions to setup SkillHub Skills Registry",
-        "commandTemplate": "Read {{url}} and follow the instructions to setup SkillHub Skills Registry"
+        "command": "Connect SkillHub using https://www.example.com/install/skillhub.md",
+        "commandTemplate": "Connect SkillHub using {{url}}"
       },
       "human": {
-        "description": "Use the CLI tool to install Skills",
-        "command": "npx clawhub search <keyword>"
+        "description": "Use the SkillHub CLI to search for and install Skills",
+        "command": "npx @astron-team/skillhub@latest search <keyword> --registry https://www.example.com",
+        "commandTemplate": "npx @astron-team/skillhub@latest search <keyword> --registry {{url}}"
       },
       "steps": {
         "configureEnv": {
@@ -874,6 +875,7 @@
     "install": "Install",
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "SkillHub CLI",
+    "installCommandUnsafeVersion": "This version cannot be represented safely in a cross-platform command. Ask the publisher to correct it.",
     "download": "Download",
     "labelsSectionTitle": "Labels",
     "labelsSectionDescription": "Attach or remove recommended labels that help users filter and discover this skill.",
@@ -1047,6 +1049,11 @@
       "button": "Share",
       "copied": "Copied",
       "defaultDescription": "A useful skill"
+    },
+    "installForAgent": {
+      "button": "Install for Agent",
+      "copied": "Agent prompt copied",
+      "prompt": "Follow {{guideUrl}} to connect SkillHub and install {{skill}} version {{version}} from this SkillHub."
     }
   },
   "skillCompare": {

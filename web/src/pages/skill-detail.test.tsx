@@ -178,6 +178,7 @@ vi.mock('@/features/skill/file-tree', () => ({
 
 vi.mock('@/features/skill/install-command', () => ({
   InstallCommand: () => <div>install</div>,
+  isPortableSkillVersion: () => true,
 }))
 
 vi.mock('@/features/social/rating-input', () => ({

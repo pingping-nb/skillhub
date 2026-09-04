@@ -121,13 +121,14 @@
         "command": "npm i -g @astron-team/skillhub"
       },
       "agent": {
-        "description": "傳送提示詞給你的 Agent，以設定SkillHub Registry",
-        "command": "閱讀 https://www.example.com/registry/skill.md，並按照說明完成 SkillHub Skills Registry 的配置",
-        "commandTemplate": "閱讀 {{url}}，並按照說明完成 SkillHub Skills Registry 的配置"
+        "description": "傳送提示詞給你的 Agent，以設定 SkillHub Registry",
+        "command": "請根據 https://www.example.com/install/skillhub.md 接入 SkillHub",
+        "commandTemplate": "請根據 {{url}} 接入 SkillHub"
       },
       "human": {
-        "description": "使用CLI工具安裝Skills",
-        "command": "npx clawhub search <keyword>"
+        "description": "使用 SkillHub CLI 搜尋和安裝技能",
+        "command": "npx @astron-team/skillhub@latest search <keyword> --registry https://www.example.com",
+        "commandTemplate": "npx @astron-team/skillhub@latest search <keyword> --registry {{url}}"
       },
       "steps": {
         "configureEnv": {
@@ -874,6 +875,7 @@
     "install": "安裝",
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "SkillHub CLI",
+    "installCommandUnsafeVersion": "該版本號無法安全地生成跨平台命令，請聯絡發布者修正版本號。",
     "download": "下載",
     "labelsSectionTitle": "標籤管理",
     "labelsSectionDescription": "為這個技能掛載或移除推薦標籤，幫助使用者篩選和發現。",
@@ -1047,6 +1049,11 @@
       "button": "分享",
       "copied": "已複製",
       "defaultDescription": "實用技能"
+    },
+    "installForAgent": {
+      "button": "安裝到 Agent",
+      "copied": "安裝指令已複製",
+      "prompt": "請根據 {{guideUrl}} 接入 SkillHub，並從該 SkillHub 安裝 {{skill}} 的 {{version}} 版本。"
     }
   },
   "skillCompare": {

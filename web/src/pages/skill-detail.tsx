@@ -11,6 +11,7 @@ import type { FileTreeNode } from '@/features/skill/file-tree-builder'
 import type { SkillFile } from '@/api/types'
 import { InstallCommand } from '@/features/skill/install-command'
 import { ShareButton } from '@/features/skill/share-button'
+import { InstallForAgentButton } from '@/features/skill/install-for-agent-button'
 import { SkillLabelPanel } from '@/features/skill/skill-label-panel'
 import { ComplianceSnapshotPanel } from '@/features/skill/compliance-snapshot-panel'
 import {
@@ -1260,6 +1261,13 @@ export function SkillDetailPage() {
           namespace={namespace}
           slug={slug}
           description={skill.summary}
+        />
+
+        <InstallForAgentButton
+          namespace={namespace}
+          slug={slug}
+          version={selectedVersionEntry?.version ?? publishedVersion?.version ?? ''}
+          disabled={!selectedVersionEntry || skill.status === 'ARCHIVED' || !isVersionDownloadable}
         />
 
         {canManageSecurityScan && securityAuditVersion && (

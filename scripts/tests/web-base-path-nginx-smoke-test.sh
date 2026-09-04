@@ -19,31 +19,36 @@ port=18080
 
 tmp=$(mktemp -d)
 cleanup() {
-  docker rm -f "$name" "$name-fixed" >/dev/null 2>&1 || true
+  docker rm -f "$name" "$name-fixed" "$name-default" "$name-trusted" >/dev/null 2>&1 || true
   rm -rf "$tmp"
 }
 trap cleanup EXIT
 
 html="$tmp/html"
-mkdir -p "$html/assets"
+mkdir -p "$html/assets" "$html/install" "$html/registry"
 printf '%s\n' 'INDEX_HTML_MARKER' >"$html/index.html"
 printf '%s\n' 'APP_JS_MARKER' >"$html/assets/app.js"
+cp "$ROOT_DIR/web/src/docs/skill.md.template" "$html/registry/skill.md.template"
+cp "$ROOT_DIR/web/runtime-config.js.template" "$html/runtime-config.js.template"
 
 # The image build chmods the entrypoint scripts; here we mount a copy and make it
 # executable, since the nginx entrypoint silently ignores non-executable *.sh.
 entrypoint_d="$tmp/entrypoint.d"
 mkdir -p "$entrypoint_d"
 cp "$ROOT_DIR/web/docker-entrypoint.d/20-base-path.sh" "$entrypoint_d/20-base-path.sh"
-chmod +x "$entrypoint_d/20-base-path.sh"
+cp "$ROOT_DIR/web/docker-entrypoint.d/30-runtime-config.sh" "$entrypoint_d/30-runtime-config.sh"
+chmod +x "$entrypoint_d/20-base-path.sh" "$entrypoint_d/30-runtime-config.sh"
 
 if ! docker run -d --name "$name" \
     -p "$port:80" \
     -e SKILLHUB_API_UPSTREAM=http://127.0.0.1:9 \
     -e SKILLHUB_TRUST_FORWARDED_PROTO=false \
     -e SKILLHUB_WEB_BASE_PATH=/skillhub/ \
-    -v "$html:/usr/share/nginx/html:ro" \
+    -e SKILLHUB_PUBLIC_BASE_URL=https://skill.example.com/skillhub \
+    -v "$html:/usr/share/nginx/html" \
     -v "$ROOT_DIR/web/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro" \
     -v "$entrypoint_d/20-base-path.sh:/docker-entrypoint.d/20-base-path.sh:ro" \
+    -v "$entrypoint_d/30-runtime-config.sh:/docker-entrypoint.d/30-runtime-config.sh:ro" \
     "$NGINX_IMAGE" >/dev/null 2>&1; then
   printf '%s\n' 'web-base-path-nginx-smoke-test skipped (docker run failed, e.g. no image/network)'
   exit 0
@@ -92,7 +97,130 @@ if [ "$location" != '/skillhub/' ]; then
   exit 1
 fi
 
+# The preferred Agent install guide is generated from the instance URL and is
+# reachable through the configured sub-path. The legacy registry route remains
+# available from the same source document.
+guide=$(curl -fsS "$base/skillhub/install/skillhub.md")
+printf '%s' "$guide" | grep -F 'The primary registry for this guide is `https://skill.example.com/skillhub`.' >/dev/null
+printf '%s' "$guide" | grep -F 'read the sibling `.skillhub/metadata.json` first' >/dev/null
+printf '%s' "$guide" | grep -F 'skillhub list --agent <agent> --registry https://skill.example.com/skillhub --json' >/dev/null
+printf '%s' "$guide" | grep -F 'skillhub install @global/skillhub-registry' >/dev/null
+printf '%s' "$guide" | grep -F 'skillhub upgrade @global/skillhub-registry \' >/dev/null
+if printf '%s' "$guide" | sed -n '/skillhub upgrade @global\/skillhub-registry \\/,/--json/p' | grep -F -- '--agent' >/dev/null; then
+  echo 'helper upgrade must cover all installed Agent targets' >&2
+  exit 1
+fi
+printf '%s' "$guide" | grep -F 'skillhub search "<query>" --registry https://skill.xfyun.cn --json' >/dev/null
+printf '%s' "$guide" | grep -F 'npx --yes clawhub search "<query>"' >/dev/null
+printf '%s' "$guide" | grep -F 'skillhub login --token <token> --registry https://skill.example.com/skillhub' >/dev/null
+legacy_guide=$(curl -fsS "$base/skillhub/registry/skill.md")
+if [ "$guide" != "$legacy_guide" ]; then
+  echo 'preferred and compatibility Agent guides must have identical content' >&2
+  exit 1
+fi
+cache_control=$(curl -sSI "$base/skillhub/install/skillhub.md" | awk -F': ' 'tolower($1) == "cache-control" { print $2 }' | tr -d '\r')
+if [ "$cache_control" != 'no-cache' ]; then
+  echo "Agent guide must be revalidated instead of cached indefinitely, got: $cache_control" >&2
+  exit 1
+fi
+
+# An explicit URL is authoritative and must not interpolate a hostile request Host.
+explicit_hostile=$(curl -fsS -H 'Host: evil.example;echo_injected' "$base/skillhub/install/skillhub.md")
+printf '%s' "$explicit_hostile" | grep -F 'The primary registry for this guide is `https://skill.example.com/skillhub`.' >/dev/null
+if printf '%s' "$explicit_hostile" | grep -F 'echo_injected' >/dev/null; then
+  echo 'explicit Agent guide must not interpolate the request Host' >&2
+  exit 1
+fi
+
 docker rm -f "$name" >/dev/null 2>&1 || true
+
+# With no explicit public URL, the guide must derive the registry from the
+# sanitized request scheme, Host (including port), and deployment base path.
+default_html="$tmp/default-html"
+mkdir -p "$default_html/assets" "$default_html/install" "$default_html/registry"
+printf '%s\n' 'INDEX_HTML_MARKER' >"$default_html/index.html"
+cp "$ROOT_DIR/web/src/docs/skill.md.template" "$default_html/registry/skill.md.template"
+cp "$ROOT_DIR/web/runtime-config.js.template" "$default_html/runtime-config.js.template"
+name_default="$name-default"
+port_default=18082
+docker run -d --name "$name_default" \
+  -p "$port_default:80" \
+  -e SKILLHUB_API_UPSTREAM=http://127.0.0.1:9 \
+  -e SKILLHUB_TRUST_FORWARDED_PROTO=false \
+  -e SKILLHUB_WEB_BASE_PATH=/skillhub/ \
+  -v "$default_html:/usr/share/nginx/html" \
+  -v "$ROOT_DIR/web/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro" \
+  -v "$entrypoint_d/20-base-path.sh:/docker-entrypoint.d/20-base-path.sh:ro" \
+  -v "$entrypoint_d/30-runtime-config.sh:/docker-entrypoint.d/30-runtime-config.sh:ro" \
+  "$NGINX_IMAGE" >/dev/null
+
+default_base="http://127.0.0.1:$port_default"
+i=0
+until curl -fsS -o /dev/null "$default_base/nginx-health" 2>/dev/null; do
+  i=$((i + 1))
+  if [ "$i" -ge 30 ]; then
+    echo 'nginx (default public URL) did not become ready' >&2
+    docker logs "$name_default" >&2 || true
+    exit 1
+  fi
+  sleep 1
+done
+default_guide=$(curl -fsS "$default_base/skillhub/install/skillhub.md")
+printf '%s' "$default_guide" | grep -F "The primary registry for this guide is \`$default_base/skillhub\`." >/dev/null
+untrusted_https=$(curl -fsS -H 'X-Forwarded-Proto: https' "$default_base/skillhub/install/skillhub.md")
+printf '%s' "$untrusted_https" | grep -F "The primary registry for this guide is \`$default_base/skillhub\`." >/dev/null
+if printf '%s' "$default_guide" | grep -F '__SKILLHUB_PUBLIC_BASE_URL__' >/dev/null; then
+  echo 'default Agent guide must not expose the runtime URL marker' >&2
+  exit 1
+fi
+for hostile_host in 'evil.example;echo_injected' 'evil.example$(id)' 'evil.example&whoami'; do
+  hostile_status=$(curl -sS -o "$tmp/hostile-response" -w '%{http_code}' -H "Host: $hostile_host" "$default_base/skillhub/install/skillhub.md")
+  if [ "$hostile_status" != 400 ]; then
+    echo "dynamic Agent guide must reject hostile Host, got $hostile_status for $hostile_host" >&2
+    exit 1
+  fi
+  if grep -F "$hostile_host" "$tmp/hostile-response" >/dev/null 2>&1; then
+    echo 'dynamic Agent guide must not echo a hostile Host' >&2
+    exit 1
+  fi
+done
+docker rm -f "$name_default" >/dev/null 2>&1 || true
+
+# A trusted proxy may supply one exact canonical scheme. Comma-separated or
+# otherwise malformed values retain the direct request scheme.
+trusted_html="$tmp/trusted-html"
+mkdir -p "$trusted_html/assets" "$trusted_html/install" "$trusted_html/registry"
+printf '%s\n' 'INDEX_HTML_MARKER' >"$trusted_html/index.html"
+cp "$ROOT_DIR/web/src/docs/skill.md.template" "$trusted_html/registry/skill.md.template"
+cp "$ROOT_DIR/web/runtime-config.js.template" "$trusted_html/runtime-config.js.template"
+name_trusted="$name-trusted"
+port_trusted=18083
+docker run -d --name "$name_trusted" \
+  -p "$port_trusted:80" \
+  -e SKILLHUB_API_UPSTREAM=http://127.0.0.1:9 \
+  -e SKILLHUB_TRUST_FORWARDED_PROTO=true \
+  -e SKILLHUB_WEB_BASE_PATH=/skillhub/ \
+  -v "$trusted_html:/usr/share/nginx/html" \
+  -v "$ROOT_DIR/web/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro" \
+  -v "$entrypoint_d/20-base-path.sh:/docker-entrypoint.d/20-base-path.sh:ro" \
+  -v "$entrypoint_d/30-runtime-config.sh:/docker-entrypoint.d/30-runtime-config.sh:ro" \
+  "$NGINX_IMAGE" >/dev/null
+trusted_base="http://127.0.0.1:$port_trusted"
+i=0
+until curl -fsS -o /dev/null "$trusted_base/nginx-health" 2>/dev/null; do
+  i=$((i + 1))
+  if [ "$i" -ge 30 ]; then
+    echo 'nginx (trusted proxy) did not become ready' >&2
+    docker logs "$name_trusted" >&2 || true
+    exit 1
+  fi
+  sleep 1
+done
+trusted_https=$(curl -fsS -H 'X-Forwarded-Proto: https' "$trusted_base/skillhub/install/skillhub.md")
+printf '%s' "$trusted_https" | grep -F "The primary registry for this guide is \`https://127.0.0.1:$port_trusted/skillhub\`." >/dev/null
+trusted_malformed=$(curl -fsS -H 'X-Forwarded-Proto: https,http' "$trusted_base/skillhub/install/skillhub.md")
+printf '%s' "$trusted_malformed" | grep -F "The primary registry for this guide is \`$trusted_base/skillhub\`." >/dev/null
+docker rm -f "$name_trusted" >/dev/null 2>&1 || true
 
 # Fixed-base image served via the bundled deploy configs: assets are baked under
 # /fixed/, a baked-base marker is present, and SKILLHUB_WEB_BASE_PATH is passed as

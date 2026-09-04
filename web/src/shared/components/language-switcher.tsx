@@ -22,12 +22,14 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const [open, setOpen] = useState(false)
 
   const languages = [
-    { code: 'zh', name: '中文' },
+    { code: 'zh', name: '繁體中文' },
+    { code: 'zh-CN', name: '简体中文' },
     { code: 'en', name: 'English' },
+    { code: 'ru', name: 'Русский' },
   ]
 
-  // Primary language code only (strip region, e.g. zh-CN → zh).
-  const currentLangCode = i18n.language?.split('-')[0] || 'zh'
+  // Full language code (preserve region, e.g. zh-CN).
+  const currentLangCode = i18n.language || 'zh'
   const currentLanguage = languages.find((lang) => lang.code === currentLangCode) || languages[0]
 
   useEffect(() => {
