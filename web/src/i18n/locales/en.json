@@ -215,6 +215,8 @@
     "subtitle": "Choose a method to continue",
     "tabPassword": "Password",
     "tabOAuth": "OAuth",
+    "providerLabel": "Login method",
+    "providerLocal": "Local Account",
     "username": "Username",
     "password": "Password",
     "usernamePlaceholder": "Enter username",

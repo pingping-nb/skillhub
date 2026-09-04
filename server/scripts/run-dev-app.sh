@@ -5,6 +5,16 @@ set -euo pipefail
 SERVER_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILE="${SPRING_PROFILES_ACTIVE:-local}"
 
+# Load local secrets (e.g. LDAP credentials) from server/.env.local (gitignored).
+# Format: KEY=VALUE lines; comments and blank lines are skipped.
+ENV_LOCAL_FILE="$SERVER_DIR/.env.local"
+if [[ -f "$ENV_LOCAL_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_LOCAL_FILE"
+  set +a
+fi
+
 cd "$SERVER_DIR"
 
 ./mvnw -pl skillhub-app -am clean package -DskipTests >/dev/null

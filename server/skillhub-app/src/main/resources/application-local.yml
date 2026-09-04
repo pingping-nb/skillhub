@@ -27,6 +27,22 @@ skillhub:
   auth:
     mock:
       enabled: true
+    direct:
+      enabled: true
+    ldap:
+      # Credentials come from the environment (see server/.env.local, gitignored).
+      # Never hardcode real bind credentials here: this file is tracked in git.
+      enabled: ${SKILLHUB_AUTH_LDAP_ENABLED:false}
+      url: ${SKILLHUB_AUTH_LDAP_URL:}
+      base-dn: ${SKILLHUB_AUTH_LDAP_BASE_DN:}
+      bind-dn: ${SKILLHUB_AUTH_LDAP_BIND_DN:}
+      bind-password: ${SKILLHUB_AUTH_LDAP_BIND_PASSWORD:}
+      user-search-filter: ${SKILLHUB_AUTH_LDAP_USER_SEARCH_FILTER:(&(sAMAccountName={0})(!(userAccountControl:1.2.840.113556.1.4.803:=2)))}
+      display-name-attribute: ${SKILLHUB_AUTH_LDAP_DISPLAY_NAME_ATTRIBUTE:cn}
+      email-attribute: ${SKILLHUB_AUTH_LDAP_EMAIL_ATTRIBUTE:mail}
+      uid-attribute: ${SKILLHUB_AUTH_LDAP_UID_ATTRIBUTE:objectGUID}
+      use-tls: ${SKILLHUB_AUTH_LDAP_USE_TLS:false}
+      validate-cert: ${SKILLHUB_AUTH_LDAP_VALIDATE_CERT:false}
   ratelimit:
     download:
       anonymous-cookie-secret: ${SKILLHUB_DOWNLOAD_ANON_COOKIE_SECRET:local-dev-download-secret-32-bytes}

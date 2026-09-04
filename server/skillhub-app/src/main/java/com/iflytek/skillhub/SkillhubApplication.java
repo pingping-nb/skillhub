@@ -5,12 +5,13 @@ import com.iflytek.skillhub.config.ProfileFieldPolicyProperties;
 import com.iflytek.skillhub.config.ProfileModerationProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 /**
  * Main Spring Boot entry point for the SkillHub backend application.
  */
-@SpringBootApplication
+@SpringBootApplication(exclude = LdapAutoConfiguration.class)
 @EnableConfigurationProperties({
         BuiltinSkillProperties.class,
         ProfileModerationProperties.class,

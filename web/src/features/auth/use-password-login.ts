@@ -1,21 +1,24 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { authApi, getDirectAuthRuntimeConfig } from '@/api/client'
+import { authApi } from '@/api/client'
 import { ApiError } from '@/shared/lib/api-error'
 import type { LocalLoginRequest, User } from '@/api/types'
 import { clearSessionScopedQueries } from '@/features/notification/notification-session'
 
 /**
- * Password-login mutation that can switch between local auth and direct upstream auth based on
- * runtime configuration.
+ * Password-login mutation that can route to the local account endpoint or a
+ * direct-auth provider (e.g. LDAP) based on the supplied provider code.
+ *
+ * When {@code provider} is omitted, the request goes to the fixed local account
+ * endpoint ({@code /api/v1/auth/local/login}). When a provider is supplied, the
+ * request goes to the direct-auth endpoint ({@code /api/v1/auth/direct/login}).
  */
-export function usePasswordLogin() {
+export function usePasswordLogin(provider?: string) {
   const queryClient = useQueryClient()
-  const directAuthConfig = getDirectAuthRuntimeConfig()
 
   return useMutation({
     mutationFn: (request: LocalLoginRequest) => {
-      if (directAuthConfig.enabled && directAuthConfig.provider) {
-        return authApi.directLogin(directAuthConfig.provider, request)
+      if (provider) {
+        return authApi.directLogin(provider, request)
       }
       return authApi.localLogin(request)
     },
