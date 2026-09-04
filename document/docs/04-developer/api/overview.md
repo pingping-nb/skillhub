@@ -6,30 +6,30 @@ description: SkillHub API 概述
 
 # API 概述
 
-SkillHub 提供 RESTful API 用于集成和自动化。
+SkillHub 提供 RESTful API 用於整合和自動化。
 
-## API 分类
+## API 分類
 
-### 公开 API
-- 技能搜索
-- 技能详情
+### 公開 API
+- 技能搜尋
+- 技能詳情
 - 版本列表
-- 下载技能
-- 无需认证（PUBLIC 技能）
+- 下載技能
+- 無需認證（PUBLIC 技能）
 
-### 认证 API
-- 发布技能
-- 收藏/评分
-- 命名空间管理
-- 需要登录或 Bearer Token
+### 認證 API
+- 發布技能
+- 收藏/評分
+- 名稱空間管理
+- 需要登入或 Bearer Token
 
-### CLI 兼容层
-- 兼容 ClawHub CLI 协议
-- 现有工具可无缝迁移
+### CLI 相容層
+- 相容 ClawHub CLI 協議
+- 現有工具可無縫遷移
 
-## 响应格式
+## 響應格式
 
-### 统一响应结构
+### 統一響應結構
 
 ```json
 {
@@ -41,7 +41,7 @@ SkillHub 提供 RESTful API 用于集成和自动化。
 }
 ```
 
-### 分页响应
+### 分頁響應
 
 ```json
 {
@@ -58,24 +58,24 @@ SkillHub 提供 RESTful API 用于集成和自动化。
 }
 ```
 
-## 认证方式
+## 認證方式
 
 ### Session Cookie
-Web 端使用 Session Cookie 认证。
+Web 端使用 Session Cookie 認證。
 
 ### Bearer Token
-CLI 和 API 集成使用 Bearer Token：
+CLI 和 API 整合使用 Bearer Token：
 
 ```bash
 Authorization: Bearer <token>
 ```
 
 ### API Token
-可创建长期有效的 API Token 用于自动化。
+可建立長期有效的 API Token 用於自動化。
 
-## 幂等性
+## 冪等性
 
-所有写操作支持 `X-Request-Id` 请求头实现幂等：
+所有寫操作支援 `X-Request-Id` 請求頭實現冪等：
 
 ```bash
 X-Request-Id: <uuid-v4>
@@ -83,4 +83,4 @@ X-Request-Id: <uuid-v4>
 
 ## 下一步
 
-- [公开 API](./public) - 查看公开接口
+- [公開 API](./public) - 檢視公開介面

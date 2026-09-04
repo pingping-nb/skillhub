@@ -1,83 +1,83 @@
-# 私有 SSO 接入兼容层实施手册
+# 私有 SSO 接入相容層實施手冊
 
-## 1. 文档目的
+## 1. 檔案目的
 
-本文档面向两类读者：
+本檔案面向兩類讀者：
 
-- 后续在私有仓库中接入企业 SSO 的开发者
-- 需要基于当前开源版兼容层继续开发的 coding agent
+- 後續在私有倉庫中接入企業 SSO 的開發者
+- 需要基於當前開源版相容層繼續開發的 coding agent
 
-本文档不是认证架构总览，而是实施手册。目标是让后续执行者在不了解全部历史上下文的情况下，也能基于当前成果直接开始接入工作，并且尽量把私有仓库与开源仓库的差异控制在 provider 实现层和少量配置层。
+本檔案不是認證架構總覽，而是實施手冊。目標是讓後續執行者在不瞭解全部歷史上下文的情況下，也能基於當前成果直接開始接入工作，並且儘量把私有倉庫與開源倉庫的差異控制在 provider 實現層和少量配置層。
 
-相关文档：
+相關檔案：
 
 - [03-authentication-design.md](/Users/xudongsun/github/skillhub/docs/03-authentication-design.md)
 - [06-api-design.md](/Users/xudongsun/github/skillhub/docs/06-api-design.md)
 - [08-frontend-architecture.md](/Users/xudongsun/github/skillhub/docs/08-frontend-architecture.md)
 - [11-auth-extensibility-and-private-sso.md](/Users/xudongsun/github/skillhub/docs/11-auth-extensibility-and-private-sso.md)
 
-## 2. 当前上下文与已确认约束
+## 2. 當前上下文與已確認約束
 
-本轮改造的真实目标不是在开源版里实现私有 SSO，而是先把开源版前后端改造成一个稳定的兼容接入层。
+本輪改造的真實目標不是在開源版裡實現私有 SSO，而是先把開源版前後端改造成一個穩定的相容接入層。
 
-已经确认的业务前提如下：
+已經確認的業務前提如下：
 
-- 私有 SSO 能返回稳定且唯一的 UID
-- 用户名密码校验接口与基于 Cookie 的会话校验接口都返回同一个 UID
-- SkillHub 私有版与私有 SSO 会部署在统一主域下，例如 `skill.xxx.com` 与 `sso.xxx.com`
-- 私有版可以通过内部接口或 RPC 调用 SSO 的用户名密码校验能力
-- 首次 SSO 登录自动创建 SkillHub 账号
-- 不考虑账号合并
-- 不依赖 email 字段
-- 不要求联动登出，但可保留低优先级扩展点
+- 私有 SSO 能返回穩定且唯一的 UID
+- 使用者名稱密碼校驗介面與基於 Cookie 的會話校驗介面都返回同一個 UID
+- SkillHub 私有版與私有 SSO 會部署在統一主域下，例如 `skill.xxx.com` 與 `sso.xxx.com`
+- 私有版可以透過內部介面或 RPC 呼叫 SSO 的使用者名稱密碼校驗能力
+- 首次 SSO 登入自動建立 SkillHub 賬號
+- 不考慮賬號合併
+- 不依賴 email 欄位
+- 不要求聯動登出，但可保留低優先順序擴充套件點
 
-这意味着后续私有 SSO 的正确接入方式是：
+這意味著後續私有 SSO 的正確接入方式是：
 
-- 把 SSO 建模为新的认证来源 `private-sso`
+- 把 SSO 建模為新的認證來源 `private-sso`
 - 用 `providerCode + subject` 表示外部身份，其中 `subject` 就是 SSO UID
-- 复用当前平台的统一 Session 建立逻辑，而不是再造一套登录态机制
+- 複用當前平臺的統一 Session 建立邏輯，而不是再造一套登入態機制
 
-## 3. 当前兼容层已经提供了什么
+## 3. 當前相容層已經提供了什麼
 
-### 3.1 后端扩展点
+### 3.1 後端擴充套件點
 
-当前开源版已经提供以下后端兼容能力：
+當前開源版已經提供以下後端相容能力：
 
 - `DirectAuthProvider`
-  - 用于“前端收集用户名密码，后端调用外部系统校验”的模式
+  - 用於“前端收集使用者名稱密碼，後端呼叫外部系統校驗”的模式
 - `PassiveSessionAuthenticator`
-  - 用于“浏览器自动带上 SSO Cookie，后端读取请求并向 SSO 校验”的模式
+  - 用於“瀏覽器自動帶上 SSO Cookie，後端讀取請求並向 SSO 校驗”的模式
 - `PlatformSessionService`
-  - 用于统一建立 SkillHub Web Session
+  - 用於統一建立 SkillHub Web Session
 - `LogoutPropagationHandler`
-  - 用于未来低优先级登出联动
+  - 用於未來低優先順序登出聯動
 
-关键代码位置：
+關鍵程式碼位置：
 
 - [DirectAuthProvider.java](/Users/xudongsun/github/skillhub/server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/direct/DirectAuthProvider.java)
 - [PassiveSessionAuthenticator.java](/Users/xudongsun/github/skillhub/server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/bootstrap/PassiveSessionAuthenticator.java)
 - [PlatformSessionService.java](/Users/xudongsun/github/skillhub/server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/session/PlatformSessionService.java)
 
-### 3.2 后端公共协议
+### 3.2 後端公共協議
 
-当前开源版已经提供以下兼容协议：
+當前開源版已經提供以下相容協議：
 
 - `POST /api/v1/auth/direct/login`
 - `POST /api/v1/auth/session/bootstrap`
 - `GET /api/v1/auth/methods`
 
-这些协议的设计原则如下：
+這些協議的設計原則如下：
 
-- 默认关闭
-- 默认没有私有 SSO 实现
-- 启用后由 provider 扩展驱动
-- 成功后统一建立标准 Spring Security Session
-- 不替换现有 `/api/v1/auth/local/login`
-- 不替换现有 OAuth 登录
+- 預設關閉
+- 預設沒有私有 SSO 實現
+- 啟用後由 provider 擴充套件驅動
+- 成功後統一建立標準 Spring Security Session
+- 不替換現有 `/api/v1/auth/local/login`
+- 不替換現有 OAuth 登入
 
-### 3.3 前端兼容层
+### 3.3 前端相容層
 
-当前开源版前端已经支持通过运行时配置开启兼容入口：
+當前開源版前端已經支援透過執行時配置開啟相容入口：
 
 - `SKILLHUB_WEB_AUTH_DIRECT_ENABLED`
 - `SKILLHUB_WEB_AUTH_DIRECT_PROVIDER`
@@ -85,60 +85,60 @@
 - `SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_PROVIDER`
 - `SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_AUTO`
 
-前端设计原则如下：
+前端設計原則如下：
 
-- 默认不启用任何私有登录入口
-- 开启后通过兼容层切换，不破坏现有登录页默认行为
-- 优先走统一目录接口 `/api/v1/auth/methods`
-- 被动会话登录优先使用显式 bootstrap，而不是页面加载时偷偷尝试多次
+- 預設不啟用任何私有登入入口
+- 開啟後透過相容層切換，不破壞現有登入頁預設行為
+- 優先走統一目錄介面 `/api/v1/auth/methods`
+- 被動會話登入優先使用顯式 bootstrap，而不是頁面載入時偷偷嘗試多次
 
-## 4. 私有 SSO 的推荐接入方案
+## 4. 私有 SSO 的推薦接入方案
 
-### 4.1 推荐总策略
+### 4.1 推薦總策略
 
-最佳实践不是只选一种方式，而是同时支持两条链路：
+最佳實踐不是隻選一種方式，而是同時支援兩條鏈路：
 
-1. 主路径：`DirectAuthProvider`
-   - 登录页展示企业 SSO 用户名密码表单
-   - 后端通过内部接口或 RPC 调用私有 SSO 校验
-   - 校验成功后给用户建立 SkillHub Session
+1. 主路徑：`DirectAuthProvider`
+   - 登入頁展示企業 SSO 使用者名稱密碼錶單
+   - 後端透過內部介面或 RPC 呼叫私有 SSO 校驗
+   - 校驗成功後給使用者建立 SkillHub Session
 
-2. 补充路径：`PassiveSessionAuthenticator`
-   - 当用户已经在 SSO 系统登录过，并且浏览器会自动带上共享 Cookie 时
-   - 登录页允许用户主动点击“从企业 SSO 登录”
-   - 或在非常谨慎的前提下自动尝试一次 bootstrap
+2. 補充路徑：`PassiveSessionAuthenticator`
+   - 當使用者已經在 SSO 系統登入過，並且瀏覽器會自動帶上共享 Cookie 時
+   - 登入頁允許使用者主動點選“從企業 SSO 登入”
+   - 或在非常謹慎的前提下自動嘗試一次 bootstrap
 
-这样做的理由：
+這樣做的理由：
 
-- 覆盖“尚未登录 SSO”和“已登录 SSO”两种用户状态
-- 不依赖浏览器一定已持有 Cookie
-- 不把所有登录成功率押在 Cookie 域、SameSite、过期策略等细节上
-- 不改变开源版原始登录逻辑
+- 覆蓋“尚未登入 SSO”和“已登入 SSO”兩種使用者狀態
+- 不依賴瀏覽器一定已持有 Cookie
+- 不把所有登入成功率押在 Cookie 域、SameSite、過期策略等細節上
+- 不改變開源版原始登入邏輯
 
-### 4.2 不推荐的做法
+### 4.2 不推薦的做法
 
-以下做法不建议在私有版采用：
+以下做法不建議在私有版採用：
 
-- 在全局 servlet filter 中对所有匿名请求自动尝试 SSO 登录
-- 直接在 controller、filter 或 provider 里手写 `HttpSession` 和 `SecurityContext` 逻辑
-- 把私有 SSO 的 UID 映射成临时整数 ID 再作为用户主标识
-- 按 email 自动合并账号
-- 让前端直接调用私有 SSO 的内部校验接口
-- 为私有版新增一整套与开源版平行的“私有登录 session 机制”
+- 在全域性 servlet filter 中對所有匿名請求自動嘗試 SSO 登入
+- 直接在 controller、filter 或 provider 裡手寫 `HttpSession` 和 `SecurityContext` 邏輯
+- 把私有 SSO 的 UID 對映成臨時整數 ID 再作為使用者主標識
+- 按 email 自動合併賬號
+- 讓前端直接呼叫私有 SSO 的內部校驗介面
+- 為私有版新增一整套與開源版平行的“私有登入 session 機制”
 
-## 5. 私有版最小差异实施方案
+## 5. 私有版最小差異實施方案
 
-### 5.1 后端应新增什么
+### 5.1 後端應新增什麼
 
-私有仓库建议只新增以下实现类，不改主链路：
+私有倉庫建議只新增以下實現類，不改主鏈路：
 
-1. 一个 `DirectAuthProvider` 实现
-2. 一个 `PassiveSessionAuthenticator` 实现
-3. 可选的 `LogoutPropagationHandler` 实现
-4. 私有配置属性类或私有配置项
-5. 若 SSO 返回的是外部 UID 而不是现成平台用户，需要补充“根据 SSO UID 查询或创建平台用户”的私有服务
+1. 一個 `DirectAuthProvider` 實現
+2. 一個 `PassiveSessionAuthenticator` 實現
+3. 可選的 `LogoutPropagationHandler` 實現
+4. 私有配置屬性類或私有配置項
+5. 若 SSO 返回的是外部 UID 而不是現成平臺使用者，需要補充“根據 SSO UID 查詢或建立平臺使用者”的私有服務
 
-建议命名示例：
+建議命名示例：
 
 - `PrivateSsoDirectAuthProvider`
 - `PrivateSsoPassiveSessionAuthenticator`
@@ -146,18 +146,18 @@
 - `PrivateSsoProperties`
 - `PrivateSsoIdentityService`
 
-不建议修改这些公共类的职责：
+不建議修改這些公共類的職責：
 
 - `PlatformSessionService`
 - `LocalAuthController`
 - `AuthController`
 - `SecurityConfig`
 
-### 5.2 后端建议实现步骤
+### 5.2 後端建議實現步驟
 
-#### 步骤 1：定义 provider code
+#### 步驟 1：定義 provider code
 
-私有版统一使用稳定 provider code：
+私有版統一使用穩定 provider code：
 
 ```text
 private-sso
@@ -165,13 +165,13 @@ private-sso
 
 要求：
 
-- `DirectAuthProvider.providerCode()` 和 `PassiveSessionAuthenticator.providerCode()` 返回同一个值
-- 不要为“用户名密码登录”和“Cookie 登录”定义两个不同 provider code
-- 如需更友好的登录页文案，请同时覆盖 provider 的 `displayName()`，避免前端再维护一份私有显示名映射
+- `DirectAuthProvider.providerCode()` 和 `PassiveSessionAuthenticator.providerCode()` 返回同一個值
+- 不要為“使用者名稱密碼登入”和“Cookie 登入”定義兩個不同 provider code
+- 如需更友好的登入頁文案，請同時覆蓋 provider 的 `displayName()`，避免前端再維護一份私有顯示名對映
 
-#### 步骤 2：封装 SSO 客户端
+#### 步驟 2：封裝 SSO 客戶端
 
-不要在 provider 实现里直接散落 HTTP 或 RPC 调用。建议先抽一层私有客户端：
+不要在 provider 實現裡直接散落 HTTP 或 RPC 呼叫。建議先抽一層私有客戶端：
 
 ```java
 public interface PrivateSsoClient {
@@ -180,21 +180,21 @@ public interface PrivateSsoClient {
 }
 ```
 
-其中 `PrivateSsoUser` 至少应包含：
+其中 `PrivateSsoUser` 至少應包含：
 
 - `uid`
 - `username`
 - `displayName`
 
-最佳实践：
+最佳實踐：
 
-- 所有超时、重试、日志脱敏、错误码翻译都放在客户端层
-- provider 层只负责把外部结果映射成平台所需的身份对象
-- 禁止记录明文密码
+- 所有超時、重試、日誌脫敏、錯誤碼翻譯都放在客戶端層
+- provider 層只負責把外部結果對映成平臺所需的身份物件
+- 禁止記錄明文密碼
 
-#### 步骤 3：实现用户映射服务
+#### 步驟 3：實現使用者對映服務
 
-私有 SSO 不依赖 email，也不做账号合并，因此建议私有版实现一个专用服务：
+私有 SSO 不依賴 email，也不做賬號合併，因此建議私有版實現一個專用服務：
 
 ```java
 public interface PrivateSsoIdentityService {
@@ -202,22 +202,22 @@ public interface PrivateSsoIdentityService {
 }
 ```
 
-推荐逻辑：
+推薦邏輯：
 
-1. 按 `providerCode=private-sso` 和 `subject=ssoUid` 查现有绑定
-2. 若已存在，加载对应平台用户
-3. 若不存在，则自动创建平台用户
-4. 创建新的身份绑定
+1. 按 `providerCode=private-sso` 和 `subject=ssoUid` 查現有繫結
+2. 若已存在，載入對應平臺使用者
+3. 若不存在，則自動建立平臺使用者
+4. 建立新的身份繫結
 5. 返回 `PlatformPrincipal`
 
 要求：
 
-- 自动创建出的用户默认应是 `ACTIVE`
-- 不要尝试和现有本地账号或 OAuth 账号按 email 合并
+- 自動建立出的使用者預設應是 `ACTIVE`
+- 不要嘗試和現有本地賬號或 OAuth 賬號按 email 合併
 
-#### 步骤 4：实现 `DirectAuthProvider`
+#### 步驟 4：實現 `DirectAuthProvider`
 
-伪代码如下：
+虛擬碼如下：
 
 ```java
 @Component
@@ -241,13 +241,13 @@ public class PrivateSsoDirectAuthProvider implements DirectAuthProvider {
 
 要求：
 
-- 只返回认证成功后的 `PlatformPrincipal`
-- 不在这里建立 Session
-- 不在这里写 `SecurityContext`
+- 只返回認證成功後的 `PlatformPrincipal`
+- 不在這裡建立 Session
+- 不在這裡寫 `SecurityContext`
 
-#### 步骤 5：实现 `PassiveSessionAuthenticator`
+#### 步驟 5：實現 `PassiveSessionAuthenticator`
 
-伪代码如下：
+虛擬碼如下：
 
 ```java
 @Component
@@ -268,13 +268,13 @@ public class PrivateSsoPassiveSessionAuthenticator implements PassiveSessionAuth
 
 要求：
 
-- 只消费当前请求已带上的 Cookie 或其他被动凭证
-- 不主动重定向到 SSO
-- 不在这里自行创建 Session
+- 只消費當前請求已帶上的 Cookie 或其他被動憑證
+- 不主動重定向到 SSO
+- 不在這裡自行建立 Session
 
-#### 步骤 6：开启配置
+#### 步驟 6：開啟配置
 
-私有版部署时启用：
+私有版部署時啟用：
 
 ```yaml
 skillhub:
@@ -285,154 +285,154 @@ skillhub:
       enabled: true
 ```
 
-建议：
+建議：
 
-- 预发环境先只开 direct auth
-- passive bootstrap 在确认 Cookie 域和 SameSite 行为可靠后再开启
+- 預發環境先只開 direct auth
+- passive bootstrap 在確認 Cookie 域和 SameSite 行為可靠後再開啟
 
-## 6. 前端最佳实践
+## 6. 前端最佳實踐
 
-### 6.1 推荐的登录页策略
+### 6.1 推薦的登入頁策略
 
-私有版推荐保留当前开源登录页结构，但增加企业 SSO 入口：
+私有版推薦保留當前開源登入頁結構，但增加企業 SSO 入口：
 
-- 保留 OAuth 按钮
-- 本地账号登录是否保留，由私有版自行决定
-- 增加企业 SSO 用户名密码表单，或将现有密码表单切换到 direct auth 兼容接口
-- 增加“从企业 SSO 登录”按钮，对应 `session/bootstrap`
+- 保留 OAuth 按鈕
+- 本地賬號登入是否保留，由私有版自行決定
+- 增加企業 SSO 使用者名稱密碼錶單，或將現有密碼錶單切換到 direct auth 相容介面
+- 增加“從企業 SSO 登入”按鈕，對應 `session/bootstrap`
 
-推荐优先级：
+推薦優先順序：
 
-1. 首先提供明确可见的企业用户名密码登录
-2. 其次提供“从企业 SSO 登录”按钮
-3. 最后才考虑自动 bootstrap
+1. 首先提供明確可見的企業使用者名稱密碼登入
+2. 其次提供“從企業 SSO 登入”按鈕
+3. 最後才考慮自動 bootstrap
 
-### 6.2 自动 bootstrap 的使用建议
+### 6.2 自動 bootstrap 的使用建議
 
-只有在以下条件同时满足时才建议开启 `SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_AUTO=true`：
+只有在以下條件同時滿足時才建議開啟 `SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_AUTO=true`：
 
-- 已确认浏览器在 `skill.xxx.com` 下能稳定带上 SSO Cookie
-- 失败时 UI 不会卡死或重复重试
-- 页面只会自动尝试一次
-- 前端不会因为自动尝试失败而阻断正常密码登录
+- 已確認瀏覽器在 `skill.xxx.com` 下能穩定帶上 SSO Cookie
+- 失敗時 UI 不會卡死或重複重試
+- 頁面只會自動嘗試一次
+- 前端不會因為自動嘗試失敗而阻斷正常密碼登入
 
-如果以上条件不满足，建议只显示一个显式按钮，让用户主动触发。
+如果以上條件不滿足，建議只顯示一個顯式按鈕，讓使用者主動觸發。
 
-### 6.3 前端禁止事项
+### 6.3 前端禁止事項
 
-- 不要把密码提交给非 SkillHub 后端地址
-- 不要在浏览器里解析或操作私有 SSO 内部 Cookie 细节
-- 不要把 bootstrap 失败当成页面级致命错误
+- 不要把密碼提交給非 SkillHub 後端地址
+- 不要在瀏覽器裡解析或操作私有 SSO 內部 Cookie 細節
+- 不要把 bootstrap 失敗當成頁面級致命錯誤
 
-## 7. Spring Session Redis 相关约束
+## 7. Spring Session Redis 相關約束
 
-当前平台的统一 Web 登录态是 Spring Session。
+當前平臺的統一 Web 登入態是 Spring Session。
 
-后续私有版继续接入时，必须遵守以下规则：
+後續私有版繼續接入時，必須遵守以下規則：
 
-- 所有成功登录都必须通过 `PlatformSessionService`
-- 所有 Web 会话都通过 `HttpSession` 持久化
-- 不要手动维护第二份“私有 SSO session”
-- 不要在 Redis 中自行定义另一套认证缓存结构来替代 Session
+- 所有成功登入都必須透過 `PlatformSessionService`
+- 所有 Web 會話都透過 `HttpSession` 持久化
+- 不要手動維護第二份“私有 SSO session”
+- 不要在 Redis 中自行定義另一套認證快取結構來替代 Session
 
-当前统一服务会做的事：
+當前統一服務會做的事：
 
-- 写入 `platformPrincipal`
-- 写入 `SPRING_SECURITY_CONTEXT`
-- 在交互式登录流程中轮换 session id
+- 寫入 `platformPrincipal`
+- 寫入 `SPRING_SECURITY_CONTEXT`
+- 在互動式登入流程中輪換 session id
 
-## 8. 安全最佳实践
+## 8. 安全最佳實踐
 
-### 8.1 用户名密码直连场景
+### 8.1 使用者名稱密碼直連場景
 
-- SkillHub 后端与私有 SSO 之间必须走内网或可信 RPC
-- 明文密码只允许存在于浏览器提交和后端调用 SSO 的瞬时链路中
-- 日志、埋点、异常信息中禁止出现密码
-- 对下游 SSO 调用应设置超时和熔断策略
+- SkillHub 後端與私有 SSO 之間必須走內網或可信 RPC
+- 明文密碼只允許存在於瀏覽器提交和後端呼叫 SSO 的瞬時鏈路中
+- 日誌、埋點、異常資訊中禁止出現密碼
+- 對下游 SSO 呼叫應設定超時和熔斷策略
 
-### 8.2 Cookie 被动会话场景
+### 8.2 Cookie 被動會話場景
 
-- 必须先确认 Cookie 域、路径、SameSite、Secure 策略能满足 `skill.xxx.com` 使用
-- bootstrap 接口应保留 CSRF 防护
-- 失败时只返回认证失败，不泄露过多 Cookie 校验细节
-- 除非有明确产品要求，否则不要做无感知的全站自动登录 filter
+- 必須先確認 Cookie 域、路徑、SameSite、Secure 策略能滿足 `skill.xxx.com` 使用
+- bootstrap 介面應保留 CSRF 防護
+- 失敗時只返回認證失敗，不洩露過多 Cookie 校驗細節
+- 除非有明確產品要求，否則不要做無感知的全站自動登入 filter
 
-### 8.3 身份映射场景
+### 8.3 身份對映場景
 
-- 只信任稳定 UID，不信任显示名作为主身份依据
-- 不按 email 合并
-- 不按 username 合并
+- 只信任穩定 UID，不信任顯示名作為主身份依據
+- 不按 email 合併
+- 不按 username 合併
 
-## 9. 建议测试矩阵
+## 9. 建議測試矩陣
 
-### 9.1 后端单元测试
+### 9.1 後端單元測試
 
-- `DirectAuthProvider` 成功认证
-- `DirectAuthProvider` 认证失败
-- `PassiveSessionAuthenticator` 在有效 Cookie 下成功返回主体
-- `PassiveSessionAuthenticator` 在无效 Cookie 下返回空或失败
-- `PrivateSsoIdentityService` 首次登录自动建号
-- `PrivateSsoIdentityService` 再次登录复用已有绑定
+- `DirectAuthProvider` 成功認證
+- `DirectAuthProvider` 認證失敗
+- `PassiveSessionAuthenticator` 在有效 Cookie 下成功返回主體
+- `PassiveSessionAuthenticator` 在無效 Cookie 下返回空或失敗
+- `PrivateSsoIdentityService` 首次登入自動建號
+- `PrivateSsoIdentityService` 再次登入複用已有繫結
 
-### 9.2 后端集成测试
+### 9.2 後端整合測試
 
-- `POST /api/v1/auth/direct/login` 在开启配置后能建立 Session
-- `POST /api/v1/auth/session/bootstrap` 在开启配置后能建立 Session
-- 成功登录后 `/api/v1/auth/me` 返回正确用户
-- direct auth 与现有 `/api/v1/auth/local/login` 不互相影响
-- bootstrap 关闭时仍返回 `403`
-- direct auth 关闭时仍返回 `403`
+- `POST /api/v1/auth/direct/login` 在開啟配置後能建立 Session
+- `POST /api/v1/auth/session/bootstrap` 在開啟配置後能建立 Session
+- 成功登入後 `/api/v1/auth/me` 返回正確使用者
+- direct auth 與現有 `/api/v1/auth/local/login` 不互相影響
+- bootstrap 關閉時仍返回 `403`
+- direct auth 關閉時仍返回 `403`
 
-### 9.3 前端测试
+### 9.3 前端測試
 
-- 未开启运行时开关时，登录页与开源版默认行为一致
-- 开启 direct auth 后，密码表单请求走 `/api/v1/auth/direct/login`
-- 开启 bootstrap 按钮后，点击能触发 bootstrap 请求
-- 自动 bootstrap 失败后，用户仍可正常使用其它登录入口
+- 未開啟執行時開關時，登入頁與開源版預設行為一致
+- 開啟 direct auth 後，密碼錶單請求走 `/api/v1/auth/direct/login`
+- 開啟 bootstrap 按鈕後，點選能觸發 bootstrap 請求
+- 自動 bootstrap 失敗後，使用者仍可正常使用其它登入入口
 
-### 9.4 手工验收
+### 9.4 手工驗收
 
-- 已登录 SSO 的浏览器中，bootstrap 能成功建立 SkillHub 登录态
-- 未登录 SSO 的浏览器中，bootstrap 失败但不影响密码登录
-- direct auth 登录成功后，刷新页面仍保持登录态
-- 多 Pod 环境下，借助 Spring Session Redis，切换实例后 session 仍有效
+- 已登入 SSO 的瀏覽器中，bootstrap 能成功建立 SkillHub 登入態
+- 未登入 SSO 的瀏覽器中，bootstrap 失敗但不影響密碼登入
+- direct auth 登入成功後，重新整理頁面仍保持登入態
+- 多 Pod 環境下，藉助 Spring Session Redis，切換例項後 session 仍有效
 
-## 10. 推荐开发顺序
+## 10. 推薦開發順序
 
-如果后续在私有仓库中真正开始接入，建议按下面顺序推进：
+如果後續在私有倉庫中真正開始接入，建議按下面順序推進：
 
-1. 实现 `PrivateSsoClient`
-2. 实现 `PrivateSsoIdentityService`
-3. 实现 `PrivateSsoDirectAuthProvider`
-4. 先启用 `skillhub.auth.direct.enabled=true`
-5. 前端接通 direct auth 入口并完成测试
-6. 再实现 `PrivateSsoPassiveSessionAuthenticator`
-7. 确认 Cookie 作用域和浏览器行为
-8. 启用 `session-bootstrap`
-9. 视需要决定是否开启自动 bootstrap
+1. 實現 `PrivateSsoClient`
+2. 實現 `PrivateSsoIdentityService`
+3. 實現 `PrivateSsoDirectAuthProvider`
+4. 先啟用 `skillhub.auth.direct.enabled=true`
+5. 前端接通 direct auth 入口並完成測試
+6. 再實現 `PrivateSsoPassiveSessionAuthenticator`
+7. 確認 Cookie 作用域和瀏覽器行為
+8. 啟用 `session-bootstrap`
+9. 視需要決定是否開啟自動 bootstrap
 
-## 11. 给 coding agent 的执行指令
+## 11. 給 coding agent 的執行指令
 
-如果后续由 AI 继续在私有仓库上完成接入，建议严格遵守以下执行规则：
+如果後續由 AI 繼續在私有倉庫上完成接入，建議嚴格遵守以下執行規則：
 
-- 先读 [11-auth-extensibility-and-private-sso.md](/Users/xudongsun/github/skillhub/docs/11-auth-extensibility-and-private-sso.md) 和本文档
-- 不要重构现有公共认证主链路，除非发现明确 bug
-- 私有 SSO 的具体实现优先写成 provider、authenticator、client、identity service
-- 不要复制 `PlatformSessionService` 逻辑
-- 不要在多个 controller 或 filter 中重复写 Session 建立代码
-- 任何新增前端行为都必须保证运行时配置关闭时完全不影响开源版
-- 所有新增协议和运行时配置必须同步更新文档
-- 每完成一个阶段都跑后端测试；涉及前端改动时再补跑 `pnpm typecheck` 和 `pnpm build`
+- 先讀 [11-auth-extensibility-and-private-sso.md](/Users/xudongsun/github/skillhub/docs/11-auth-extensibility-and-private-sso.md) 和本檔案
+- 不要重構現有公共認證主鏈路，除非發現明確 bug
+- 私有 SSO 的具體實現優先寫成 provider、authenticator、client、identity service
+- 不要複製 `PlatformSessionService` 邏輯
+- 不要在多個 controller 或 filter 中重複寫 Session 建立程式碼
+- 任何新增前端行為都必須保證執行時配置關閉時完全不影響開源版
+- 所有新增協議和執行時配置必須同步更新檔案
+- 每完成一個階段都跑後端測試；涉及前端改動時再補跑 `pnpm typecheck` 和 `pnpm build`
 
-## 12. 完成定义
+## 12. 完成定義
 
-当私有版 SSO 接入完成时，应满足以下标准：
+當私有版 SSO 接入完成時，應滿足以下標準：
 
-- 开源版默认登录方式仍然不变
-- 私有版只通过扩展点接入，没有复制一套独立登录架构
+- 開源版預設登入方式仍然不變
+- 私有版只透過擴充套件點接入，沒有複製一套獨立登入架構
 - direct auth 可用
 - session bootstrap 可用
-- 首次 SSO 登录自动建号
-- 统一使用 Spring Session Redis 承载 Web 登录态
-- `/api/v1/auth/me`、RBAC、现有业务接口对登录来源无感知
-- 文档、配置、测试都完整
+- 首次 SSO 登入自動建號
+- 統一使用 Spring Session Redis 承載 Web 登入態
+- `/api/v1/auth/me`、RBAC、現有業務介面對登入來源無感知
+- 檔案、配置、測試都完整

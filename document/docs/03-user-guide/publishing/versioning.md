@@ -1,40 +1,40 @@
 ---
 title: 版本管理
 sidebar_position: 3
-description: 技能版本和标签管理
+description: 技能版本和標籤管理
 ---
 
 # 版本管理
 
-## 语义化版本
+## 語義化版本
 
-SkillHub 使用语义化版本（Semantic Versioning）：`MAJOR.MINOR.PATCH`
+SkillHub 使用語義化版本（Semantic Versioning）：`MAJOR.MINOR.PATCH`
 
-- `MAJOR`：不兼容的 API 变更
-- `MINOR`：向后兼容的功能新增
-- `PATCH`：向后兼容的问题修复
+- `MAJOR`：不相容的 API 變更
+- `MINOR`：向後相容的功能新增
+- `PATCH`：向後相容的問題修復
 
 示例：`1.0.0`, `1.1.0`, `2.0.0`
 
-## latest 标签
+## latest 標籤
 
-`latest` 是系统保留标签，自动跟随最新已发布版本，不可手动移动。
+`latest` 是系統保留標籤，自動跟隨最新已發布版本，不可手動移動。
 
-## 自定义标签
+## 自定義標籤
 
-可创建自定义标签用于版本通道管理：
+可建立自定義標籤用於版本通道管理：
 
-- `beta` - 测试版本
-- `stable` - 稳定版本
-- `stable-2026q1` - 季度稳定版本
+- `beta` - 測試版本
+- `stable` - 穩定版本
+- `stable-2026q1` - 季度穩定版本
 
-### 创建/移动标签
+### 建立/移動標籤
 
 ```bash
 clawhub tag set @team/my-skill beta 1.2.0
 ```
 
-### 删除标签
+### 刪除標籤
 
 ```bash
 clawhub tag delete @team/my-skill beta
@@ -42,15 +42,15 @@ clawhub tag delete @team/my-skill beta
 
 ## 版本撤回
 
-已发布版本发现问题可撤回：
+已發布版本發現問題可撤回：
 
-1. 进入技能详情页
-2. 找到目标版本
-3. 点击"撤回版本"
-4. 确认撤回
+1. 進入技能詳情頁
+2. 找到目標版本
+3. 點選"撤回版本"
+4. 確認撤回
 
-撤回后的版本仍可查看，但会标记为不推荐使用。
+撤回後的版本仍可檢視，但會標記為不推薦使用。
 
 ## 下一步
 
-- [搜索技能](../discovery/search) - 发现技能
+- [搜尋技能](../discovery/search) - 發現技能

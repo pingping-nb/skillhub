@@ -1,14 +1,14 @@
-# Scanner 配置说明
+# Scanner 配置說明
 
 ## 概述
 
-本文档详细说明 SkillHub Scanner 的所有配置项，包括基础配置、分析器配置、策略配置和运维配置。
+本檔案詳細說明 SkillHub Scanner 的所有配置項，包括基礎配置、分析器配置、策略配置和運維配置。
 
-## 配置文件位置
+## 配置檔案位置
 
-- **开发环境**：`server/skillhub-app/src/main/resources/application-local.yml`
-- **测试环境**：`server/skillhub-app/src/main/resources/application-test.yml`
-- **生产环境**：`server/skillhub-app/src/main/resources/application.yml`
+- **開發環境**：`server/skillhub-app/src/main/resources/application-local.yml`
+- **測試環境**：`server/skillhub-app/src/main/resources/application-test.yml`
+- **生產環境**：`server/skillhub-app/src/main/resources/application.yml`
 - **Kubernetes**：`deploy/k8s/configmap.yaml` 和 `deploy/k8s/secret.yaml`
 
 ## 完整配置示例
@@ -17,7 +17,7 @@
 skillhub:
   security:
     scanner:
-      # 基础配置
+      # 基礎配置
       enabled: ${SKILLHUB_SECURITY_SCANNER_ENABLED:true}
       base-url: ${SKILLHUB_SECURITY_SCANNER_URL:http://localhost:8000}
       mode: ${SKILLHUB_SECURITY_SCANNER_MODE:local}
@@ -46,27 +46,27 @@ skillhub:
       reclaim-min-idle: ${SKILLHUB_SCAN_STREAM_RECLAIM_MIN_IDLE:PT16M}
 ```
 
-## 配置项详解
+## 配置項詳解
 
-### 1. 基础配置
+### 1. 基礎配置
 
 #### `enabled`
 
-- **类型**：Boolean
-- **默认值**：`true`
-- **环境变量**：`SKILLHUB_SECURITY_SCANNER_ENABLED`
-- **说明**：是否启用安全扫描功能
-- **影响**：
-  - `true`：技能包发布时会触发安全扫描
-  - `false`：仅允许 `PRIVATE` 技能跳过扫描；`PUBLIC` / `NAMESPACE_ONLY` 发布会失败并提示必须启用 Scanner
+- **型別**：Boolean
+- **預設值**：`true`
+- **環境變數**：`SKILLHUB_SECURITY_SCANNER_ENABLED`
+- **說明**：是否啟用安全掃描功能
+- **影響**：
+  - `true`：技能包發布時會觸發安全掃描
+  - `false`：僅允許 `PRIVATE` 技能跳過掃描；`PUBLIC` / `NAMESPACE_ONLY` 發布會失敗並提示必須啟用 Scanner
 
 **示例**：
 
 ```yaml
-# 仅本地私有技能调试：禁用扫描
+# 僅本地私有技能除錯：禁用掃描
 enabled: false
 
-# 公共或命名空间可见发布：启用扫描
+# 公共或名稱空間可見發布：啟用掃描
 enabled: true
 ```
 
@@ -74,22 +74,22 @@ enabled: true
 
 #### `base-url`
 
-- **类型**：String (URL)
-- **默认值**：`http://localhost:8000`
-- **环境变量**：`SKILLHUB_SECURITY_SCANNER_URL`
-- **说明**：Scanner 服务的基础 URL
+- **型別**：String (URL)
+- **預設值**：`http://localhost:8000`
+- **環境變數**：`SKILLHUB_SECURITY_SCANNER_URL`
+- **說明**：Scanner 服務的基礎 URL
 - **格式**：`http(s)://host:port`
 
 **示例**：
 
 ```yaml
-# 本地开发
+# 本地開發
 base-url: http://localhost:8000
 
-# Kubernetes 内部服务
+# Kubernetes 內部服務
 base-url: http://skill-scanner:8000
 
-# 外部服务
+# 外部服務
 base-url: https://scanner.example.com
 ```
 
@@ -97,32 +97,32 @@ base-url: https://scanner.example.com
 
 #### `mode`
 
-- **类型**：String (Enum)
-- **可选值**：`local` | `upload`
-- **默认值**：`local`
-- **环境变量**：`SKILLHUB_SECURITY_SCANNER_MODE`
-- **说明**：扫描模式
-  - `local`：Scanner 直接访问本地文件系统（适用于 Scanner 和 SkillHub 在同一主机）
-  - `upload`：通过 HTTP 上传 ZIP 文件（适用于 Scanner 和 SkillHub 分离部署）
+- **型別**：String (Enum)
+- **可選值**：`local` | `upload`
+- **預設值**：`local`
+- **環境變數**：`SKILLHUB_SECURITY_SCANNER_MODE`
+- **說明**：掃描模式
+  - `local`：Scanner 直接訪問本地檔案系統（適用於 Scanner 和 SkillHub 在同一主機）
+  - `upload`：透過 HTTP 上傳 ZIP 檔案（適用於 Scanner 和 SkillHub 分離部署）
 
 **示例**：
 
 ```yaml
-# Docker Compose 环境（Scanner 独立容器，无共享发布目录）
+# Docker Compose 環境（Scanner 獨立容器，無共享發布目錄）
 mode: upload
 
-# Kubernetes 环境（独立 Pod）
+# Kubernetes 環境（獨立 Pod）
 mode: upload
 ```
 
-#### 扫描超时与并发
+#### 掃描超時與併發
 
-- `SKILLHUB_SECURITY_SCANNER_READ_TIMEOUT`：服务端等待单次扫描的毫秒数，默认 15 分钟。
-- `SKILLHUB_SCAN_STREAM_RECLAIM_MIN_IDLE`：未确认任务允许被恢复的等待时间，应大于扫描超时，默认 16 分钟。
-- `SKILLHUB_SCANNER_MAX_CONCURRENT_SCANS`：Scanner 容器内的最大并发扫描数，默认 `1`；超出的请求返回 HTTP 503，由待处理消息稍后重试。
-- `SKILLHUB_SCANNER_HARD_TIMEOUT_SECONDS`：Scanner 单次工作的硬上限，默认 930 秒。超时后进程以状态码 `124` 退出，由 Compose/Kubernetes 重启；默认关系为服务端等待 900 秒 < Scanner 硬上限 930 秒 < Redis 恢复等待 960 秒。进程退出会使同容器内其他扫描稍后重试，因此建议保持默认并发数 `1`。
+- `SKILLHUB_SECURITY_SCANNER_READ_TIMEOUT`：服務端等待單次掃描的毫秒數，預設 15 分鐘。
+- `SKILLHUB_SCAN_STREAM_RECLAIM_MIN_IDLE`：未確認任務允許被恢復的等待時間，應大於掃描超時，預設 16 分鐘。
+- `SKILLHUB_SCANNER_MAX_CONCURRENT_SCANS`：Scanner 容器內的最大併發掃描數，預設 `1`；超出的請求返回 HTTP 503，由待處理訊息稍後重試。
+- `SKILLHUB_SCANNER_HARD_TIMEOUT_SECONDS`：Scanner 單次工作的硬上限，預設 930 秒。超時後程式以狀態碼 `124` 退出，由 Compose/Kubernetes 重啟；預設關係為服務端等待 900 秒 < Scanner 硬上限 930 秒 < Redis 恢復等待 960 秒。程式退出會使同容器內其他掃描稍後重試，因此建議保持預設併發數 `1`。
 
-Scanner 超时或暂时不可用（包括 429、5xx）时，版本不会进入 `SCAN_FAILED`。任务保留为待处理，版本保持 `SCANNING`，待 Scanner 恢复后自动继续。确定性的 4xx 包校验错误仍采用有限次数重试，最终可以进入 `SCAN_FAILED`。某个包若稳定触发 Scanner 内部 500，会保持 `SCANNING` 等待 Scanner 修复，而不会被误判为包本身不合格。
+Scanner 超時或暫時不可用（包括 429、5xx）時，版本不會進入 `SCAN_FAILED`。任務保留為待處理，版本保持 `SCANNING`，待 Scanner 恢復後自動繼續。確定性的 4xx 包校驗錯誤仍採用有限次數重試，最終可以進入 `SCAN_FAILED`。某個包若穩定觸發 Scanner 內部 500，會保持 `SCANNING` 等待 Scanner 修復，而不會被誤判為包本身不合格。
 
 ---
 
@@ -130,33 +130,33 @@ Scanner 超时或暂时不可用（包括 429、5xx）时，版本不会进入 `
 
 #### `analyzers.behavioral`
 
-- **类型**：Boolean
-- **默认值**：`false`
-- **环境变量**：`SKILLHUB_SCANNER_USE_BEHAVIORAL`
-- **说明**：是否启用行为分析引擎
-- **功能**：检测可疑的运行时行为（如文件系统访问、网络请求等）
+- **型別**：Boolean
+- **預設值**：`false`
+- **環境變數**：`SKILLHUB_SCANNER_USE_BEHAVIORAL`
+- **說明**：是否啟用行為分析引擎
+- **功能**：檢測可疑的執行時行為（如檔案系統訪問、網路請求等）
 
 ---
 
 #### `analyzers.llm`
 
-- **类型**：Boolean
-- **默认值**：`false`
-- **环境变量**：`SKILLHUB_SCANNER_USE_LLM`
-- **说明**：是否启用 LLM 分析引擎
-- **功能**：使用大语言模型进行代码语义分析
-- **依赖**：需要配置 `llm-provider`
+- **型別**：Boolean
+- **預設值**：`false`
+- **環境變數**：`SKILLHUB_SCANNER_USE_LLM`
+- **說明**：是否啟用 LLM 分析引擎
+- **功能**：使用大語言模型進行程式碼語義分析
+- **依賴**：需要配置 `llm-provider`
 
 ---
 
 #### `analyzers.llm-provider`
 
-- **类型**：String (Enum)
-- **可选值**：`anthropic` | `openai` | `azure`
-- **默认值**：`anthropic`
-- **环境变量**：`SKILLHUB_SCANNER_LLM_PROVIDER`
-- **说明**：LLM 提供商
-- **依赖**：需要在 Scanner 服务中配置对应的 API Key
+- **型別**：String (Enum)
+- **可選值**：`anthropic` | `openai` | `azure`
+- **預設值**：`anthropic`
+- **環境變數**：`SKILLHUB_SCANNER_LLM_PROVIDER`
+- **說明**：LLM 提供商
+- **依賴**：需要在 Scanner 服務中配置對應的 API Key
 
 **示例**：
 
@@ -175,63 +175,63 @@ llm-provider: azure
 
 #### `analyzers.llm-consensus-runs`
 
-- **类型**：Integer
-- **默认值**：`3`
-- **范围**：`1-10`
-- **环境变量**：`SKILLHUB_SCANNER_LLM_CONSENSUS_RUNS`
-- **说明**：LLM 共识运行次数（多次运行取共识结果，提高准确性）
-- **性能影响**：值越大，扫描时间越长，但准确性越高
+- **型別**：Integer
+- **預設值**：`3`
+- **範圍**：`1-10`
+- **環境變數**：`SKILLHUB_SCANNER_LLM_CONSENSUS_RUNS`
+- **說明**：LLM 共識執行次數（多次執行取共識結果，提高準確性）
+- **效能影響**：值越大，掃描時間越長，但準確性越高
 
 ---
 
 #### `analyzers.meta`
 
-- **类型**：Boolean
-- **默认值**：`true`
-- **环境变量**：`SKILLHUB_SCANNER_USE_META`
-- **说明**：是否启用元数据分析引擎
-- **功能**：检查 package.json、依赖版本、许可证等元数据
+- **型別**：Boolean
+- **預設值**：`true`
+- **環境變數**：`SKILLHUB_SCANNER_USE_META`
+- **說明**：是否啟用後設資料分析引擎
+- **功能**：檢查 package.json、依賴版本、許可證等後設資料
 
 ---
 
 #### `analyzers.ai-defense`
 
-- **类型**：Boolean
-- **默认值**：`false`
-- **环境变量**：`SKILLHUB_SCANNER_USE_AI_DEFENSE`
-- **说明**：是否启用 AI Defense 引擎
-- **功能**：使用 AI Defense API 进行高级威胁检测
-- **依赖**：需要配置 `ai-defense-api-key`
+- **型別**：Boolean
+- **預設值**：`false`
+- **環境變數**：`SKILLHUB_SCANNER_USE_AI_DEFENSE`
+- **說明**：是否啟用 AI Defense 引擎
+- **功能**：使用 AI Defense API 進行高階威脅檢測
+- **依賴**：需要配置 `ai-defense-api-key`
 
 ---
 
 #### `analyzers.ai-defense-api-key`
 
-- **类型**：String (Secret)
-- **默认值**：空字符串
-- **环境变量**：`SKILLHUB_SCANNER_AI_DEFENSE_API_KEY`
-- **说明**：AI Defense API Key
-- **安全**：应通过 Kubernetes Secret 或环境变量注入，不要硬编码
+- **型別**：String (Secret)
+- **預設值**：空字串
+- **環境變數**：`SKILLHUB_SCANNER_AI_DEFENSE_API_KEY`
+- **說明**：AI Defense API Key
+- **安全**：應透過 Kubernetes Secret 或環境變數注入，不要硬編碼
 
 ---
 
 #### `analyzers.virus-total`
 
-- **类型**：Boolean
-- **默认值**：`false`
-- **环境变量**：`SKILLHUB_SCANNER_USE_VIRUS_TOTAL`
-- **说明**：是否启用 VirusTotal 引擎
-- **功能**：使用 VirusTotal API 检测已知恶意文件
+- **型別**：Boolean
+- **預設值**：`false`
+- **環境變數**：`SKILLHUB_SCANNER_USE_VIRUS_TOTAL`
+- **說明**：是否啟用 VirusTotal 引擎
+- **功能**：使用 VirusTotal API 檢測已知惡意檔案
 
 ---
 
 #### `analyzers.trigger`
 
-- **类型**：Boolean
-- **默认值**：`false`
-- **环境变量**：`SKILLHUB_SCANNER_USE_TRIGGER`
-- **说明**：是否启用触发器分析引擎
-- **功能**：检测可疑的触发器模式（如定时任务、事件监听等）
+- **型別**：Boolean
+- **預設值**：`false`
+- **環境變數**：`SKILLHUB_SCANNER_USE_TRIGGER`
+- **說明**：是否啟用觸發器分析引擎
+- **功能**：檢測可疑的觸發器模式（如定時任務、事件監聽等）
 
 ---
 
@@ -239,22 +239,22 @@ llm-provider: azure
 
 #### `policy.preset`
 
-- **类型**：String (Enum)
-- **可选值**：`strict` | `balanced` | `permissive`
-- **默认值**：`balanced`
-- **环境变量**：`SKILLHUB_SCANNER_POLICY_PRESET`
-- **说明**：安全策略预设
-  - `strict`：严格模式，任何可疑行为都会标记为不安全
-  - `balanced`：平衡模式，只标记高风险行为
-  - `permissive`：宽松模式，只标记明确的恶意行为
+- **型別**：String (Enum)
+- **可選值**：`strict` | `balanced` | `permissive`
+- **預設值**：`balanced`
+- **環境變數**：`SKILLHUB_SCANNER_POLICY_PRESET`
+- **說明**：安全策略預設
+  - `strict`：嚴格模式，任何可疑行為都會標記為不安全
+  - `balanced`：平衡模式，只標記高風險行為
+  - `permissive`：寬鬆模式，只標記明確的惡意行為
 
 **示例**：
 
 ```yaml
-# 生产环境：使用严格模式
+# 生產環境：使用嚴格模式
 preset: strict
 
-# 开发环境：使用宽松模式
+# 開發環境：使用寬鬆模式
 preset: permissive
 ```
 
@@ -262,16 +262,16 @@ preset: permissive
 
 #### `policy.custom-policy-path`
 
-- **类型**：String (File Path)
-- **默认值**：空字符串
-- **环境变量**：`SKILLHUB_SCANNER_CUSTOM_POLICY_PATH`
-- **说明**：自定义策略文件路径（覆盖 preset）
-- **格式**：YAML 文件
+- **型別**：String (File Path)
+- **預設值**：空字串
+- **環境變數**：`SKILLHUB_SCANNER_CUSTOM_POLICY_PATH`
+- **說明**：自定義策略檔案路徑（覆蓋 preset）
+- **格式**：YAML 檔案
 
 **示例**：
 
 ```yaml
-# 使用自定义策略
+# 使用自定義策略
 custom-policy-path: /etc/skillhub/scanner-policy.yaml
 ```
 
@@ -279,29 +279,29 @@ custom-policy-path: /etc/skillhub/scanner-policy.yaml
 
 #### `policy.fail-on-severity`
 
-- **类型**：String (Enum)
-- **可选值**：`critical` | `high` | `medium` | `low`
-- **默认值**：`high`
-- **环境变量**：`SKILLHUB_SCANNER_FAIL_ON_SEVERITY`
-- **说明**：扫描失败的严重级别门槛
-  - `critical`：只有发现 critical 级别的问题才标记为不安全
-  - `high`：发现 high 或 critical 级别的问题标记为不安全
-  - `medium`：发现 medium、high 或 critical 级别的问题标记为不安全
-  - `low`：发现任何级别的问题都标记为不安全
+- **型別**：String (Enum)
+- **可選值**：`critical` | `high` | `medium` | `low`
+- **預設值**：`high`
+- **環境變數**：`SKILLHUB_SCANNER_FAIL_ON_SEVERITY`
+- **說明**：掃描失敗的嚴重級別門檻
+  - `critical`：只有發現 critical 級別的問題才標記為不安全
+  - `high`：發現 high 或 critical 級別的問題標記為不安全
+  - `medium`：發現 medium、high 或 critical 級別的問題標記為不安全
+  - `low`：發現任何級別的問題都標記為不安全
 
 **示例**：
 
 ```yaml
-# 生产环境：high 及以上标记为不安全
+# 生產環境：high 及以上標記為不安全
 fail-on-severity: high
 
-# 测试环境：只有 critical 标记为不安全
+# 測試環境：只有 critical 標記為不安全
 fail-on-severity: critical
 ```
 
 ---
 
-## 环境变量配置
+## 環境變數配置
 
 ### Docker Compose
 
@@ -354,91 +354,91 @@ stringData:
 
 ---
 
-## 配置最佳实践
+## 配置最佳實踐
 
-### 1. 开发环境配置
+### 1. 開發環境配置
 
 ```yaml
 skillhub:
   security:
     scanner:
-      enabled: true  # 默认启用；PUBLIC/NAMESPACE_ONLY 发布依赖扫描
+      enabled: true  # 預設啟用；PUBLIC/NAMESPACE_ONLY 發布依賴掃描
       base-url: http://localhost:8000
       mode: upload
       analyzers:
-        meta: true  # 只启用元数据分析
+        meta: true  # 只啟用後設資料分析
       policy:
-        preset: permissive  # 使用宽松策略
+        preset: permissive  # 使用寬鬆策略
         fail-on-severity: critical
 ```
 
-### 2. 测试环境配置
+### 2. 測試環境配置
 
 ```yaml
 skillhub:
   security:
     scanner:
-      enabled: true  # 测试环境启用扫描
+      enabled: true  # 測試環境啟用掃描
       base-url: http://skill-scanner:8000
       mode: upload
       analyzers:
         behavioral: true
         meta: true
-        llm: false  # LLM 分析较慢，测试环境可选
+        llm: false  # LLM 分析較慢，測試環境可選
       policy:
         preset: balanced
         fail-on-severity: high
 ```
 
-### 3. 生产环境配置
+### 3. 生產環境配置
 
 ```yaml
 skillhub:
   security:
     scanner:
-      enabled: true  # 生产环境必须启用扫描
+      enabled: true  # 生產環境必須啟用掃描
       base-url: http://skill-scanner:8000
-      mode: upload  # 使用上传模式，更安全
+      mode: upload  # 使用上傳模式，更安全
       analyzers:
         behavioral: true
-        llm: true  # 启用 LLM 分析，提高准确性
+        llm: true  # 啟用 LLM 分析，提高準確性
         llm-provider: anthropic
         llm-consensus-runs: 3
         meta: true
-        ai-defense: true  # 启用高级威胁检测
+        ai-defense: true  # 啟用高階威脅檢測
         virus-total: true
         trigger: true
       policy:
-        preset: strict  # 使用严格策略
+        preset: strict  # 使用嚴格策略
         fail-on-severity: high
 ```
 
 ---
 
-## 性能调优
+## 效能調優
 
-### 扫描速度 vs 准确性
+### 掃描速度 vs 準確性
 
-| 配置 | 扫描时间 | 准确性 | 适用场景 |
+| 配置 | 掃描時間 | 準確性 | 適用場景 |
 |-----|---------|-------|---------|
-| 只启用 meta | ~5 秒 | 低 | 开发环境 |
-| meta + behavioral | ~15 秒 | 中 | 测试环境 |
-| meta + behavioral + llm | ~60 秒 | 高 | 生产环境 |
-| 全部启用 | ~120 秒 | 最高 | 高安全要求 |
+| 只啟用 meta | ~5 秒 | 低 | 開發環境 |
+| meta + behavioral | ~15 秒 | 中 | 測試環境 |
+| meta + behavioral + llm | ~60 秒 | 高 | 生產環境 |
+| 全部啟用 | ~120 秒 | 最高 | 高安全要求 |
 
-### 推荐配置
+### 推薦配置
 
 ```yaml
-# 快速扫描（开发环境）
+# 快速掃描（開發環境）
 analyzers:
   meta: true
 
-# 标准扫描（测试环境）
+# 標準掃描（測試環境）
 analyzers:
   behavioral: true
   meta: true
 
-# 深度扫描（生产环境）
+# 深度掃描（生產環境）
 analyzers:
   behavioral: true
   llm: true
@@ -450,51 +450,51 @@ analyzers:
 
 ## 故障排查
 
-### 问题 1：Scanner 连接失败
+### 問題 1：Scanner 連線失敗
 
-**检查配置**：
+**檢查配置**：
 
 ```bash
-# 检查 base-url 是否正确
+# 檢查 base-url 是否正確
 curl -f $SKILLHUB_SECURITY_SCANNER_URL/health
 
-# 检查网络连通性
+# 檢查網路連通性
 ping skill-scanner
 ```
 
-### 问题 2：扫描超时
+### 問題 2：掃描超時
 
-**调整配置**：
+**調整配置**：
 
 ```yaml
-# 减少 LLM 共识运行次数
+# 減少 LLM 共識執行次數
 analyzers:
-  llm-consensus-runs: 1  # 从 3 降到 1
+  llm-consensus-runs: 1  # 從 3 降到 1
 
 # 或禁用 LLM 分析
 analyzers:
   llm: false
 ```
 
-### 问题 3：扫描失败率高
+### 問題 3：掃描失敗率高
 
-**调整策略**：
+**調整策略**：
 
 ```yaml
-# 降低严重级别门槛
+# 降低嚴重級別門檻
 policy:
-  fail-on-severity: critical  # 从 high 改为 critical
+  fail-on-severity: critical  # 從 high 改為 critical
 
-# 或使用宽松策略
+# 或使用寬鬆策略
 policy:
-  preset: permissive  # 从 strict 改为 permissive
+  preset: permissive  # 從 strict 改為 permissive
 ```
 
 ---
 
-## 相关文档
+## 相關檔案
 
-- [故障影响分析](./failure-impact-analysis.md)
-- [运维监控指南](./monitoring-guide.md)
-- [改进建议](./improvement-recommendations.md)
-- [Scanner 服务文档](../README.md)
+- [故障影響分析](./failure-impact-analysis.md)
+- [運維監控指南](./monitoring-guide.md)
+- [改進建議](./improvement-recommendations.md)
+- [Scanner 服務檔案](../README.md)

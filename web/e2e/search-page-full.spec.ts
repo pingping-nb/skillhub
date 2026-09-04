@@ -70,7 +70,7 @@ test.describe('Search Input (Real API)', () => {
 
   // TC_SEARCH_INPUT_009 P0 - Chinese keyword search
   test('TC_SEARCH_INPUT_009: supports Chinese keyword search without error', async ({ page }) => {
-    await page.goto(searchUrl('测试技能'))
+    await page.goto(searchUrl('測試技能'))
     await expect(page).toHaveURL(/\/search/)
     await expect(page.locator('body')).not.toContainText(/error|500|crash/i)
   })

@@ -1,8 +1,8 @@
 {
-  "label": "参考资料",
+  "label": "參考資料",
   "position": 5,
   "link": {
     "type": "generated-index",
-    "description": "FAQ、故障排查和更多资源"
+    "description": "FAQ、故障排查和更多資源"
   }
 }

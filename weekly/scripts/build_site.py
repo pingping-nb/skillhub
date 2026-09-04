@@ -56,7 +56,7 @@ def render_archive(latest: str, reports: list[dict[str, str]]) -> str:
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>SkillHub 开源周报归档</title>
+  <title>SkillHub 開源週報歸檔</title>
   <style data-site-theme="notion-light">
     :root {{
       color-scheme: light;
@@ -134,20 +134,20 @@ def render_archive(latest: str, reports: list[dict[str, str]]) -> str:
       <div class="brand">
         <span class="brand-mark" aria-hidden="true">SH</span>
         <span class="brand-name">SkillHub</span>
-        <span class="brand-tag">开源周报</span>
+        <span class="brand-tag">開源週報</span>
       </div>
-      <nav class="utility" aria-label="站点链接">
-        <a href="https://iflytek.github.io/skillhub/">项目文档</a>
-        <a href="https://github.com/iflytek/skillhub">GitHub 仓库</a>
+      <nav class="utility" aria-label="站點連結">
+        <a href="https://iflytek.github.io/skillhub/">專案檔案</a>
+        <a href="https://github.com/iflytek/skillhub">GitHub 倉庫</a>
       </nav>
     </div>
-    <h1>SkillHub 开源周报归档</h1>
-    <p class="intro">按统计周期倒序查看历期开源周报。</p>
-    <div class="archive-summary">当前共收录 <strong>{len(reports)} 期</strong>，最新一期为 <strong>{escape(latest)}</strong>。</div>
+    <h1>SkillHub 開源週報歸檔</h1>
+    <p class="intro">按統計週期倒序檢視歷期開源週報。</p>
+    <div class="archive-summary">當前共收錄 <strong>{len(reports)} 期</strong>，最新一期為 <strong>{escape(latest)}</strong>。</div>
     <ul>
 {rows}
     </ul>
-    <a class="back" href="./">返回最新周报</a>
+    <a class="back" href="./">返回最新週報</a>
   </main>
 </body>
 </html>

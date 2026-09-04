@@ -1,43 +1,43 @@
-# Runtime 集成契约
+# Runtime 整合契約
 
-## 职责边界
+## 職責邊界
 
-SkillHub 和 Agent Runtime 的职责分开：
+SkillHub 和 Agent Runtime 的職責分開：
 
-| 系统 | 权威负责内容 |
+| 系統 | 權威負責內容 |
 |------|--------------|
-| SkillHub | 技能包、版本、元数据、合规声明快照、下载与审核记录 |
-| Agent Runtime | 技能实际执行、输入输出、模型调用、工具调用、执行 trace |
+| SkillHub | 技能包、版本、後設資料、合規宣告快照、下載與稽核記錄 |
+| Agent Runtime | 技能實際執行、輸入輸出、模型呼叫、工具呼叫、執行 trace |
 
-SkillHub 不执行技能，因此不记录 Runtime trace，也不判断一次真实执行是否合规。SkillHub 提供的是版本级事实：某个不可变技能版本在发布时包含了什么合规声明，以及该声明快照的稳定摘要。
+SkillHub 不執行技能，因此不記錄 Runtime trace，也不判斷一次真實執行是否合規。SkillHub 提供的是版本級事實：某個不可變技能版本在發布時包含了什麼合規宣告，以及該宣告快照的穩定摘要。
 
-## Runtime 应记录什么
+## Runtime 應記錄什麼
 
-Runtime 在执行技能时，如果需要把执行链路与 SkillHub 的合规声明关联起来，建议记录以下字段：
+Runtime 在執行技能時，如果需要把執行鏈路與 SkillHub 的合規宣告關聯起來，建議記錄以下欄位：
 
-| 字段 | 来源 | 说明 |
+| 欄位 | 來源 | 說明 |
 |------|------|------|
-| `registryUrl` | Runtime 配置 | 使用的 SkillHub 注册中心地址 |
-| `namespace` | SkillHub 坐标 | 技能命名空间，例如 `global` 或团队 slug |
-| `skillSlug` | SkillHub 坐标 | 技能 slug |
-| `requestedVersion` | Runtime 请求 | 用户请求的版本、标签或版本范围 |
-| `resolvedVersion` | SkillHub 响应 | 实际解析到的版本号 |
-| `skillVersionId` | SkillHub 响应里的版本 `id` | 不可变版本 ID，审计关联的主键 |
-| `complianceSnapshotDigest` | `complianceSnapshot.digest` | 该版本合规声明快照的稳定摘要 |
-| `packageDigest` | 下载或安装流程 | 技能包内容摘要，便于确认执行内容 |
-| `runtimeTraceId` | Runtime | Runtime 自己生成的执行链路 ID |
+| `registryUrl` | Runtime 配置 | 使用的 SkillHub 註冊中心地址 |
+| `namespace` | SkillHub 座標 | 技能名稱空間，例如 `global` 或團隊 slug |
+| `skillSlug` | SkillHub 座標 | 技能 slug |
+| `requestedVersion` | Runtime 請求 | 使用者請求的版本、標籤或版本範圍 |
+| `resolvedVersion` | SkillHub 響應 | 實際解析到的版本號 |
+| `skillVersionId` | SkillHub 響應裡的版本 `id` | 不可變版本 ID，審計關聯的主鍵 |
+| `complianceSnapshotDigest` | `complianceSnapshot.digest` | 該版本合規宣告快照的穩定摘要 |
+| `packageDigest` | 下載或安裝流程 | 技能包內容摘要，便於確認執行內容 |
+| `runtimeTraceId` | Runtime | Runtime 自己生成的執行鏈路 ID |
 
-如果 Runtime 使用 Astron 自有 trace schema，可以把这些字段映射成 `x-astron-*` 键；这属于 Runtime 的 trace 约定，不是 SkillHub 服务端必须写入或解析的字段。
+如果 Runtime 使用 Astron 自有 trace schema，可以把這些欄位對映成 `x-astron-*` 鍵；這屬於 Runtime 的 trace 約定，不是 SkillHub 服務端必須寫入或解析的欄位。
 
-## 获取版本级合规快照
+## 獲取版本級合規快照
 
-第一阶段不提供独立的 compliance API。Runtime 可以通过既有版本详情接口读取版本 ID 和快照：
+第一階段不提供獨立的 compliance API。Runtime 可以透過既有版本詳情介面讀取版本 ID 和快照：
 
 ```bash
 GET /api/v1/skills/{namespace}/{slug}/versions/{version}
 ```
 
-响应中的关键字段：
+響應中的關鍵欄位：
 
 ```json
 {
@@ -65,37 +65,37 @@ GET /api/v1/skills/{namespace}/{slug}/versions/{version}
 }
 ```
 
-Runtime 应把 `id` 和 `complianceSnapshot.digest` 一起写入执行 trace。只记录 digest 不够，因为不同注册中心或未来迁移场景下需要版本 ID 来定位完整快照。
+Runtime 應把 `id` 和 `complianceSnapshot.digest` 一起寫入執行 trace。只記錄 digest 不夠，因為不同註冊中心或未來遷移場景下需要版本 ID 來定位完整快照。
 
-## 推荐执行链路
+## 推薦執行鏈路
 
-1. Runtime 根据用户请求解析技能坐标和版本。
-2. Runtime 从 SkillHub 获取精确版本详情。
-3. Runtime 下载并校验技能包。
-4. Runtime 执行技能。
-5. Runtime 在自己的 trace 中记录：
-   - SkillHub 注册中心；
-   - 技能坐标；
-   - 实际版本号；
+1. Runtime 根據使用者請求解析技能座標和版本。
+2. Runtime 從 SkillHub 獲取精確版本詳情。
+3. Runtime 下載並校驗技能包。
+4. Runtime 執行技能。
+5. Runtime 在自己的 trace 中記錄：
+   - SkillHub 註冊中心；
+   - 技能座標；
+   - 實際版本號；
    - `skillVersionId`；
    - `complianceSnapshotDigest`；
-   - Runtime 自己的执行证据。
+   - Runtime 自己的執行證據。
 
-这样审计系统可以先通过 Runtime trace 找到实际执行，再回到 SkillHub 查询该版本发布时的合规声明快照。
+這樣審計系統可以先透過 Runtime trace 找到實際執行，再回到 SkillHub 查詢該版本發布時的合規宣告快照。
 
-## 不建议的做法
+## 不建議的做法
 
-- 不要把 `x-astron-compliance` 原文复制到 trace 后再由 Runtime 修改。
-- 不要只记录技能 slug，不记录版本 ID；slug 指向的是技能容器，不是不可变版本。
-- 不要把 SkillHub 的合规声明当成第三方认证结果。
-- 不要要求 SkillHub 记录模型输入输出；这是 Runtime 的审计边界。
+- 不要把 `x-astron-compliance` 原文複製到 trace 後再由 Runtime 修改。
+- 不要只記錄技能 slug，不記錄版本 ID；slug 指向的是技能容器，不是不可變版本。
+- 不要把 SkillHub 的合規宣告當成第三方認證結果。
+- 不要要求 SkillHub 記錄模型輸入輸出；這是 Runtime 的審計邊界。
 
-## 未来可能新增的 API
+## 未來可能新增的 API
 
-如果出现明确使用方，例如 Runtime 只需要合规快照而不需要完整技能详情，可以新增不可变版本维度的接口：
+如果出現明確使用方，例如 Runtime 只需要合規快照而不需要完整技能詳情，可以新增不可變版本維度的介面：
 
 ```text
 GET /api/skill-versions/{skillVersionId}/compliance
 ```
 
-当前阶段先复用版本详情响应，避免为尚未稳定的调用方提前设计多套 API。
+當前階段先複用版本詳情響應，避免為尚未穩定的呼叫方提前設計多套 API。

@@ -1,60 +1,60 @@
 ---
-title: 常见问题
+title: 常見問題
 sidebar_position: 1
-description: 常见问题解答
+description: 常見問題解答
 ---
 
-# 常见问题
+# 常見問題
 
-## 部署相关
+## 部署相關
 
-### 如何修改默认端口？
+### 如何修改預設埠？
 
-修改 `.env.release` 中的端口配置。
+修改 `.env.release` 中的埠配置。
 
 ### 如何配置 HTTPS？
 
-建议使用反向代理（Nginx/Ingress）处理 TLS 终止。
+建議使用反向代理（Nginx/Ingress）處理 TLS 終止。
 
-### 数据库如何备份？
+### 資料庫如何備份？
 
-使用 PostgreSQL 标准备份工具（pg_dump）。
+使用 PostgreSQL 標準備份工具（pg_dump）。
 
-## 使用相关
+## 使用相關
 
-### 如何重置管理员密码？
+### 如何重置管理員密碼？
 
-如果忘记管理员密码，可通过环境变量重新设置首登管理员，或直接操作数据库。
+如果忘記管理員密碼，可透過環境變數重新設定首登管理員，或直接運算元據庫。
 
-### 技能包上传失败怎么办？
+### 技能包上傳失敗怎麼辦？
 
-检查：
-1. 文件大小是否超限
-2. 文件类型是否在白名单内
+檢查：
+1. 檔案大小是否超限
+2. 檔案型別是否在白名單內
 3. 是否包含必需的 SKILL.md
-4. SKILL.md frontmatter 格式是否正确
+4. SKILL.md frontmatter 格式是否正確
 
-### 使用 CLI 安装技能时报 `namespace not found`？
+### 使用 CLI 安裝技能時報 `namespace not found`？
 
-多数情况是 CLI 没有指向你自己的 SkillHub 实例，或命名空间格式不对：
+多數情況是 CLI 沒有指向你自己的 SkillHub 例項，或名稱空間格式不對：
 
-1. **配置 registry 并登录**：用环境变量或 `--registry` 指向你的实例，例如
-   `clawhub --registry https://skillhub.your-company.com install <skill>`；登录需要先在 Web 控制台生成 API Token。
-2. **命名空间 slug 格式**：全局命名空间的技能直接用名字（如 `my-skill`）；团队命名空间要用 `team--skill` 的形式（`@team/skill` → `team--skill`）。
-3. 最稳妥的方式是直接在 SkillHub Web 界面点技能的「安装」按钮，复制其中已经带好正确 registry 与命名空间的命令。
+1. **配置 registry 並登入**：用環境變數或 `--registry` 指向你的例項，例如
+   `clawhub --registry https://skillhub.your-company.com install <skill>`；登入需要先在 Web 控制檯生成 API Token。
+2. **名稱空間 slug 格式**：全域性名稱空間的技能直接用名字（如 `my-skill`）；團隊名稱空間要用 `team--skill` 的形式（`@team/skill` → `team--skill`）。
+3. 最穩妥的方式是直接在 SkillHub Web 介面點技能的「安裝」按鈕，複製其中已經帶好正確 registry 與名稱空間的命令。
 
-> SkillHub 同时提供 `clawhub` 和 `skillhub` 两种 CLI，用法见各自 README；通过 OpenClaw 对话安装技能时，底层同样调用 CLI。
+> SkillHub 同時提供 `clawhub` 和 `skillhub` 兩種 CLI，用法見各自 README；透過 OpenClaw 對話安裝技能時，底層同樣呼叫 CLI。
 
-## 开发相关
+## 開發相關
 
-### 如何扩展 OAuth Provider？
+### 如何擴充套件 OAuth Provider？
 
-参考现有 GitHub 实现，添加新的 OAuth Provider 配置。
+參考現有 GitHub 實現，新增新的 OAuth Provider 配置。
 
-### 如何自定义搜索实现？
+### 如何自定義搜尋實現？
 
-实现 `SearchIndexService` 和 `SearchQueryService` 接口。
+實現 `SearchIndexService` 和 `SearchQueryService` 介面。
 
 ## 下一步
 
-- [故障排查](./troubleshooting) - 问题诊断
+- [故障排查](./troubleshooting) - 問題診斷

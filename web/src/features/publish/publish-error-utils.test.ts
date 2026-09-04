@@ -13,7 +13,7 @@ describe('publish-error-utils', () => {
   })
 
   it('detects confirmation-required warnings in Chinese', () => {
-    expect(isPrecheckConfirmationMessage('预发布发现以下风险提醒，确认后仍可继续发布：\n- 风险提醒')).toBe(true)
+    expect(isPrecheckConfirmationMessage('預發布發現以下風險提醒，確認後仍可繼續發布：\n- 風險提醒')).toBe(true)
   })
 
   it('extracts warning lines from a confirmation message', () => {

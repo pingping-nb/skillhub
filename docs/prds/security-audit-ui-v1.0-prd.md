@@ -1,20 +1,20 @@
-# PRD: 前端安全审核信息展示
+# PRD: 前端安全稽核資訊展示
 
 **版本**: v1.0
 **日期**: 2026-03-22
-**状态**: Draft
+**狀態**: Draft
 
 ---
 
 ## 1. 背景
 
-后端已实现多扫描器、多轮次的安全审核系统。当前前端的审核详情页（`review-detail.tsx`）和技能详情页（`skill-detail.tsx`）均未展示安全审核信息。审核员只能看到基本的审核任务元数据，无法直接查看安全扫描结果。
+後端已實現多掃描器、多輪次的安全稽核系統。當前前端的稽核詳情頁（`review-detail.tsx`）和技能詳情頁（`skill-detail.tsx`）均未展示安全稽核資訊。稽核員只能看到基本的稽核任務後設資料，無法直接檢視安全掃描結果。
 
-### 现有后端 API
+### 現有後端 API
 
 ```
 GET /api/v1/skills/{skillId}/versions/{versionId}/security-audit
-  ?scannerType=skill-scanner  (可选)
+  ?scannerType=skill-scanner  (可選)
 
 Response:
 {
@@ -51,128 +51,128 @@ Response:
 }
 ```
 
-### 现有前端架构
+### 現有前端架構
 
-- **审核详情页**: `pages/dashboard/review-detail.tsx` — 展示审核任务元数据 + 技能内容
-- **技能详情页**: `pages/skill-detail.tsx` — 公开的技能展示页面
-- **API 客户端**: `api/client.ts` — OpenAPI fetch，已有 `reviewApi` 等分组
+- **稽核詳情頁**: `pages/dashboard/review-detail.tsx` — 展示稽核任務後設資料 + 技能內容
+- **技能詳情頁**: `pages/skill-detail.tsx` — 公開的技能展示頁面
+- **API 客戶端**: `api/client.ts` — OpenAPI fetch，已有 `reviewApi` 等分組
 - **Query 模式**: TanStack Query，`useQuery` + `useMutation`
-- **UI 组件**: Card、Tabs、Button、Badge、Table（自定义 + Radix）
+- **UI 元件**: Card、Tabs、Button、Badge、Table（自定義 + Radix）
 - **i18n**: i18next，en.json / zh.json
 
 ---
 
-## 2. 功能设计
+## 2. 功能設計
 
-### 2.1 审核详情页 — 安全审核信息区块
+### 2.1 稽核詳情頁 — 安全稽核資訊區塊
 
-**位置**: `review-detail.tsx`，插入在审核任务卡片和 `ReviewSkillDetailSection` 之间。
+**位置**: `review-detail.tsx`，插入在稽核任務卡片和 `ReviewSkillDetailSection` 之間。
 
-**触发条件**: 当 `review.skillVersionId` 存在时，查询安全审核 API。若返回空数组则不渲染此区块。
+**觸發條件**: 當 `review.skillVersionId` 存在時，查詢安全稽核 API。若返回空陣列則不渲染此區塊。
 
-#### 布局设计
+#### 佈局設計
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│ 🔒 安全扫描结果                                      │
+│ 🔒 安全掃描結果                                      │
 ├─────────────────────────────────────────────────────┤
 │                                                     │
 │  ┌──────────────────────┐  ┌──────────────────────┐ │
 │  │ skill-scanner        │  │ future-scanner       │ │
-│  │ ● DANGEROUS          │  │ (未来扩展)            │ │
+│  │ ● DANGEROUS          │  │ (未來擴充套件)            │ │
 │  │ 4 findings           │  │                      │ │
 │  │ 2026-03-22 16:12     │  │                      │ │
 │  └──────────────────────┘  └──────────────────────┘ │
 │                                                     │
-│  ▼ 详细发现 (4)                                      │
+│  ▼ 詳細發現 (4)                                      │
 │  ┌─────────────────────────────────────────────────┐│
 │  │ CRITICAL  YARA_prompt_injection_generic         ││
 │  │ SKILL.md:3                                      ││
 │  │ Detects prompt strings used to override...      ││
-│  │ 修复建议: Review and remove prompt injection... ││
+│  │ 修復建議: Review and remove prompt injection... ││
 │  ├─────────────────────────────────────────────────┤│
 │  │ HIGH  PROMPT_INJECTION_IGNORE_INSTRUCTIONS      ││
 │  │ SKILL.md:3                                      ││
 │  │ Pattern detected: Ignore all previous...        ││
-│  │ 修复建议: Remove instructions that attempt...   ││
+│  │ 修復建議: Remove instructions that attempt...   ││
 │  ├─────────────────────────────────────────────────┤│
 │  │ ...                                             ││
 │  └─────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────┘
 ```
 
-#### 组件层次
+#### 元件層次
 
 ```
-SecurityAuditSection (新建 feature 组件)
-├── SecurityAuditSummary        — 扫描器卡片概览（verdict 徽章 + 统计）
-│   ├── VerdictBadge            — SAFE/SUSPICIOUS/DANGEROUS/BLOCKED 颜色徽章
-│   └── SeverityCountBar        — 按严重程度统计的横向计数条
-└── SecurityFindingsList        — 可折叠的详细发现列表
-    └── SecurityFindingItem     — 单条发现：severity 标签 + ruleId + 文件 + 消息 + 修复建议
+SecurityAuditSection (新建 feature 元件)
+├── SecurityAuditSummary        — 掃描器卡片概覽（verdict 徽章 + 統計）
+│   ├── VerdictBadge            — SAFE/SUSPICIOUS/DANGEROUS/BLOCKED 顏色徽章
+│   └── SeverityCountBar        — 按嚴重程度統計的橫向計數條
+└── SecurityFindingsList        — 可摺疊的詳細發現列表
+    └── SecurityFindingItem     — 單條發現：severity 標籤 + ruleId + 檔案 + 訊息 + 修復建議
 ```
 
-### 2.2 技能详情页 — 安全审核信息区块
+### 2.2 技能詳情頁 — 安全稽核資訊區塊
 
-**位置**: `skill-detail.tsx` 侧边栏，在版本信息下方。
+**位置**: `skill-detail.tsx` 側邊欄，在版本資訊下方。
 
-**触发条件**:
-1. 当前用户是技能的 owner 或有审核权限
-2. 当前查看的版本有安全审核记录
-3. 使用 `enabled` 参数控制 — 仅当版本状态为 `SCANNING`、`SCAN_FAILED`、`PENDING_REVIEW` 时才查询
+**觸發條件**:
+1. 當前使用者是技能的 owner 或有稽核許可權
+2. 當前檢視的版本有安全稽核記錄
+3. 使用 `enabled` 引數控制 — 僅當版本狀態為 `SCANNING`、`SCAN_FAILED`、`PENDING_REVIEW` 時才查詢
 
-**布局设计**（侧边栏精简版）:
+**佈局設計**（側邊欄精簡版）:
 
 ```
 ┌──────────────────────┐
-│ 🔒 安全扫描          │
+│ 🔒 安全掃描          │
 │                      │
 │  ● DANGEROUS         │
 │  HIGH · 4 findings   │
 │  skill-scanner       │
 │  2 min ago           │
 │                      │
-│  [查看详情]           │
+│  [檢視詳情]           │
 └──────────────────────┘
 ```
 
-点击"查看详情"展开弹窗，复用 `SecurityAuditSection` 组件的完整模式。
+點選"檢視詳情"展開彈窗，複用 `SecurityAuditSection` 元件的完整模式。
 
-### 2.3 版本状态 Badge 扩展
+### 2.3 版本狀態 Badge 擴充套件
 
-在审核列表和详情页中，为 `SCANNING` 和 `SCAN_FAILED` 版本状态增加对应的 badge：
+在稽核列表和詳情頁中，為 `SCANNING` 和 `SCAN_FAILED` 版本狀態增加對應的 badge：
 
-| 状态 | 颜色 | 文本 |
+| 狀態 | 顏色 | 文字 |
 |------|------|------|
-| `SCANNING` | `blue-500/10` | 扫描中... |
-| `SCAN_FAILED` | `red-500/10` | 扫描失败 |
+| `SCANNING` | `blue-500/10` | 掃描中... |
+| `SCAN_FAILED` | `red-500/10` | 掃描失敗 |
 
 ---
 
-## 3. 技术设计
+## 3. 技術設計
 
-### 3.1 新建文件清单
+### 3.1 新建檔案清單
 
-| 文件 | 类型 | 说明 |
+| 檔案 | 型別 | 說明 |
 |------|------|------|
-| `web/src/features/security-audit/use-security-audit.ts` | Hook | 安全审核查询 hook |
-| `web/src/features/security-audit/security-audit-section.tsx` | 组件 | 审核信息完整展示区块 |
-| `web/src/features/security-audit/verdict-badge.tsx` | 组件 | 审核结论颜色徽章 |
-| `web/src/features/security-audit/severity-badge.tsx` | 组件 | 严重级别颜色标签 |
-| `web/src/features/security-audit/finding-item.tsx` | 组件 | 单条发现展示 |
-| `web/src/features/security-audit/types.ts` | 类型 | SecurityAudit 相关 TypeScript 类型 |
+| `web/src/features/security-audit/use-security-audit.ts` | Hook | 安全稽核查詢 hook |
+| `web/src/features/security-audit/security-audit-section.tsx` | 元件 | 稽核資訊完整展示區塊 |
+| `web/src/features/security-audit/verdict-badge.tsx` | 元件 | 稽核結論顏色徽章 |
+| `web/src/features/security-audit/severity-badge.tsx` | 元件 | 嚴重級別顏色標籤 |
+| `web/src/features/security-audit/finding-item.tsx` | 元件 | 單條發現展示 |
+| `web/src/features/security-audit/types.ts` | 型別 | SecurityAudit 相關 TypeScript 型別 |
 
-### 3.2 修改文件清单
+### 3.2 修改檔案清單
 
-| 文件 | 修改内容 |
+| 檔案 | 修改內容 |
 |------|---------|
 | `web/src/pages/dashboard/review-detail.tsx` | 引入 SecurityAuditSection |
-| `web/src/pages/skill-detail.tsx` | 侧边栏添加安全审核信息摘要 |
-| `web/src/api/client.ts` | 新增 `securityAuditApi` 分组 |
-| `web/src/i18n/locales/en.json` | 新增 `securityAudit.*` 翻译键 |
-| `web/src/i18n/locales/zh.json` | 新增 `securityAudit.*` 翻译键 |
+| `web/src/pages/skill-detail.tsx` | 側邊欄新增安全稽核資訊摘要 |
+| `web/src/api/client.ts` | 新增 `securityAuditApi` 分組 |
+| `web/src/i18n/locales/en.json` | 新增 `securityAudit.*` 翻譯鍵 |
+| `web/src/i18n/locales/zh.json` | 新增 `securityAudit.*` 翻譯鍵 |
 
-### 3.3 API 调用策略
+### 3.3 API 呼叫策略
 
 ```typescript
 // use-security-audit.ts
@@ -181,26 +181,26 @@ export function useSecurityAudits(skillId: number, versionId: number, options?: 
     queryKey: ['security-audits', skillId, versionId],
     queryFn: () => securityAuditApi.list(skillId, versionId),
     enabled: options?.enabled ?? true,
-    staleTime: 30_000,  // 30 秒内不重新请求
+    staleTime: 30_000,  // 30 秒內不重新請求
   })
 }
 ```
 
-**关键设计决策**:
-- 审核详情页：`enabled = true`，始终查询
-- 技能详情页：`enabled = isOwner && hasAuditableStatus`，按需查询
-- 使用 `staleTime: 30s` 避免频繁请求
+**關鍵設計決策**:
+- 稽核詳情頁：`enabled = true`，始終查詢
+- 技能詳情頁：`enabled = isOwner && hasAuditableStatus`，按需查詢
+- 使用 `staleTime: 30s` 避免頻繁請求
 
-### 3.4 Verdict 颜色映射
+### 3.4 Verdict 顏色對映
 
-| Verdict | 背景色 | 文字色 | 图标 |
+| Verdict | 背景色 | 文字色 | 圖示 |
 |---------|--------|--------|------|
 | `SAFE` | `emerald-500/10` | `emerald-400` | ✓ (CheckCircle) |
 | `SUSPICIOUS` | `amber-500/10` | `amber-400` | ⚠ (AlertTriangle) |
 | `DANGEROUS` | `orange-500/10` | `orange-400` | ✕ (XCircle) |
 | `BLOCKED` | `red-500/10` | `red-400` | ⛔ (ShieldAlert) |
 
-### 3.5 Severity 颜色映射
+### 3.5 Severity 顏色對映
 
 | Severity | 背景色 | 文字色 |
 |----------|--------|--------|
@@ -212,7 +212,7 @@ export function useSecurityAudits(skillId: number, versionId: number, options?: 
 
 ---
 
-## 4. i18n 翻译键
+## 4. i18n 翻譯鍵
 
 ```json
 {
@@ -245,69 +245,69 @@ export function useSecurityAudits(skillId: number, versionId: number, options?: 
 
 ---
 
-## 5. 边界与约束
+## 5. 邊界與約束
 
-### 5.1 功能边界
+### 5.1 功能邊界
 
-**本次实现**:
-- 展示审核结果（只读，不包含触发扫描的操作）
-- 支持多扫描器结果并排展示
-- 支持中英文
+**本次實現**:
+- 展示稽核結果（只讀，不包含觸發掃描的操作）
+- 支援多掃描器結果並排展示
+- 支援中英文
 
-**不实现**:
-- 手动触发重新扫描
-- 审核结果的筛选/搜索
-- 审核结果的导出
-- 审核结果的对比（不同版本间）
+**不實現**:
+- 手動觸發重新掃描
+- 稽核結果的篩選/搜尋
+- 稽核結果的匯出
+- 稽核結果的對比（不同版本間）
 
-### 5.2 技术约束
+### 5.2 技術約束
 
-- BR-001: 安全审核接口返回空数组时，不渲染审核区块，不显示空状态
-- BR-002: 技能详情页仅 owner 或有审核权限的用户可见安全审核信息
-- BR-003: 使用 `enabled` 参数按需查询，避免不必要的 API 调用
-- BR-004: Findings 列表默认折叠，点击展开，避免页面过长
-
----
-
-## 6. 验收标准
-
-### 功能验收
-
-- [ ] AC-P-001: 审核详情页展示安全审核概览（verdict + 统计）
-- [ ] AC-P-002: 审核详情页可展开查看详细发现列表
-- [ ] AC-P-003: 每条发现展示完整信息（severity、ruleId、file、message、remediation）
-- [ ] AC-P-004: 技能详情页侧边栏展示安全审核摘要
-- [ ] AC-P-005: 点击"查看详情"弹窗展示完整审核信息
-- [ ] AC-P-006: 无审核记录时不显示审核区块
-- [ ] AC-P-007: 多扫描器结果并排展示
-
-### 质量验收
-
-- [ ] AC-Q-001: 中英文翻译完整
-- [ ] AC-Q-002: Loading 状态有 shimmer 动画
-- [ ] AC-Q-003: 颜色风格与现有 UI 一致
-- [ ] AC-Q-004: TypeScript 类型完整，无 any
+- BR-001: 安全稽核介面返回空陣列時，不渲染稽核區塊，不顯示空狀態
+- BR-002: 技能詳情頁僅 owner 或有稽核許可權的使用者可見安全稽核資訊
+- BR-003: 使用 `enabled` 引數按需查詢，避免不必要的 API 呼叫
+- BR-004: Findings 列表預設摺疊，點選展開，避免頁面過長
 
 ---
 
-## 7. 执行阶段
+## 6. 驗收標準
 
-### Phase 1: 基础组件（~2h）
-1. 创建 TypeScript 类型定义
-2. 创建 API hook
-3. 实现 VerdictBadge 和 SeverityBadge 组件
-4. 实现 FindingItem 组件
+### 功能驗收
 
-### Phase 2: 审核详情页集成（~2h）
-1. 实现 SecurityAuditSection 完整组件
-2. 集成到 review-detail.tsx
-3. 添加 i18n 翻译
+- [ ] AC-P-001: 稽核詳情頁展示安全稽核概覽（verdict + 統計）
+- [ ] AC-P-002: 稽核詳情頁可展開檢視詳細發現列表
+- [ ] AC-P-003: 每條發現展示完整資訊（severity、ruleId、file、message、remediation）
+- [ ] AC-P-004: 技能詳情頁側邊欄展示安全稽核摘要
+- [ ] AC-P-005: 點選"檢視詳情"彈窗展示完整稽核資訊
+- [ ] AC-P-006: 無稽核記錄時不顯示稽核區塊
+- [ ] AC-P-007: 多掃描器結果並排展示
 
-### Phase 3: 技能详情页集成（~1h）
-1. 在 skill-detail.tsx 侧边栏添加审核摘要
-2. 实现弹窗展示完整审核信息
-3. 按需查询逻辑
+### 質量驗收
 
-### Phase 4: 版本状态扩展（~0.5h）
-1. 添加 SCANNING/SCAN_FAILED 状态 badge
-2. 更新审核列表中的状态展示
+- [ ] AC-Q-001: 中英文翻譯完整
+- [ ] AC-Q-002: Loading 狀態有 shimmer 動畫
+- [ ] AC-Q-003: 顏色風格與現有 UI 一致
+- [ ] AC-Q-004: TypeScript 型別完整，無 any
+
+---
+
+## 7. 執行階段
+
+### Phase 1: 基礎元件（~2h）
+1. 建立 TypeScript 型別定義
+2. 建立 API hook
+3. 實現 VerdictBadge 和 SeverityBadge 元件
+4. 實現 FindingItem 元件
+
+### Phase 2: 稽核詳情頁整合（~2h）
+1. 實現 SecurityAuditSection 完整元件
+2. 整合到 review-detail.tsx
+3. 新增 i18n 翻譯
+
+### Phase 3: 技能詳情頁整合（~1h）
+1. 在 skill-detail.tsx 側邊欄新增稽核摘要
+2. 實現彈窗展示完整稽核資訊
+3. 按需查詢邏輯
+
+### Phase 4: 版本狀態擴充套件（~0.5h）
+1. 新增 SCANNING/SCAN_FAILED 狀態 badge
+2. 更新稽核列表中的狀態展示

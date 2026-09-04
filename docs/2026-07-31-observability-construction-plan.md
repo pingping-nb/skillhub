@@ -1,60 +1,60 @@
-# SkillHub 日志关联与链路追踪建设方案
+# SkillHub 日誌關聯與鏈路追蹤建設方案
 
 > 日期：2026-07-31
 >
-> 状态：Accepted（2026-07-31，按本文分阶段实施和验证）
+> 狀態：Accepted（2026-07-31，按本文分階段實施和驗證）
 >
-> 关联：GitHub Issue #597
-> 适用基线：Spring Boot 3.2.3、Java 21、Logback、Micrometer Actuator
+> 關聯：GitHub Issue #597
+> 適用基線：Spring Boot 3.2.3、Java 21、Logback、Micrometer Actuator
 
 ## 1. 背景
 
-SkillHub 已经使用 `X-Request-Id` 关联 API 响应、业务日志和审计记录，但目前仍存在以下问题：
+SkillHub 已經使用 `X-Request-Id` 關聯 API 響應、業務日誌和審計記錄，但目前仍存在以下問題：
 
-- 部分应用服务和 DTO 直接读取 SLF4J MDC，可观测性实现泄漏到了业务代码。
-- `X-Request-Id` 接受任意客户端输入，没有统一的长度和字符约束。
-- `@Async` 线程池没有显式传播请求和 Trace 上下文，异步日志可能丢失关联信息。
-- 当前没有标准分布式 Trace，无法通过一个 ID 串联 SkillHub、Scanner 等服务调用。
-- 日志字段尚未形成适合 Elasticsearch/Kibana 查询的稳定结构。
+- 部分應用服務和 DTO 直接讀取 SLF4J MDC，可觀測性實現洩漏到了業務程式碼。
+- `X-Request-Id` 接受任意客戶端輸入，沒有統一的長度和字元約束。
+- `@Async` 執行緒池沒有顯式傳播請求和 Trace 上下文，非同步日誌可能丟失關聯資訊。
+- 當前沒有標準分散式 Trace，無法透過一個 ID 串聯 SkillHub、Scanner 等服務呼叫。
+- 日誌欄位尚未形成適合 Elasticsearch/Kibana 查詢的穩定結構。
 
-本方案用最小建设成本建立通用日志关联与链路追踪基础设施。它不负责建设完整的企业
-可观测性平台，也不把日志、Trace 或 Metrics 逻辑写入业务处理器。
+本方案用最小建設成本建立通用日誌關聯與鏈路追蹤基礎設施。它不負責建設完整的企業
+可觀測性平臺，也不把日誌、Trace 或 Metrics 邏輯寫入業務處理器。
 
-Issue #597 中“搜索索引可靠异步交付”应作为独立问题处理，不属于本文范围。
+Issue #597 中“搜尋索引可靠非同步交付”應作為獨立問題處理，不屬於本文範圍。
 
-## 2. 建设目标
+## 2. 建設目標
 
-一期需要实现：
+一期需要實現：
 
-1. 每个 HTTP 请求都有合法的 `request.id`。
-2. 启用 Tracing 时，日志包含标准 `trace.id` 和 `span.id`。
-3. `otel-sdk` 模式使用 W3C `traceparent` / `tracestate` 传播 Trace Context。
-4. 业务代码不直接读写 MDC，也不直接依赖 OpenTelemetry 或 SkyWalking API。
-5. 现有 Spring `@Async` 执行器能够正确传播并清理上下文。
-6. 日志以结构化 JSON 输出到 stdout，可由 Filebeat/Fluent Bit 采集到
+1. 每個 HTTP 請求都有合法的 `request.id`。
+2. 啟用 Tracing 時，日誌包含標準 `trace.id` 和 `span.id`。
+3. `otel-sdk` 模式使用 W3C `traceparent` / `tracestate` 傳播 Trace Context。
+4. 業務程式碼不直接讀寫 MDC，也不直接依賴 OpenTelemetry 或 SkyWalking API。
+5. 現有 Spring `@Async` 執行器能夠正確傳播並清理上下文。
+6. 日誌以結構化 JSON 輸出到 stdout，可由 Filebeat/Fluent Bit 採集到
    Elasticsearch/Kibana。
-7. Trace 可以选择通过 OTLP Collector 接入 SkyWalking。
-8. Collector、SkyWalking、Elasticsearch 或日志采集器不可用时，SkillHub 业务继续运行。
-9. SkillHub 应用配置只能启用一个应用内 Tracer；`external-agent` 模式下唯一外部
-   Agent 由部署参数和发布检查保证。
+7. Trace 可以選擇透過 OTLP Collector 接入 SkyWalking。
+8. Collector、SkyWalking、Elasticsearch 或日誌採集器不可用時，SkillHub 業務繼續執行。
+9. SkillHub 應用配置只能啟用一個應用內 Tracer；`external-agent` 模式下唯一外部
+   Agent 由部署引數和發布檢查保證。
 
-本方案按多个小阶段、小提交实施和验证，全部通过后再统一创建一个替代 PR。
+本方案按多個小階段、小提交實施和驗證，全部透過後再統一建立一個替代 PR。
 
-## 3. 非目标
+## 3. 非目標
 
-一期不建设：
+一期不建設：
 
-- 搜索索引可靠队列、重试、死信和重放。
-- 多租户差异化采样和运行时动态采样。
-- Spring Cloud Config、Nacos 或可写 Actuator 配置端点。
-- 应用内 OTLP 熔断器或自定义重试框架。
-- 审计日志归档、物理隔离和 WORM 存储。
-- 通用 PII/DLP 检测平台。
-- Prometheus/Grafana/Kibana 告警模板和容量规划平台。
-- Spring Boot 2.x 或 Java 17 兼容。
-- 在业务类上增加 Trace 注解或要求业务开发者操作 Span。
+- 搜尋索引可靠佇列、重試、死信和重放。
+- 多租戶差異化取樣和執行時動態取樣。
+- Spring Cloud Config、Nacos 或可寫 Actuator 配置端點。
+- 應用內 OTLP 熔斷器或自定義重試框架。
+- 審計日誌歸檔、物理隔離和 WORM 儲存。
+- 通用 PII/DLP 檢測平臺。
+- Prometheus/Grafana/Kibana 告警模板和容量規劃平臺。
+- Spring Boot 2.x 或 Java 17 相容。
+- 在業務類上增加 Trace 註解或要求業務開發者操作 Span。
 
-## 4. 总体架构
+## 4. 總體架構
 
 ```text
 HTTP request
@@ -74,17 +74,17 @@ HTTP request
                             └─ SkyWalking OAP
 ```
 
-稳定边界是：
+穩定邊界是：
 
-- 应用内使用 Micrometer Observation/Tracing。
-- `otel-sdk` 模式跨进程使用 W3C Trace Context。
-- Trace 导出使用 OTLP。
-- 日志使用 ECS 风格字段。
-- SkyWalking、Elasticsearch 和 Kibana 都是部署适配器，不进入业务模型。
+- 應用內使用 Micrometer Observation/Tracing。
+- `otel-sdk` 模式跨程式使用 W3C Trace Context。
+- Trace 匯出使用 OTLP。
+- 日誌使用 ECS 風格欄位。
+- SkyWalking、Elasticsearch 和 Kibana 都是部署介面卡，不進入業務模型。
 
-## 5. 运行模式
+## 5. 執行模式
 
-通过一个启动期配置选择运行模式：
+透過一個啟動期配置選擇執行模式：
 
 ```yaml
 skillhub:
@@ -92,105 +92,105 @@ skillhub:
     tracing-mode: ${SKILLHUB_TRACING_MODE:none}
 ```
 
-允许值和确定行为：
+允許值和確定行為：
 
-| 模式 | Micrometer Tracer | OTLP Exporter | 外部 Agent | 无 Agent/endpoint 时 |
+| 模式 | Micrometer Tracer | OTLP Exporter | 外部 Agent | 無 Agent/endpoint 時 |
 |------|-------------------|---------------|------------|---------------------|
-| `none` | NOOP | 无 | 不支持 | 只有 `request.id` |
-| `otel-sdk` | OTel Bridge | 配置 endpoint 时创建 | 不支持 | 仍建立进程内 Trace，但不导出 |
-| `external-agent` | NOOP | 无 | 可选 | 记录警告并退化为只有 `request.id` |
+| `none` | NOOP | 無 | 不支援 | 只有 `request.id` |
+| `otel-sdk` | OTel Bridge | 配置 endpoint 時建立 | 不支援 | 仍建立程式內 Trace，但不匯出 |
+| `external-agent` | NOOP | 無 | 可選 | 記錄警告並退化為只有 `request.id` |
 
-运行模式是启动期不变量，不支持热切换。
+執行模式是啟動期不變數，不支援熱切換。
 
-必须保证：
+必須保證：
 
-- `none` 和 `external-agent` 不创建应用内 OTel Span。
-- `otel-sdk` 不支持同时启用 SkyWalking、OTel 或其他外部 Tracing Agent；应用只能校验
-  自身 endpoint/mode 冲突，不能可靠识别任意 JVM Agent。
-- `external-agent` 不创建 OTLP Exporter。
-- SkillHub 配置能够识别的冲突应在启动时失败；任意 Java Agent 无法被应用可靠识别，因此
-  部署检查和原型测试还必须验证实际 JVM 参数中只有一个 Tracer。
+- `none` 和 `external-agent` 不建立應用內 OTel Span。
+- `otel-sdk` 不支援同時啟用 SkyWalking、OTel 或其他外部 Tracing Agent；應用只能校驗
+  自身 endpoint/mode 衝突，不能可靠識別任意 JVM Agent。
+- `external-agent` 不建立 OTLP Exporter。
+- SkillHub 配置能夠識別的衝突應在啟動時失敗；任意 Java Agent 無法被應用可靠識別，因此
+  部署檢查和原型測試還必須驗證實際 JVM 引數中只有一個 Tracer。
 
-一期实现并验证三种模式的应用上下文互斥边界和日志关联。`external-agent` 只验证
-SkyWalking Agent 接管 Trace 时应用内 OTel Tracer/Exporter 不工作；“只挂载一个外部
-Agent”属于部署验收项。SkyWalking 特有高级能力不进入 SkillHub 核心代码。
+一期實現並驗證三種模式的應用上下文互斥邊界和日誌關聯。`external-agent` 只驗證
+SkyWalking Agent 接管 Trace 時應用內 OTel Tracer/Exporter 不工作；“只掛載一個外部
+Agent”屬於部署驗收項。SkyWalking 特有高階能力不進入 SkillHub 核心程式碼。
 
-## 6. 关联字段契约
+## 6. 關聯欄位契約
 
-### 6.1 对外日志字段
+### 6.1 對外日誌欄位
 
-日志输出统一使用：
+日誌輸出統一使用：
 
-| 字段 | 必需性 | 含义 |
+| 欄位 | 必需性 | 含義 |
 |------|--------|------|
-| `request.id` | HTTP 请求或显式任务上下文中存在 | SkillHub API、响应和审计关联 ID |
-| `trace.id` | 当前存在有效 Trace 时 | 分布式 Trace ID |
-| `span.id` | 当前 Tracer 能提供时 | 当前调用节点 ID |
-| `service.name` | 始终存在 | 固定为 `skillhub` |
-| `service.version` | 部署时提供 | 发布版本或镜像对应 Commit |
-| `service.environment` | 部署时提供 | 当前部署环境 |
+| `request.id` | HTTP 請求或顯式任務上下文中存在 | SkillHub API、響應和審計關聯 ID |
+| `trace.id` | 當前存在有效 Trace 時 | 分散式 Trace ID |
+| `span.id` | 當前 Tracer 能提供時 | 當前呼叫節點 ID |
+| `service.name` | 始終存在 | 固定為 `skillhub` |
+| `service.version` | 部署時提供 | 發布版本或映象對應 Commit |
+| `service.environment` | 部署時提供 | 當前部署環境 |
 
-`request.id` 与 `trace.id` 不能合并：
+`request.id` 與 `trace.id` 不能合併：
 
-- `request.id` 属于 SkillHub API 契约，可出现在响应和审计记录中。
-- `trace.id` 属于可选的分布式追踪上下文，可能被采样或关闭。
+- `request.id` 屬於 SkillHub API 契約，可出現在響應和審計記錄中。
+- `trace.id` 屬於可選的分散式追蹤上下文，可能被取樣或關閉。
 
-启动日志以及没有显式任务上下文的后台维护日志允许不包含 `request.id`。
+啟動日誌以及沒有顯式任務上下文的後臺維護日誌允許不包含 `request.id`。
 
-### 6.2 内部字段映射
+### 6.2 內部欄位對映
 
-日志基础设施负责字段映射，业务代码不感知具体 MDC 键：
+日誌基礎設施負責欄位對映，業務程式碼不感知具體 MDC 鍵：
 
-| 来源 | 内部字段 | 输出字段 |
+| 來源 | 內部欄位 | 輸出欄位 |
 |------|----------|----------|
 | SkillHub Request Context | `requestId` | `request.id` |
 | Micrometer OTel Bridge | `traceId` | `trace.id` |
 | Micrometer OTel Bridge | `spanId` | `span.id` |
-| SkyWalking Logback Toolkit 事件转换器 | `tid` | `trace.id` |
+| SkyWalking Logback Toolkit 事件轉換器 | `tid` | `trace.id` |
 
-SkyWalking Agent 是否能稳定提供独立 `span.id` 以实际原型结果为准。无法稳定提供时允许只
-输出 `trace.id`，不得解析不稳定的内部字符串格式。
+SkyWalking Agent 是否能穩定提供獨立 `span.id` 以實際原型結果為準。無法穩定提供時允許只
+輸出 `trace.id`，不得解析不穩定的內部字串格式。
 
-External Agent 模式通过 SkyWalking 官方 Logback Toolkit 从当前日志事件读取 `tid`；
-这不是业务代码读取 MDC，也不能假定 `tid` 一定存在于异步日志线程的 MDC 中。日志编码器
-只读取允许的关联字段，不得把整个 MDC Map 自动写入 JSON。
+External Agent 模式透過 SkyWalking 官方 Logback Toolkit 從當前日誌事件讀取 `tid`；
+這不是業務程式碼讀取 MDC，也不能假定 `tid` 一定存在於非同步日誌執行緒的 MDC 中。日誌編碼器
+只讀取允許的關聯欄位，不得把整個 MDC Map 自動寫入 JSON。
 
 ## 7. Request ID
 
-### 7.1 输入规则
+### 7.1 輸入規則
 
-客户端可以传入 `X-Request-Id`，但必须同时满足：
+客戶端可以傳入 `X-Request-Id`，但必須同時滿足：
 
-- 长度为 1–64 个字符。
-- 首字符是字母或数字。
-- 其余字符只允许字母、数字、`.`、`_`、`:`、`-`。
+- 長度為 1–64 個字元。
+- 首字元是字母或數字。
+- 其餘字元只允許字母、數字、`.`、`_`、`:`、`-`。
 
-建议校验表达式：
+建議校驗表示式：
 
 ```regex
 ^[A-Za-z0-9][A-Za-z0-9._:-]{0,63}$
 ```
 
-请求头缺失、为空或不合法时，服务端生成 UUID。响应始终返回最终采用的
+請求頭缺失、為空或不合法時，服務端生成 UUID。響應始終返回最終採用的
 `X-Request-Id`。
 
-### 7.2 代码边界
+### 7.2 程式碼邊界
 
-新增通用 `RequestIdAccessor` 和对应的 Request ID Scope：
+新增通用 `RequestIdAccessor` 和對應的 Request ID Scope：
 
-- Filter 负责解析、校验、建立和清理 Request ID 上下文。
-- 独立 ThreadLocal Scope 是 Request ID 的进程内权威来源。
-- 为该 Scope 注册 Micrometer `ThreadLocalAccessor`，由
-  `ContextPropagatingTaskDecorator` 捕获、恢复和清理。
-- Scope 同步维护日志所需的 MDC 镜像，但读取方不能把 MDC 当作权威来源。
-- API 响应工厂通过该抽象读取 Request ID。
-- 审计编排通过该抽象或明确参数读取 Request ID。
-- 应用服务、Controller 和 DTO 不再直接调用 `MDC.get()`。
-- MDC 只作为日志适配器，不再作为业务上下文的权威来源。
+- Filter 負責解析、校驗、建立和清理 Request ID 上下文。
+- 獨立 ThreadLocal Scope 是 Request ID 的程式內權威來源。
+- 為該 Scope 註冊 Micrometer `ThreadLocalAccessor`，由
+  `ContextPropagatingTaskDecorator` 捕獲、恢復和清理。
+- Scope 同步維護日誌所需的 MDC 映象，但讀取方不能把 MDC 當作權威來源。
+- API 響應工廠透過該抽象讀取 Request ID。
+- 審計編排透過該抽象或明確引數讀取 Request ID。
+- 應用服務、Controller 和 DTO 不再直接呼叫 `MDC.get()`。
+- MDC 只作為日誌介面卡，不再作為業務上下文的權威來源。
 
 ## 8. Tracing 配置
 
-`skillhub-app` 使用 Spring Boot 3.2.3 管理的依赖版本：
+`skillhub-app` 使用 Spring Boot 3.2.3 管理的依賴版本：
 
 ```xml
 <dependency>
@@ -203,7 +203,7 @@ External Agent 模式通过 SkyWalking 官方 Logback Toolkit 从当前日志事
 </dependency>
 ```
 
-基础配置：
+基礎配置：
 
 ```yaml
 management:
@@ -220,29 +220,29 @@ management:
       compression: ${SKILLHUB_OTLP_COMPRESSION:gzip}
 ```
 
-基础配置不得为 OTLP endpoint 提供默认地址。只有 `otel-sdk` 部署显式设置以下标准
-Spring Boot 配置时才创建 Exporter：
+基礎配置不得為 OTLP endpoint 提供預設地址。只有 `otel-sdk` 部署顯式設定以下標準
+Spring Boot 配置時才建立 Exporter：
 
 ```bash
 MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces
 ```
 
-一期沿用 OpenTelemetry 1.31 的默认 BatchSpanProcessor 有界队列和丢弃策略，不增加应用内
-重试、熔断或自定义队列实现。
+一期沿用 OpenTelemetry 1.31 的預設 BatchSpanProcessor 有界佇列和丟棄策略，不增加應用內
+重試、熔斷或自定義佇列實現。
 
-## 9. 日志输出
+## 9. 日誌輸出
 
-### 9.1 输出模式
+### 9.1 輸出模式
 
-- 本地开发默认使用可读的文本日志。
-- `SKILLHUB_LOG_FORMAT=json` 启用 ECS 风格 JSON stdout。
-- JSON 编码器显式输出标准字段和三个关联字段，不启用“输出全部 MDC”。
-- JSON ConsoleAppender 外包一层 Logback AsyncAppender，初始队列容量为 1024，并允许通过
-  `SKILLHUB_LOG_ASYNC_QUEUE_SIZE` 调整。
-- AsyncAppender 使用非阻塞策略；队列耗尽时日志可能丢失，审计事实不依赖该通道。
-- 异常使用 `error.type`、`error.message`、`error.stack_trace`。
-- 队列容量保持可配置，默认值在原型压测后固定，不在设计阶段猜测。
-- 异常和队列丢弃行为必须在测试中验证。
+- 本地開發預設使用可讀的文字日誌。
+- `SKILLHUB_LOG_FORMAT=json` 啟用 ECS 風格 JSON stdout。
+- JSON 編碼器顯式輸出標準欄位和三個關聯欄位，不啟用“輸出全部 MDC”。
+- JSON ConsoleAppender 外包一層 Logback AsyncAppender，初始佇列容量為 1024，並允許透過
+  `SKILLHUB_LOG_ASYNC_QUEUE_SIZE` 調整。
+- AsyncAppender 使用非阻塞策略；佇列耗盡時日誌可能丟失，審計事實不依賴該通道。
+- 異常使用 `error.type`、`error.message`、`error.stack_trace`。
+- 佇列容量保持可配置，預設值在原型壓測後固定，不在設計階段猜測。
+- 異常和佇列丟棄行為必須在測試中驗證。
 
 示例：
 
@@ -261,55 +261,55 @@ MANAGEMENT_OTLP_TRACING_ENDPOINT=http://otel-collector:4318/v1/traces
 }
 ```
 
-应用只输出 stdout，不直接依赖 Elasticsearch SDK，也不直接写 Elasticsearch。
+應用只輸出 stdout，不直接依賴 Elasticsearch SDK，也不直接寫 Elasticsearch。
 
-### 9.2 审计边界
+### 9.2 審計邊界
 
-`audit_log` 数据库记录仍是审计事实来源。stdout 日志不能代替审计记录，审计留存和归档
-不在本方案中处理。
+`audit_log` 資料庫記錄仍是審計事實來源。stdout 日誌不能代替審計記錄，審計留存和歸檔
+不在本方案中處理。
 
-## 10. 上下文传播
+## 10. 上下文傳播
 
-### 10.1 Spring 异步执行器
+### 10.1 Spring 非同步執行器
 
-为现有 `skillhubEventExecutor` 配置 Spring Framework 6.1 的
+為現有 `skillhubEventExecutor` 配置 Spring Framework 6.1 的
 `ContextPropagatingTaskDecorator`：
 
-- 提交任务时捕获 Request ID 和 Trace Context。
-- 执行任务时恢复上下文。
-- 执行完成后在 `finally` 中清理。
-- `CallerRunsPolicy` 触发时也必须保持正确的嵌套作用域。
+- 提交任務時捕獲 Request ID 和 Trace Context。
+- 執行任務時恢復上下文。
+- 執行完成後在 `finally` 中清理。
+- `CallerRunsPolicy` 觸發時也必須保持正確的巢狀作用域。
 
-测试必须重复复用同一工作线程，证明不同请求之间不会串号。
+測試必須重複複用同一工作執行緒，證明不同請求之間不會串號。
 
-### 10.2 消息队列与长生命周期后台线程
+### 10.2 訊息佇列與長生命週期後臺執行緒
 
-Redis Stream 消费循环和 Reclaimer 不继承应用启动线程或任意请求的 MDC。Producer 通过
-通用消息 Observation 把 W3C Trace Context 与受控 Request ID 注入 transport metadata；
-Consumer/Reclaimer 逐条提取、建立 Scope，并在处理结束后清理。Scanner HTTP 调用自然成为
-Consumer Span 的子调用。
+Redis Stream 消費迴圈和 Reclaimer 不繼承應用啟動執行緒或任意請求的 MDC。Producer 透過
+通用訊息 Observation 把 W3C Trace Context 與受控 Request ID 注入 transport metadata；
+Consumer/Reclaimer 逐條提取、建立 Scope，並在處理結束後清理。Scanner HTTP 呼叫自然成為
+Consumer Span 的子呼叫。
 
-上下文不写入 `ScanTask` 或搜索业务 payload，也不改变可靠任务状态机。普通定时任务没有
-上游 carrier，仍建立独立执行上下文；长期延迟任务使用稳定任务 ID 或 Span Link，不维持
-超长父 Span。
+上下文不寫入 `ScanTask` 或搜尋業務 payload，也不改變可靠任務狀態機。普通定時任務沒有
+上游 carrier，仍建立獨立執行上下文；長期延遲任務使用穩定任務 ID 或 Span Link，不維持
+超長父 Span。
 
 ### 10.3 HTTP 出站
 
-一期只管理两类 HTTP Client：
+一期只管理兩類 HTTP Client：
 
-- 内部 Scanner Client：使用 Spring 管理且带 Observation 的 Builder，传播 W3C Trace
+- 內部 Scanner Client：使用 Spring 管理且帶 Observation 的 Builder，傳播 W3C Trace
   Context。
-- 其他现有 Client：GitHub、GitLab、内置 Skill 公网下载和 S3 Client 均不在一期新增
-  Trace Context 传播。
+- 其他現有 Client：GitHub、GitLab、內建 Skill 公網下載和 S3 Client 均不在一期新增
+  Trace Context 傳播。
 
-后续新增 Client 必须明确选择内部或外部配置，不能依赖全局 Host 正则或在业务代码中手工
-删除 Header。
+後續新增 Client 必須明確選擇內部或外部配置，不能依賴全域性 Host 正則或在業務程式碼中手工
+刪除 Header。
 
-## 11. SkyWalking 与 Elasticsearch 接入
+## 11. SkyWalking 與 Elasticsearch 接入
 
 ### 11.1 OTel SDK 模式
 
-推荐链路：
+推薦鏈路：
 
 ```text
 SkillHub
@@ -319,24 +319,24 @@ SkillHub
   → SkyWalking OAP
 ```
 
-Collector 用于协议适配和后端路由，不是 SkillHub 的启动依赖。
+Collector 用於協議適配和後端路由，不是 SkillHub 的啟動依賴。
 
-SkyWalking 10.3 的 OTLP Trace 会转换为 Zipkin Trace，并通过 Zipkin Query/Lens UI 查询。
-它不等价于 SkyWalking Java Agent 的原生拓扑、慢 SQL 和 Profiling 能力，部署文档必须
-明确该差异。原型报告必须记录实际使用的 Maven 依赖、Collector、OAP 和 Agent 版本及
-查询结果。
+SkyWalking 10.3 的 OTLP Trace 會轉換為 Zipkin Trace，並透過 Zipkin Query/Lens UI 查詢。
+它不等價於 SkyWalking Java Agent 的原生拓撲、慢 SQL 和 Profiling 能力，部署檔案必須
+明確該差異。原型報告必須記錄實際使用的 Maven 依賴、Collector、OAP 和 Agent 版本及
+查詢結果。
 
 ### 11.2 External Agent 模式
 
-需要 SkyWalking 原生能力时：
+需要 SkyWalking 原生能力時：
 
 - 使用 `external-agent`。
 - 不配置 SkillHub OTLP endpoint。
-- 由部署环境挂载并启动 SkyWalking Java Agent。
+- 由部署環境掛載並啟動 SkyWalking Java Agent。
 - 使用 SkyWalking 官方 Logback Toolkit 提供 Trace ID。
-- 日志基础设施将 `tid` 映射为 `trace.id`。
+- 日誌基礎設施將 `tid` 對映為 `trace.id`。
 
-### 11.3 日志链路
+### 11.3 日誌鏈路
 
 ```text
 SkillHub JSON stdout
@@ -345,183 +345,183 @@ SkillHub JSON stdout
   → Kibana
 ```
 
-Kibana 使用 `trace.id` 查询日志，SkyWalking 使用同一个 Trace ID 查询调用链。
+Kibana 使用 `trace.id` 查詢日誌，SkyWalking 使用同一個 Trace ID 查詢呼叫鏈。
 
-## 12. 实施步骤
+## 12. 實施步驟
 
-### 阶段一：Request ID 与日志边界
+### 階段一：Request ID 與日誌邊界
 
-1. 增加 Request ID 校验。
+1. 增加 Request ID 校驗。
 2. 建立 `RequestIdAccessor`。
-3. 移除应用服务、Controller、DTO 对 MDC 的直接读取。
-4. 增加允许字段明确的结构化日志配置。
-5. 增加 Request ID 和日志字段测试。
+3. 移除應用服務、Controller、DTO 對 MDC 的直接讀取。
+4. 增加允許欄位明確的結構化日誌配置。
+5. 增加 Request ID 和日誌欄位測試。
 
-可观察结果：
+可觀察結果：
 
-- 非法 Request ID 被替换。
-- API 响应和审计记录仍使用同一 Request ID。
-- 业务类不再 import `org.slf4j.MDC`。
+- 非法 Request ID 被替換。
+- API 響應和審計記錄仍使用同一 Request ID。
+- 業務類不再 import `org.slf4j.MDC`。
 
-### 阶段二：Micrometer + OTel
+### 階段二：Micrometer + OTel
 
-1. 增加 Tracing Bridge 和 OTLP Exporter 依赖。
+1. 增加 Tracing Bridge 和 OTLP Exporter 依賴。
 2. 增加 `none`、`otel-sdk`、`external-agent` 模式。
-3. 设置 W3C、关闭 baggage、配置采样率。
-4. 保证无 endpoint 时不会产生网络连接。
-5. 保证每个模式只存在一个实际 Tracer。
+3. 設定 W3C、關閉 baggage、配置取樣率。
+4. 保證無 endpoint 時不會產生網路連線。
+5. 保證每個模式只存在一個實際 Tracer。
 
-可观察结果：
+可觀察結果：
 
 - `none` 模式只有 `request.id`。
-- `otel-sdk` 模式日志出现标准 Trace 字段。
-- `external-agent` 模式不会产生应用内 OTel Trace。
+- `otel-sdk` 模式日誌出現標準 Trace 欄位。
+- `external-agent` 模式不會產生應用內 OTel Trace。
 
-### 阶段三：传播边界
+### 階段三：傳播邊界
 
-1. 为 `skillhubEventExecutor` 增加上下文传播。
-2. 验证线程复用、嵌套任务和 `CallerRunsPolicy`。
-3. 让内部 Scanner Client 使用 Spring 管理且可观测的 Client Builder。
-4. 验证外部 HTTP Client 不发送 Trace Context。
+1. 為 `skillhubEventExecutor` 增加上下文傳播。
+2. 驗證執行緒複用、巢狀任務和 `CallerRunsPolicy`。
+3. 讓內部 Scanner Client 使用 Spring 管理且可觀測的 Client Builder。
+4. 驗證外部 HTTP Client 不傳送 Trace Context。
 
-### 阶段四：部署示例与远端验证
+### 階段四：部署示例與遠端驗證
 
 1. 提供最小 OTel Collector 配置示例。
-2. 补充 SkyWalking OTLP 与 Agent 模式差异。
-3. 将待测分支合入 `big-main`，记录合入后的精确 Commit SHA。
-4. 构建绑定 `big-main` SHA 的测试镜像。
-5. 在共享测试机使用独立容器、网络、数据卷和动态端口运行三个原型。
-6. 生成中文测试报告并保存在本地私有目录，不提交开源仓库。
+2. 補充 SkyWalking OTLP 與 Agent 模式差異。
+3. 將待測分支合入 `big-main`，記錄合入後的精確 Commit SHA。
+4. 構建繫結 `big-main` SHA 的測試映象。
+5. 在共享測試機使用獨立容器、網路、資料卷和動態埠執行三個原型。
+6. 生成中文測試報告並儲存在本地私有目錄，不提交開源倉庫。
 
-每个阶段使用独立的小提交并保留在同一实现分支；前一阶段的范围测试通过后再进入下一
-阶段。公开 Issue 和 PR 统一在阶段五创建。
+每個階段使用獨立的小提交併保留在同一實現分支；前一階段的範圍測試透過後再進入下一
+階段。公開 Issue 和 PR 統一在階段五建立。
 
-### 阶段五：社区交付（最后执行）
+### 階段五：社群交付（最後執行）
 
-该阶段必须在远端验证全部通过后执行：
+該階段必須在遠端驗證全部透過後執行：
 
-1. 创建新的可观测性建设 Issue，说明它承接 #597 中的“通用日志关联与链路追踪”部分。
-2. 搜索索引可靠异步交付继续作为独立问题，不混入新的可观测性 Issue。
-3. 从经过验证的实现分支创建新的 PR，并关联新 Issue。
-4. PR 只包含公开代码、配置、自动化测试和公开部署说明；不得包含测试机地址、凭证、
-   私有端口、原始远端日志或本地中文测试报告。
-5. 在 #597、#644 及其他被替代的关联项中回复：
-   - 原问题是否真实存在。
-   - 为什么不采用原 PR 的实现。
-   - 新方案的边界和主要改动。
-   - 已完成的自动化及远端验证摘要。
-   - 新 Issue 和替代 PR 的链接。
-6. 确认维护者需要的信息完整后，关闭已被替代的 PR；不在验证完成前抢先关闭。
-7. #597 等关联 Issue 只根据剩余问题是否已有明确承接决定关闭、缩小范围或继续保留，
-   不因替代 PR 创建而自动关闭。
-8. 新 PR 通过 Review 和 CI 后，确认 PR Head 仍等于已验证的功能 SHA，且该 SHA 可从已
-   测试的 `big-main` SHA 到达；满足后才允许更新 `main`。
-9. 如果 Review 或 CI 修复改变了代码、配置或测试脚本，则原验证证据失效：先将新 SHA
-   合入 `big-main`，重新构建镜像并完成受影响的远端验证，再更新 `main`。
+1. 建立新的可觀測性建設 Issue，說明它承接 #597 中的“通用日誌關聯與鏈路追蹤”部分。
+2. 搜尋索引可靠非同步交付繼續作為獨立問題，不混入新的可觀測性 Issue。
+3. 從經過驗證的實現分支建立新的 PR，並關聯新 Issue。
+4. PR 只包含公開程式碼、配置、自動化測試和公開部署說明；不得包含測試機地址、憑證、
+   私有埠、原始遠端日誌或本地中文測試報告。
+5. 在 #597、#644 及其他被替代的關聯項中回覆：
+   - 原問題是否真實存在。
+   - 為什麼不採用原 PR 的實現。
+   - 新方案的邊界和主要改動。
+   - 已完成的自動化及遠端驗證摘要。
+   - 新 Issue 和替代 PR 的連結。
+6. 確認維護者需要的資訊完整後，關閉已被替代的 PR；不在驗證完成前搶先關閉。
+7. #597 等關聯 Issue 只根據剩餘問題是否已有明確承接決定關閉、縮小範圍或繼續保留，
+   不因替代 PR 建立而自動關閉。
+8. 新 PR 透過 Review 和 CI 後，確認 PR Head 仍等於已驗證的功能 SHA，且該 SHA 可從已
+   測試的 `big-main` SHA 到達；滿足後才允許更新 `main`。
+9. 如果 Review 或 CI 修復改變了程式碼、配置或測試指令碼，則原驗證證據失效：先將新 SHA
+   合入 `big-main`，重新構建映象並完成受影響的遠端驗證，再更新 `main`。
 
-## 13. 验证方案
+## 13. 驗證方案
 
-### 13.1 自动化测试
+### 13.1 自動化測試
 
-至少覆盖：
+至少覆蓋：
 
-- 未传 Request ID 时自动生成。
+- 未傳 Request ID 時自動生成。
 - 合法 Request ID 被保留。
-- 空值、超长值和非法字符被替换。
-- Filter 正常、异常退出后都清理上下文。
-- API 响应、审计和日志中的 Request ID 一致。
-- JSON 只输出允许的关联字段。
-- Trace 采样率在测试中设为 `1.0` 后可稳定断言。
-- `@Async` 线程恢复父上下文。
-- 连续复用同一线程执行不同请求时不串号。
-- `CallerRunsPolicy` 下上下文正确恢复。
+- 空值、超長值和非法字元被替換。
+- Filter 正常、異常退出後都清理上下文。
+- API 響應、審計和日誌中的 Request ID 一致。
+- JSON 只輸出允許的關聯欄位。
+- Trace 取樣率在測試中設為 `1.0` 後可穩定斷言。
+- `@Async` 執行緒恢復父上下文。
+- 連續複用同一執行緒執行不同請求時不串號。
+- `CallerRunsPolicy` 下上下文正確恢復。
 - `none`、`otel-sdk`、`external-agent` 的 Spring Context 互斥。
-- 未配置 OTLP endpoint 时不创建网络导出。
-- 内部 Scanner 请求携带 `traceparent`。
-- Redis Stream Producer/Consumer 保持同一 Trace 和 Request ID，处理结束后线程不串号。
-- 重试发布和 Reclaimer 重新消费仍能恢复消息关联上下文。
-- 外部 HTTP 请求不携带 `traceparent`。
+- 未配置 OTLP endpoint 時不建立網路匯出。
+- 內部 Scanner 請求攜帶 `traceparent`。
+- Redis Stream Producer/Consumer 保持同一 Trace 和 Request ID，處理結束後執行緒不串號。
+- 重試發布和 Reclaimer 重新消費仍能恢復訊息關聯上下文。
+- 外部 HTTP 請求不攜帶 `traceparent`。
 
-### 13.2 远端原型
+### 13.2 遠端原型
 
 #### 原型 A：none
 
 - 不部署 Collector。
-- SkillHub 正常启动并完成核心 Smoke Test。
-- 日志存在 `request.id`，不存在伪造的 Trace 字段。
+- SkillHub 正常啟動並完成核心 Smoke Test。
+- 日誌存在 `request.id`，不存在偽造的 Trace 欄位。
 
 #### 原型 B：otel-sdk
 
 - SkillHub → Collector → SkyWalking 跑通。
-- JSON 日志进入 Elasticsearch/Kibana。
-- Kibana 与 SkyWalking 能用同一 `trace.id` 查询。
-- Collector 停止后 SkillHub API 和异步任务继续工作。
+- JSON 日誌進入 Elasticsearch/Kibana。
+- Kibana 與 SkyWalking 能用同一 `trace.id` 查詢。
+- Collector 停止後 SkillHub API 和非同步任務繼續工作。
 
 #### 原型 C：external-agent
 
 - SkyWalking Java Agent 提供原生 Trace。
-- 应用内 OTel Exporter 不工作。
-- 日志能用 SkyWalking Trace ID 关联。
-- 不产生双 Trace、重复 Span 或两个冲突的 Trace ID。
+- 應用內 OTel Exporter 不工作。
+- 日誌能用 SkyWalking Trace ID 關聯。
+- 不產生雙 Trace、重複 Span 或兩個衝突的 Trace ID。
 
-### 13.3 远端测试场景
+### 13.3 遠端測試場景
 
-- HTTP 成功、4xx、5xx 和未认证请求。
-- Scanner 成功、超时和失败。
-- 异步事件正常执行和抛出异常。
-- Redis Stream 正常消费、失败重试、Pending Reclaim 和重复投递。
-- 并发请求重复使用线程池。
-- Collector 启动、停止和恢复。
-- 日志采集器停止或消费变慢。
-- 采样率 `0.0`、`0.1` 和 `1.0`。
-- 容器收到 SIGTERM 后日志和 Trace 的关闭行为。
-- 日志中不出现 Authorization、Cookie、Token、密码和完整请求体。
+- HTTP 成功、4xx、5xx 和未認證請求。
+- Scanner 成功、超時和失敗。
+- 非同步事件正常執行和丟擲異常。
+- Redis Stream 正常消費、失敗重試、Pending Reclaim 和重複投遞。
+- 併發請求重複使用執行緒池。
+- Collector 啟動、停止和恢復。
+- 日誌採集器停止或消費變慢。
+- 取樣率 `0.0`、`0.1` 和 `1.0`。
+- 容器收到 SIGTERM 後日誌和 Trace 的關閉行為。
+- 日誌中不出現 Authorization、Cookie、Token、密碼和完整請求體。
 
-## 14. 验收标准
+## 14. 驗收標準
 
-以下条件全部满足后，一期才算完成：
+以下條件全部滿足後，一期才算完成：
 
-- [ ] 三种模式行为与本文一致。
-- [ ] 业务代码不再直接读取或写入 MDC。
-- [ ] Request ID 校验、响应和审计关联测试通过。
-- [ ] 日志字段符合约定，且不输出完整 MDC。
-- [ ] Spring 异步执行器上下文传播和隔离测试通过。
-- [ ] Redis Stream 消息上下文传播、重试、Reclaimer 和隔离测试通过。
-- [ ] 内外部 HTTP 传播边界测试通过。
-- [ ] 无 OTLP endpoint 时不存在外部连接尝试。
-- [ ] Collector 中断不影响 SkillHub 业务结果。
-- [ ] OTel SDK 与 SkyWalking Agent 不会同时产生 Trace。
-- [ ] `make test-backend-app` 通过。
-- [ ] `make typecheck-web` 和 `make lint-web` 通过。
-- [ ] 基于 `big-main` 合入后精确 SHA 构建的远端三个原型通过。
-- [ ] 中文测试报告保存在本地私有目录。
-- [ ] 新的可观测性 Issue 和替代 PR 已创建并互相关联。
-- [ ] #597、#644 等关联项已获得清晰回复，被替代的旧 PR 已关闭。
-- [ ] 关联 Issue 已根据剩余范围分别关闭、缩小范围或保留，且状态理由清楚。
-- [ ] 新 PR Head 与已验证功能 SHA 一致，且可从已测试的 `big-main` SHA 到达。
-- [ ] 通过验证后才允许更新 `main`。
+- [ ] 三種模式行為與本文一致。
+- [ ] 業務程式碼不再直接讀取或寫入 MDC。
+- [ ] Request ID 校驗、響應和審計關聯測試透過。
+- [ ] 日誌欄位符合約定，且不輸出完整 MDC。
+- [ ] Spring 非同步執行器上下文傳播和隔離測試透過。
+- [ ] Redis Stream 訊息上下文傳播、重試、Reclaimer 和隔離測試透過。
+- [ ] 內外部 HTTP 傳播邊界測試透過。
+- [ ] 無 OTLP endpoint 時不存在外部連線嘗試。
+- [ ] Collector 中斷不影響 SkillHub 業務結果。
+- [ ] OTel SDK 與 SkyWalking Agent 不會同時產生 Trace。
+- [ ] `make test-backend-app` 透過。
+- [ ] `make typecheck-web` 和 `make lint-web` 透過。
+- [ ] 基於 `big-main` 合入後精確 SHA 構建的遠端三個原型透過。
+- [ ] 中文測試報告儲存在本地私有目錄。
+- [ ] 新的可觀測性 Issue 和替代 PR 已建立並互相關聯。
+- [ ] #597、#644 等關聯項已獲得清晰回覆，被替代的舊 PR 已關閉。
+- [ ] 關聯 Issue 已根據剩餘範圍分別關閉、縮小範圍或保留，且狀態理由清楚。
+- [ ] 新 PR Head 與已驗證功能 SHA 一致，且可從已測試的 `big-main` SHA 到達。
+- [ ] 透過驗證後才允許更新 `main`。
 
-## 15. 回滚
+## 15. 回滾
 
-出现问题时：
+出現問題時：
 
-1. 将 `SKILLHUB_TRACING_MODE` 改为 `none`。
-2. 删除 `MANAGEMENT_OTLP_TRACING_ENDPOINT`。
-3. 将 `SKILLHUB_LOG_FORMAT` 改为 `text`。
-4. 保留 Request ID 和原有文本日志能力。
-5. 通过滚动重启恢复，不进行运行时模式切换。
+1. 將 `SKILLHUB_TRACING_MODE` 改為 `none`。
+2. 刪除 `MANAGEMENT_OTLP_TRACING_ENDPOINT`。
+3. 將 `SKILLHUB_LOG_FORMAT` 改為 `text`。
+4. 保留 Request ID 和原有文字日誌能力。
+5. 透過滾動重啟恢復，不進行執行時模式切換。
 
-Tracing 和结构化日志关闭后不得影响 SkillHub 的业务状态、数据库状态或任务执行语义。
+Tracing 和結構化日誌關閉後不得影響 SkillHub 的業務狀態、資料庫狀態或任務執行語義。
 
 ## 16. 已知限制
 
-- 10% Head Sampling 下，全量日志中的部分 `trace.id` 在 SkyWalking 中没有对应 Trace。
-- SkyWalking OTLP 模式的展示能力弱于原生 Java Agent。
-- 日志队列在背压时可能丢弃日志，这是保护业务线程的预期行为。
-- External Agent 提供哪些 MDC 字段取决于具体 Agent 和版本。
-- 一期只处理通用关联和传播，不保证搜索索引异步交付可靠性。
+- 10% Head Sampling 下，全量日誌中的部分 `trace.id` 在 SkyWalking 中沒有對應 Trace。
+- SkyWalking OTLP 模式的展示能力弱於原生 Java Agent。
+- 日誌佇列在背壓時可能丟棄日誌，這是保護業務執行緒的預期行為。
+- External Agent 提供哪些 MDC 欄位取決於具體 Agent 和版本。
+- 一期只處理通用關聯和傳播，不保證搜尋索引非同步交付可靠性。
 
-## 17. 参考资料
+## 17. 參考資料
 
 - [Spring Boot 3.2.3 Tracing](https://docs.spring.io/spring-boot/docs/3.2.3/reference/html/actuator.html#actuator.micrometer-tracing)
 - [Micrometer Tracing](https://docs.micrometer.io/tracing/reference/)
@@ -530,4 +530,4 @@ Tracing 和结构化日志关闭后不得影响 SkillHub 的业务状态、数�
 - [SkyWalking OpenTelemetry Trace](https://skywalking.apache.org/docs/main/v10.3.0/en/setup/backend/otlp-trace/)
 - [SkyWalking Logback Toolkit](https://skywalking.apache.org/docs/skywalking-java/next/en/setup/service-agent/java-agent/application-toolkit-logback-1.x/)
 - [Elastic ECS Tracing Fields](https://www.elastic.co/docs/reference/ecs/ecs-tracing)
-- [方案调研](./research/2026-07-31-observability-common-solutions.md)
+- [方案調研](./research/2026-07-31-observability-common-solutions.md)

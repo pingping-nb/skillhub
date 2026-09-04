@@ -138,11 +138,11 @@ $env:CLAWHUB_SITE = '${baseUrl}'
 $env:CLAWHUB_REGISTRY = '${baseUrl}'`
 
   const installCode = t(`${ns}.quickStart.steps.installSkills.code`, {
-    defaultValue: '# 搜索技能\nclawhub search <keyword>\n\n# 安装技能\nclawhub install <skill>',
+    defaultValue: '# 搜尋技能\nclawhub search <keyword>\n\n# 安裝技能\nclawhub install <skill>',
   })
 
   const publishCode = t(`${ns}.quickStart.steps.publishSkills.code`, {
-    defaultValue: '# 发布技能\nclawhub publish\n\n# 或使用网页界面\n# 点击"发布技能"',
+    defaultValue: '# 發布技能\nclawhub publish\n\n# 或使用網頁介面\n# 點選"發布技能"',
   })
 
   const steps: CodeBlockProps[] = [

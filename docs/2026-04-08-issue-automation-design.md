@@ -1,52 +1,52 @@
-# Issue 自动分诊 MVP 设计
+# Issue 自動分診 MVP 設計
 
-## 目标
+## 目標
 
-通过自动将 GitHub issue 分诊到三个队列中，降低维护者负担：
+透過自動將 GitHub issue 分診到三個佇列中，降低維護者負擔：
 
-- `triage/deferred`：低优先级 issue，会随着时间推移逐步上浮
-- `triage/core`：高优先级或高风险 issue，需要 core maintainer 接手
-- `triage/agent-ready`：高优先级、低风险 issue，适合作为后续 agent 执行候选
+- `triage/deferred`：低優先順序 issue，會隨著時間推移逐步上浮
+- `triage/core`：高優先順序或高風險 issue，需要 core maintainer 接手
+- `triage/agent-ready`：高優先順序、低風險 issue，適合作為後續 agent 執行候選
 
-本 MVP 版本还不会自动修复 issue。它聚焦在评分、路由、打标签，以及让
-backlog 持续流动。
+本 MVP 版本還不會自動修復 issue。它聚焦在評分、路由、打標籤，以及讓
+backlog 持續流動。
 
-当前版本支持两种执行模式：
+當前版本支援兩種執行模式：
 
-- 仅规则分诊
-- 规则 + 兼容 OpenAI 的 LLM 辅助
+- 僅規則分診
+- 規則 + 相容 OpenAI 的 LLM 輔助
 
-## 为什么这样拆分
+## 為什麼這樣拆分
 
-最初的方案把优先级和执行难度混在同一个决策里。实践上，如果把它们拆开，
-系统会更容易调参：
+最初的方案把優先順序和執行難度混在同一個決策裡。實踐上，如果把它們拆開，
+系統會更容易調參：
 
-- `Priority`：这个 issue 现在是否值得投入时间？
-- `Route`：一旦值得处理，应该由谁来接手？
+- `Priority`：這個 issue 現在是否值得投入時間？
+- `Route`：一旦值得處理，應該由誰來接手？
 
-这样一来，高价值但高难度的 issue 仍然可以保持高优先级，同时继续路由到
+這樣一來，高價值但高難度的 issue 仍然可以保持高優先順序，同時繼續路由到
 `triage/core`。
 
-## 输入
+## 輸入
 
-自动化会读取 issue 的实时标题、正文、标签、评论和时间戳。
+自動化會讀取 issue 的實時標題、正文、標籤、評論和時間戳。
 
-结构化的 issue 表单字段来自：
+結構化的 issue 表單欄位來自：
 
 - [bug_report.yml](../.github/ISSUE_TEMPLATE/bug_report.yml)
 - [feature_request.yml](../.github/ISSUE_TEMPLATE/feature_request.yml)
 - [reward-task.yml](../.github/ISSUE_TEMPLATE/reward-task.yml)
 
-## 评分模型
+## 評分模型
 
-每个 issue 会沿四个维度评分：
+每個 issue 會沿四個維度評分：
 
-- `impact`（1-5）：对用户和工作流的影响
-- `urgency`（1-5）：发布时间压力、功能损坏情况或重复讨论程度
-- `effort`（1-5）：预估改动规模和协作成本
-- `confidence`（1-5）：issue 描述的完整性和可执行程度
+- `impact`（1-5）：對使用者和工作流的影響
+- `urgency`（1-5）：發布時間壓力、功能損壞情況或重複討論程度
+- `effort`（1-5）：預估改動規模和協作成本
+- `confidence`（1-5）：issue 描述的完整性和可執行程度
 
-优先级计算公式如下：
+優先順序計算公式如下：
 
 ```text
 priority = impact * 0.45 + urgency * 0.35 + age_boost + engagement_boost
@@ -54,94 +54,94 @@ priority = impact * 0.45 + urgency * 0.35 + age_boost + engagement_boost
 
 其中：
 
-- `age_boost`：基于 SLA 的升级机制
-  - 第 7-9 天：预热阶段，最低提升到 `priority/p2`
-  - 第 10-13 天：强制移出 `triage/deferred`，最低提升到 `priority/p1`
-  - 第 14 天及以后：在下一次 triage/rescore 时，将该 issue 视为已违反 SLA，
-    并至少提升到 `priority/p0`
-- `engagement_boost`：由评论压力和奖励金额共同决定，上限为 +1.0
+- `age_boost`：基於 SLA 的升級機制
+  - 第 7-9 天：預熱階段，最低提升到 `priority/p2`
+  - 第 10-13 天：強制移出 `triage/deferred`，最低提升到 `priority/p1`
+  - 第 14 天及以後：在下一次 triage/rescore 時，將該 issue 視為已違反 SLA，
+    並至少提升到 `priority/p0`
+- `engagement_boost`：由評論壓力和獎勵金額共同決定，上限為 +1.0
 
-在 MVP 中，`effort` 不会直接降低优先级，它只影响路由。
+在 MVP 中，`effort` 不會直接降低優先順序，它隻影響路由。
 
-## LLM 辅助分诊
+## LLM 輔助分診
 
-配置后，工作流可以调用兼容 OpenAI 的 chat completions API。
+配置後，工作流可以呼叫相容 OpenAI 的 chat completions API。
 
-LLM 不会替代规则引擎。它只用于辅助：
+LLM 不會替代規則引擎。它只用於輔助：
 
 - 生成 issue 摘要
-- 对软性分数做微调
-- 生成 `needs-info` 的追问问题
-- 为维护者提供更好的判断依据
-- 为 `triage/core` 生成 maintainer 交接摘要
+- 對軟性分數做微調
+- 生成 `needs-info` 的追問問題
+- 為維護者提供更好的判斷依據
+- 為 `triage/core` 生成 maintainer 交接摘要
 
-硬性门槛仍然由规则控制：
+硬性門檻仍然由規則控制：
 
-- 缺失必填信息
-- auth、schema、migration、SDK 或公共契约变更等高风险区域
-- 最终是否可以提升到 `triage/agent-ready`
+- 缺失必填資訊
+- auth、schema、migration、SDK 或公共契約變更等高風險區域
+- 最終是否可以提升到 `triage/agent-ready`
 
-issue 正文和评论都视为不可信输入。工作流会：
+issue 正文和評論都視為不可信輸入。工作流會：
 
-- 在发送给模型前截断过长的正文和评论
-- 明确告诉模型，issue 文本是数据而不是指令
-- 使用严格的 JSON 协议校验模型输出
-- 如果 provider 调用失败或 JSON 校验失败，则回退到仅规则模式
+- 在傳送給模型前截斷過長的正文和評論
+- 明確告訴模型，issue 文字是資料而不是指令
+- 使用嚴格的 JSON 協議校驗模型輸出
+- 如果 provider 呼叫失敗或 JSON 校驗失敗，則回退到僅規則模式
 
 ### 模式
 
-- `off`：仅规则
-- `shadow`：调用 LLM 并展示其建议，但最终仍沿用仅规则的路由和标签
-- `assist`：允许 LLM 对软性分数做最多 `+/-1` 的微调，然后重新应用硬性门槛
+- `off`：僅規則
+- `shadow`：呼叫 LLM 並展示其建議，但最終仍沿用僅規則的路由和標籤
+- `assist`：允許 LLM 對軟性分數做最多 `+/-1` 的微調，然後重新應用硬性門檻
 
-### 何时使用 LLM
+### 何時使用 LLM
 
-工作流只会在 issue 看起来存在歧义或价值较高时调用 LLM，例如：
+工作流只會在 issue 看起來存在歧義或價值較高時呼叫 LLM，例如：
 
 - `triage/needs-info`
 - `triage/core`
-- 靠近路由阈值的 issue
+- 靠近路由閾值的 issue
 - 低置信度案例
-- 正文很长或讨论很多的 issue
-- 需要更多判断的 feature 或 reward issue
+- 正文很長或討論很多的 issue
+- 需要更多判斷的 feature 或 reward issue
 
-## 路由规则
+## 路由規則
 
 1. `triage/needs-info`
-   当缺少必填字段或 `confidence <= 2` 时触发。
+   當缺少必填欄位或 `confidence <= 2` 時觸發。
 
 2. `triage/deferred`
-   当 `priority < 3.6`、issue 不受信息缺失阻塞、且 issue 年龄仍低于 SLA
-   升级底线时触发。
+   當 `priority < 3.6`、issue 不受資訊缺失阻塞、且 issue 年齡仍低於 SLA
+   升級底線時觸發。
 
 3. `triage/core`
-   当 `priority >= 3.6` 且满足以下任一条件时触发：
+   當 `priority >= 3.6` 且滿足以下任一條件時觸發：
    - issue 阻塞了 OpenClaw/ClawHub 核心工作流，例如 install、publish、
-     update、sync 或基于 namespace 的发布
+     update、sync 或基於 namespace 的發布
    - `effort >= 4`
    - `confidence <= 3`
-   - 存在高风险关键词或会影响契约的字段
+   - 存在高風險關鍵詞或會影響契約的欄位
 
 4. `triage/agent-ready`
-   当 `priority >= 3.6`、`effort <= 3`、`confidence >= 4`，且不存在高风险
-   信号时触发。
+   當 `priority >= 3.6`、`effort <= 3`、`confidence >= 4`，且不存在高風險
+   訊號時觸發。
 
-在 `assist` 模式下，LLM 建议可以对 `impact`、`urgency`、`effort` 和
-`confidence` 各自最多调整 1 分。规则引擎随后会重新计算优先级和路由。
+在 `assist` 模式下，LLM 建議可以對 `impact`、`urgency`、`effort` 和
+`confidence` 各自最多調整 1 分。規則引擎隨後會重新計算優先順序和路由。
 
-涉及 OpenClaw/ClawHub 核心工作流的 issue 是进入 `triage/core` 的硬性门槛；
-LLM 辅助不会放宽这一规则。
+涉及 OpenClaw/ClawHub 核心工作流的 issue 是進入 `triage/core` 的硬性門檻；
+LLM 輔助不會放寬這一規則。
 
-## 受管标签
+## 受管標籤
 
-自动化负责管理以下标签前缀：
+自動化負責管理以下標籤字首：
 
 - `triage/`
 - `priority/`
 - `effort/`
 - `risk/`
 
-当前使用的具体标签有：
+當前使用的具體標籤有：
 
 - `triage/needs-info`
 - `triage/deferred`
@@ -156,111 +156,111 @@ LLM 辅助不会放宽这一规则。
 - `effort/l`
 - `risk/high`
 
-其余所有标签都保持不变。
+其餘所有標籤都保持不變。
 
-另外，自动化还识别一个不由其管理的人工操作标签：
+另外，自動化還識別一個不由其管理的人工操作標籤：
 
-- `triage-manual`：冻结该 issue 的自动分诊更新
+- `triage-manual`：凍結該 issue 的自動分診更新
 
 ## 工作流
 
-### 1. Issue 分诊
+### 1. Issue 分診
 
-文件：[issue-triage.yml](../.github/workflows/issue-triage.yml)
+檔案：[issue-triage.yml](../.github/workflows/issue-triage.yml)
 
-触发条件：
+觸發條件：
 
 - `issues.opened`
 - `issues.edited`
 - `issues.reopened`
-- 当评论包含 `/retriage` 时触发 `issue_comment.created`
+- 當評論包含 `/retriage` 時觸發 `issue_comment.created`
 - `workflow_dispatch`
 
-执行动作：
+執行動作：
 
-- 拉取 issue 和评论
-- 计算分数和路由
-- 更新或创建受管标签
-- 更新或创建一条分诊评论，其中同时包含人类可读的判断理由和隐藏的机器状态
-- 可选调用兼容 OpenAI 的 provider，并合并结果
+- 拉取 issue 和評論
+- 計算分數和路由
+- 更新或建立受管標籤
+- 更新或建立一條分診評論，其中同時包含人類可讀的判斷理由和隱藏的機器狀態
+- 可選呼叫相容 OpenAI 的 provider，併合並結果
 
-### 2. Deferred Backlog 重新评分
+### 2. Deferred Backlog 重新評分
 
-文件：
+檔案：
 [issue-backlog-rescore.yml](../.github/workflows/issue-backlog-rescore.yml)
 
-触发条件：
+觸發條件：
 
-- 每 6 小时一次
+- 每 6 小時一次
 - `workflow_dispatch`
 
-执行动作：
+執行動作：
 
-- 列出所有带有 `triage/deferred` 标签的 open issue
-- 结合年龄和参与度加成重新计算优先级
-- 决定将每个 issue 升级还是保留
-- 原地更新分诊评论
-- 当 issue 内容未变化时复用缓存的 LLM 结果
+- 列出所有帶有 `triage/deferred` 標籤的 open issue
+- 結合年齡和參與度加成重新計算優先順序
+- 決定將每個 issue 升級還是保留
+- 原地更新分診評論
+- 當 issue 內容未變化時複用快取的 LLM 結果
 
-试运行说明：
+試執行說明：
 
-- 当前定时 rescore 只扫描 `triage/deferred` 队列中的 issue
-- 这可以保证低优先级 backlog 不会在 `deferred` 中闲置超过第 10 天
-- 一旦某个 issue 已经从 `deferred` 中升级出去，之后第 14 天的进一步升级
-  依赖新的 triage 事件或手动 `/retriage`
-- 在试运行阶段，14 天规则应被视为运营层面的 SLA 目标，而不是仓库范围内的
-  硬性计时器
+- 當前定時 rescore 只掃描 `triage/deferred` 佇列中的 issue
+- 這可以保證低優先順序 backlog 不會在 `deferred` 中閒置超過第 10 天
+- 一旦某個 issue 已經從 `deferred` 中升級出去，之後第 14 天的進一步升級
+  依賴新的 triage 事件或手動 `/retriage`
+- 在試執行階段，14 天規則應被視為運營層面的 SLA 目標，而不是倉庫範圍內的
+  硬性計時器
 
-## 脚本
+## 指令碼
 
-新的 GitHub 自动化脚本位于
+新的 GitHub 自動化指令碼位於
 [`.github/scripts`](/Users/wowo/workspace/skillhub/.github/scripts)：
 
-- [github.ts](/Users/wowo/workspace/skillhub/.github/scripts/github.ts)：精简版
-  GitHub REST 客户端
+- [github.ts](/Users/wowo/workspace/skillhub/.github/scripts/github.ts)：精簡版
+  GitHub REST 客戶端
 - [issue-triage-config.ts](/Users/wowo/workspace/skillhub/.github/scripts/issue-triage-config.ts)：
-  标签、阈值和关键词规则
+  標籤、閾值和關鍵詞規則
 - [issue-llm-config.ts](/Users/wowo/workspace/skillhub/.github/scripts/issue-llm-config.ts)：
-  LLM 模式、环境变量和调用启发式
+  LLM 模式、環境變數和呼叫啟發式
 - [issue-llm-provider.ts](/Users/wowo/workspace/skillhub/.github/scripts/issue-llm-provider.ts)：
-  兼容 OpenAI 的 chat completions 客户端
+  相容 OpenAI 的 chat completions 客戶端
 - [issue-llm-evaluator.ts](/Users/wowo/workspace/skillhub/.github/scripts/issue-llm-evaluator.ts)：
-  prompt 构造、JSON 校验和缓存 key 生成
+  prompt 構造、JSON 校驗和快取 key 生成
 - [issue-triage-lib.ts](/Users/wowo/workspace/skillhub/.github/scripts/issue-triage-lib.ts)：
-  解析、评分、路由和评论渲染
+  解析、評分、路由和評論渲染
 - [issue-triage-merge.ts](/Users/wowo/workspace/skillhub/.github/scripts/issue-triage-merge.ts)：
-  有界合并和硬性门槛重应用
+  有界合併和硬性門檻重應用
 - [issue-triage.ts](/Users/wowo/workspace/skillhub/.github/scripts/issue-triage.ts)：
-  单 issue 入口
+  單 issue 入口
 - [issue-backlog-rescore.ts](/Users/wowo/workspace/skillhub/.github/scripts/issue-backlog-rescore.ts)：
-  deferred 队列重新评分入口
+  deferred 佇列重新評分入口
 
 ## 配置
 
-设置以下 GitHub 仓库变量和 secret，即可启用 LLM 辅助分诊：
+設定以下 GitHub 倉庫變數和 secret，即可啟用 LLM 輔助分診：
 
-仓库变量：
+倉庫變數：
 
 - `ISSUE_TRIAGE_LLM_MODE`
 - `ISSUE_TRIAGE_LLM_BASE_URL`
 - `ISSUE_TRIAGE_LLM_MODEL`
-- `ISSUE_TRIAGE_LLM_TIMEOUT_MS` 可选
-- `ISSUE_TRIAGE_LLM_TEMPERATURE` 可选
-- `ISSUE_TRIAGE_LLM_MAX_COMMENTS` 可选
-- `ISSUE_TRIAGE_LLM_MAX_COMMENT_CHARS` 可选
-- `ISSUE_TRIAGE_LLM_MAX_BODY_CHARS` 可选
+- `ISSUE_TRIAGE_LLM_TIMEOUT_MS` 可選
+- `ISSUE_TRIAGE_LLM_TEMPERATURE` 可選
+- `ISSUE_TRIAGE_LLM_MAX_COMMENTS` 可選
+- `ISSUE_TRIAGE_LLM_MAX_COMMENT_CHARS` 可選
+- `ISSUE_TRIAGE_LLM_MAX_BODY_CHARS` 可選
 
-仓库 secret：
+倉庫 secret：
 
 - `ISSUE_TRIAGE_LLM_API_KEY`
 
-建议的第一轮上线方式：
+建議的第一輪上線方式：
 
 - `ISSUE_TRIAGE_LLM_MODE=shadow`
-- 先观察几天分诊评论
-- 等 LLM 建议看起来稳定后，再切换到 `assist`
+- 先觀察幾天分診評論
+- 等 LLM 建議看起來穩定後，再切換到 `assist`
 
-兼容 OpenAI 的变量示例：
+相容 OpenAI 的變數示例：
 
 ```text
 ISSUE_TRIAGE_LLM_MODE=shadow
@@ -268,56 +268,56 @@ ISSUE_TRIAGE_LLM_BASE_URL=https://your-provider.example.com/v1
 ISSUE_TRIAGE_LLM_MODEL=gpt-4.1-mini
 ```
 
-## 推出计划
+## 推出計劃
 
-### Phase 1：当前阶段
+### Phase 1：當前階段
 
-- 启用 triage 和 backlog rescore
-- 观察几周的 issue 流量后微调阈值
-- 允许维护者通过 `triage-manual` 冻结特定 issue 的自动化处理
-- 如果使用 LLM，从 `shadow` 模式开始
+- 啟用 triage 和 backlog rescore
+- 觀察幾周的 issue 流量後微調閾值
+- 允許維護者透過 `triage-manual` 凍結特定 issue 的自動化處理
+- 如果使用 LLM，從 `shadow` 模式開始
 
 ### Phase 2：Maintainer 交接
 
-为 `triage/core` issue 增加 issue-brief 生成器，输出内容包括：
+為 `triage/core` issue 增加 issue-brief 生成器，輸出內容包括：
 
-- 复现提示
-- 可能涉及的模块
-- 风险备注
-- 验证清单
+- 復現提示
+- 可能涉及的模組
+- 風險備註
+- 驗證清單
 
-这些输出可以直接用于本地编程 agent 会话，以及现有的并行 worktree 流程。
+這些輸出可以直接用於本地程式設計 agent 會話，以及現有的並行 worktree 流程。
 
-当前 MVP 已经会在 `triage/core` issue 的分诊评论中直接嵌入一个
-`Maintainer Brief` 区块。该摘要包括：
+當前 MVP 已經會在 `triage/core` issue 的分診評論中直接嵌入一個
+`Maintainer Brief` 區塊。該摘要包括：
 
-- 简洁的 issue 摘要
-- issue 为什么被升级到 core
-- 复现路径或操作路径备注
-- 疑似相关模块或工作流负责人
-- 风险提示
-- 验证清单
+- 簡潔的 issue 摘要
+- issue 為什麼被升級到 core
+- 復現路徑或操作路徑備註
+- 疑似相關模組或工作流負責人
+- 風險提示
+- 驗證清單
 
-### Phase 3：自托管 Issue Agent
+### Phase 3：自託管 Issue Agent
 
-增加一个自托管 runner，监听 `triage/agent-ready`，并执行：
+增加一個自託管 runner，監聽 `triage/agent-ready`，並執行：
 
-- 创建隔离的分支和 worktree
-- 运行解决 issue 的 agent
-- 执行最小相关测试集
-- 打开一个 draft PR
+- 建立隔離的分支和 worktree
+- 執行解決 issue 的 agent
+- 執行最小相關測試集
+- 開啟一個 draft PR
 
-在这个阶段，以下场景仍应保留硬性阻断：
+在這個階段，以下場景仍應保留硬性阻斷：
 
-- auth 和权限变更
-- 安全敏感变更
-- schema 或 migration 相关工作
-- 公共 API、SDK 或 CLI 契约变更
+- auth 和許可權變更
+- 安全敏感變更
+- schema 或 migration 相關工作
+- 公共 API、SDK 或 CLI 契約變更
 
-## 待调优问题
+## 待調優問題
 
-- 参与度加成是否只看评论数就够了，还是也应该拉取 reactions
-- reward issue 是否应比当前 MVP 获得更强的价值加成
-- `agent-ready` 是否应要求 `effort <= 2`，而不是 `<= 3`
-- 某些区域（如 `scanner`）是否应默认视为高风险
-- 某些团队是否应长期保持 `shadow` 模式，只把 `assist` 用在更窄的仓库子集上
+- 參與度加成是否只看評論數就夠了，還是也應該拉取 reactions
+- reward issue 是否應比當前 MVP 獲得更強的價值加成
+- `agent-ready` 是否應要求 `effort <= 2`，而不是 `<= 3`
+- 某些區域（如 `scanner`）是否應預設視為高風險
+- 某些團隊是否應長期保持 `shadow` 模式，只把 `assist` 用在更窄的倉庫子集上

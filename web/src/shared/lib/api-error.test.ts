@@ -62,7 +62,7 @@ describe('handleApiError', () => {
 
     handleApiError(new ApiError('Network error', 0))
 
-    expect(errorSpy).toHaveBeenLastCalledWith('网络连接失败，请检查网络')
+    expect(errorSpy).toHaveBeenLastCalledWith('網路連線失敗，請檢查網路')
   })
 
   it('shows network error message when status is 0 with timeout', async () => {
@@ -70,6 +70,6 @@ describe('handleApiError', () => {
 
     handleApiError(new ApiError('error.request.timeout', 0))
 
-    expect(errorSpy).toHaveBeenLastCalledWith('网络连接失败，请检查网络')
+    expect(errorSpy).toHaveBeenLastCalledWith('網路連線失敗，請檢查網路')
   })
 })

@@ -1,80 +1,80 @@
-# Skill 发布与版本管理
+# Skill 發布與版本管理
 
 ## 功能描述
 
-Skill 发布是 SkillHub 的核心功能。开发者可以将本地开发的 Agent 技能包一键上传到注册中心，系统会自动处理版本管理、元数据提取、文件索引等工作。
+Skill 發布是 SkillHub 的核心功能。開發者可以將本地開發的 Agent 技能包一鍵上傳到註冊中心，系統會自動處理版本管理、後設資料提取、檔案索引等工作。
 
-![概念图](/diagrams/skill-publish-concept.png)
+![概念圖](/diagrams/skill-publish-concept.png)
 
-**解决的问题**：
+**解決的問題**：
 
-传统方式下，团队成员通过 Git 仓库或文件共享来分发技能包。这种方式存在几个痛点：
+傳統方式下，團隊成員透過 Git 倉庫或檔案共享來分發技能包。這種方式存在幾個痛點：
 
-- **版本混乱**：不同版本散落在各处，难以追踪
-- **权限失控**：无法精细控制谁能访问哪些技能包
-- **发现困难**：新成员不知道团队已有哪些可用技能
+- **版本混亂**：不同版本散落在各處，難以追蹤
+- **許可權失控**：無法精細控制誰能訪問哪些技能包
+- **發現困難**：新成員不知道團隊已有哪些可用技能
 
-SkillHub 提供了类似 npm 的发布体验，但增加了企业级的权限控制和审核机制。
+SkillHub 提供了類似 npm 的發布體驗，但增加了企業級的許可權控制和稽核機制。
 
 **核心特性**：
 
-- **语义化版本**：支持 `major.minor.patch` 版本号规范
-- **标签系统**：`latest`、`beta`、`stable` 等自定义标签
-- **多版本共存**：同一技能包可以保留多个历史版本
-- **版本解析**：智能解析版本选择器（如 `^1.2.0`、`~2.0.0`）
-- **文件浏览**：在线浏览技能包内的文件结构
-- **下载分发**：支持按版本、按标签下载
+- **語義化版本**：支援 `major.minor.patch` 版本號規範
+- **標籤系統**：`latest`、`beta`、`stable` 等自定義標籤
+- **多版本共存**：同一技能包可以保留多個歷史版本
+- **版本解析**：智慧解析版本選擇器（如 `^1.2.0`、`~2.0.0`）
+- **檔案瀏覽**：線上瀏覽技能包內的檔案結構
+- **下載分發**：支援按版本、按標籤下載
 
-## 使用场景
+## 使用場景
 
-**场景一：开发者发布新技能**
+**場景一：開發者發布新技能**
 
-你刚完成了一个 Claude Code 技能包，想让团队其他成员也能使用。
+你剛完成了一個 Claude Code 技能包，想讓團隊其他成員也能使用。
 
-![操作截图](/screenshots/homepage.png)
+![操作截圖](/screenshots/homepage.png)
 
-**场景二：版本迭代**
+**場景二：版本迭代**
 
-技能包需要修复 bug 或添加新功能，发布新版本并保持向后兼容。
+技能包需要修復 bug 或新增新功能，發布新版本並保持向後相容。
 
-**场景三：Beta 测试**
+**場景三：Beta 測試**
 
-新功能还不稳定，先发布 `beta` 标签让少数人测试，稳定后再推广到 `latest`。
+新功能還不穩定，先發布 `beta` 標籤讓少數人測試，穩定後再推廣到 `latest`。
 
-**场景四：版本回滚**
+**場景四：版本回滾**
 
-发现新版本有严重问题，需要将 `latest` 标签指向上一个稳定版本。
+發現新版本有嚴重問題，需要將 `latest` 標籤指向上一個穩定版本。
 
-## 使用步骤
+## 使用步驟
 
-1. **准备技能包**
+1. **準備技能包**
 
-确保技能包符合 SkillHub 规范：
+確保技能包符合 SkillHub 規範：
 - 包含 `skill.md`（技能描述）
-- 包含 `package.json` 或 `SKILL.md`（元数据）
-- 文件结构清晰，无敏感信息
+- 包含 `package.json` 或 `SKILL.md`（後設資料）
+- 檔案結構清晰，無敏感資訊
 
-2. **使用 CLI 发布（推荐）**
+2. **使用 CLI 發布（推薦）**
 
 ```bash
-# 配置 SkillHub 注册中心
+# 配置 SkillHub 註冊中心
 export SKILLHUB_REGISTRY=http://localhost:8080
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
 
-# 发布到默认命名空间
+# 發布到預設名稱空間
 npx @astron-team/skillhub@latest publish ./my-skill
 
-# 发布到指定命名空间
+# 發布到指定名稱空間
 npx @astron-team/skillhub@latest publish ./my-skill --namespace my-team
 ```
 
-> ClawHub CLI 的发布与同步协议与 SkillHub 不兼容。发布请使用上面的 SkillHub CLI。
+> ClawHub CLI 的發布與同步協議與 SkillHub 不相容。發布請使用上面的 SkillHub CLI。
 
-3. **使用 Web UI 发布**
+3. **使用 Web UI 發布**
 
-访问 `http://localhost:3000/dashboard/publish`，选择命名空间、上传 zip 文件、选择可见性后点击「发布」。
+訪問 `http://localhost:3000/dashboard/publish`，選擇名稱空間、上傳 zip 檔案、選擇可見性後點選「發布」。
 
-4. **使用 REST API 发布**
+4. **使用 REST API 發布**
 
 ```bash
 POST /api/v1/skills/{namespace}/publish
@@ -84,23 +84,23 @@ file: skill-package.zip
 visibility: PUBLIC
 ```
 
-![流程图](/diagrams/skill-publish-flow.png)
+![流程圖](/diagrams/skill-publish-flow.png)
 
-5. **安全扫描**
+5. **安全掃描**
 
-发布后，[Skill Scanner](/guide/scanner) 会自动扫描技能包，检测潜在的安全风险。扫描结果会显示在技能包详情页。
+發布後，[Skill Scanner](/guide/scanner) 會自動掃描技能包，檢測潛在的安全風險。掃描結果會顯示在技能包詳情頁。
 
-6. **等待审核**（如果命名空间开启了审核）
+6. **等待稽核**（如果名稱空間開啟了稽核）
 
-团队管理员会收到审核通知，审核通过后技能包正式发布。
+團隊管理員會收到稽核通知，稽核透過後技能包正式發布。
 
-7. **发布成功**
+7. **發布成功**
 
-技能包可以通过搜索发现，其他人可以通过 CLI 或 Web UI 下载使用。
+技能包可以透過搜尋發現，其他人可以透過 CLI 或 Web UI 下載使用。
 
-## 合规声明
+## 合規宣告
 
-技能作者可以在 `SKILL.md` frontmatter 中添加 `x-astron-compliance`，声明该技能版本与某些合规标准、控制项或安全知识库条目的映射关系。
+技能作者可以在 `SKILL.md` frontmatter 中新增 `x-astron-compliance`，宣告該技能版本與某些合規標準、控制項或安全知識庫條目的對映關係。
 
 ```yaml
 ---
@@ -121,42 +121,42 @@ x-astron-compliance:
 
 需要注意：
 
-- 这是“作者声明”，不是 SkillHub 或第三方机构的合规认证。
-- SkillHub 会校验字段结构、重复项、包内证据路径和外部 URL 格式。
-- 发布成功后，声明会被固化为当前版本的 `complianceSnapshot`，并生成稳定摘要 `digest`。
-- 后续版本如果新增、删除或修改合规声明，审核页会展示差异。
-- 搜索 `mitre-attack`、`T1059` 或声明标题时，可以命中对应技能。
+- 這是“作者宣告”，不是 SkillHub 或第三方機構的合規認證。
+- SkillHub 會校驗欄位結構、重複項、包內證據路徑和外部 URL 格式。
+- 發布成功後，宣告會被固化為當前版本的 `complianceSnapshot`，並生成穩定摘要 `digest`。
+- 後續版本如果新增、刪除或修改合規宣告，稽核頁會展示差異。
+- 搜尋 `mitre-attack`、`T1059` 或宣告標題時，可以命中對應技能。
 
-字段说明：
+欄位說明：
 
-| 字段 | 必填 | 说明 |
+| 欄位 | 必填 | 說明 |
 |------|------|------|
-| `standard` | 是 | 标准或框架标识，例如 `mitre-attack`、`nist-csf`、`soc2` |
-| `version` | 是 | 标准版本 |
-| `controlId` | 是 | 控制项、技术编号或条款 ID |
-| `title` | 否 | 控制项名称，建议填写，便于审核和搜索 |
-| `evidence` | 否 | 证据列表，支持包内文件和外部 URL |
+| `standard` | 是 | 標準或框架標識，例如 `mitre-attack`、`nist-csf`、`soc2` |
+| `version` | 是 | 標準版本 |
+| `controlId` | 是 | 控制項、技術編號或條款 ID |
+| `title` | 否 | 控制項名稱，建議填寫，便於稽核和搜尋 |
+| `evidence` | 否 | 證據列表，支援包內檔案和外部 URL |
 
-## API 接口
+## API 介面
 
-**发布技能包**：
+**發布技能包**：
 ```bash
 POST /api/v1/skills/{namespace}/publish
 Content-Type: multipart/form-data
 
-# 参数
+# 引數
 file: MultipartFile (必需)
-visibility: PUBLIC | PRIVATE | INTERNAL (可选，默认 PUBLIC)
+visibility: PUBLIC | PRIVATE | INTERNAL (可選，預設 PUBLIC)
 ```
 
-**参数说明**：
-| 参数 | 类型 | 说明 |
+**引數說明**：
+| 引數 | 型別 | 說明 |
 |------|------|------|
-| namespace | string | 命名空间 slug（路径参数） |
-| file | MultipartFile | 技能包 zip 文件 |
-| visibility | enum | 可见性级别：PUBLIC（公开）、PRIVATE（私有）、INTERNAL（内部） |
+| namespace | string | 名稱空間 slug（路徑引數） |
+| file | MultipartFile | 技能包 zip 檔案 |
+| visibility | enum | 可見性級別：PUBLIC（公開）、PRIVATE（私有）、INTERNAL（內部） |
 
-**获取 Skill 详情**：
+**獲取 Skill 詳情**：
 ```bash
 GET /api/v1/skills/{namespace}/{slug}
 ```
@@ -166,17 +166,17 @@ GET /api/v1/skills/{namespace}/{slug}
 GET /api/v1/skills/{namespace}/{slug}/versions?page=0&size=20
 ```
 
-**获取版本详情**：
+**獲取版本詳情**：
 ```bash
 GET /api/v1/skills/{namespace}/{slug}/versions/{version}
 ```
 
-**下载特定版本**：
+**下載特定版本**：
 ```bash
 GET /api/v1/skills/{namespace}/{slug}/versions/{version}/download
 ```
 
-**按标签下载**：
+**按標籤下載**：
 ```bash
 GET /api/v1/skills/{namespace}/{slug}/tags/{tagName}/download
 ```
@@ -186,13 +186,13 @@ GET /api/v1/skills/{namespace}/{slug}/tags/{tagName}/download
 GET /api/v1/skills/{namespace}/{slug}/resolve?version=^1.2.0
 ```
 
-## 注意事项
+## 注意事項
 
-> **版本号规范**：SkillHub 使用语义化版本（Semantic Versioning）。版本号格式为 `major.minor.patch`，例如 `1.2.3`。
+> **版本號規範**：SkillHub 使用語義化版本（Semantic Versioning）。版本號格式為 `major.minor.patch`，例如 `1.2.3`。
 
-- **首次发布**：版本号建议从 `0.1.0` 或 `1.0.0` 开始
-- **标签管理**：`latest` 标签会自动指向最新的稳定版本
-- **审核流程**：如果命名空间开启了审核，新版本需要等待管理员批准
-- **文件大小限制**：单个技能包不超过 100MB（可配置）
-- **命名规范**：Skill slug 支持小写字母、数字、连字符和 Unicode 字符
-- **版本不可变**：已发布的版本不能修改，只能发布新版本
+- **首次發布**：版本號建議從 `0.1.0` 或 `1.0.0` 開始
+- **標籤管理**：`latest` 標籤會自動指向最新的穩定版本
+- **稽核流程**：如果名稱空間開啟了稽核，新版本需要等待管理員批准
+- **檔案大小限制**：單個技能包不超過 100MB（可配置）
+- **命名規範**：Skill slug 支援小寫字母、數字、連字元和 Unicode 字元
+- **版本不可變**：已發布的版本不能修改，只能發布新版本

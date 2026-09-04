@@ -687,15 +687,15 @@ Use this content in section 10.3:
 ```markdown
 ### 10.3 CLI API
 
-| 接口 | 凭证规则 | 授权与错误语义 |
+| 介面 | 憑證規則 | 授權與錯誤語義 |
 |------|---------|---------------|
-| `GET /api/cli/v1/auth/whoami` | 有效 Web Session 或有效 Bearer Token | 无有效身份返回 401；坏 Bearer 即使存在 Session 也返回 401 |
-| `GET /api/cli/v1/skills/search` | Session 可用；无 Session 时可匿名；提供 Bearer 时必须有效 | 匿名仅返回公开可安装 skill；有效 Bearer 覆盖 Session；坏 Bearer 返回 401，不得降级 |
-| `GET /api/cli/v1/skills/{namespace}/{slug}/resolve` | Session 可用；无 Session 时可匿名读取公开资源；提供 Bearer 时必须有效 | 有效 Bearer 覆盖 Session；坏 Bearer 返回 401；有效身份无资源权限返回 403 |
-| `GET /api/cli/v1/skills/{namespace}/{slug}/download` | Session 可用；无 Session 时可匿名下载公开资源；提供 Bearer 时必须有效 | 有效 Bearer 覆盖 Session；坏 Bearer 返回 401；有效身份无资源权限返回 403 |
-| `GET /api/cli/v1/skills/{namespace}/{slug}/versions/{version}/download` | Session 可用；无 Session 时可匿名下载公开资源；提供 Bearer 时必须有效 | 有效 Bearer 覆盖 Session；坏 Bearer 返回 401；有效身份无资源权限返回 403 |
+| `GET /api/cli/v1/auth/whoami` | 有效 Web Session 或有效 Bearer Token | 無有效身份返回 401；壞 Bearer 即使存在 Session 也返回 401 |
+| `GET /api/cli/v1/skills/search` | Session 可用；無 Session 時可匿名；提供 Bearer 時必須有效 | 匿名僅返回公開可安裝 skill；有效 Bearer 覆蓋 Session；壞 Bearer 返回 401，不得降級 |
+| `GET /api/cli/v1/skills/{namespace}/{slug}/resolve` | Session 可用；無 Session 時可匿名讀取公開資源；提供 Bearer 時必須有效 | 有效 Bearer 覆蓋 Session；壞 Bearer 返回 401；有效身份無資源許可權返回 403 |
+| `GET /api/cli/v1/skills/{namespace}/{slug}/download` | Session 可用；無 Session 時可匿名下載公開資源；提供 Bearer 時必須有效 | 有效 Bearer 覆蓋 Session；壞 Bearer 返回 401；有效身份無資源許可權返回 403 |
+| `GET /api/cli/v1/skills/{namespace}/{slug}/versions/{version}/download` | Session 可用；無 Session 時可匿名下載公開資源；提供 Bearer 時必須有效 | 有效 Bearer 覆蓋 Session；壞 Bearer 返回 401；有效身份無資源許可權返回 403 |
 
-Spring Security 先加载 Web Session 身份，共享 API token 过滤器随后只处理 Bearer scheme。有效 Bearer 覆盖 Session；坏 Bearer 清除当前身份并立即返回 401，不回退 Session 或匿名。没有 Authorization 或使用 Basic/其他非 Bearer scheme 时保留 Session；如果 Session 也不存在，公共读匿名而 `whoami` 返回 401。身份已验证但 token scope 或资源权限不足时返回 403。`whoami.email` 字段始终存在，没有邮箱时为 `null`。
+Spring Security 先載入 Web Session 身份，共享 API token 過濾器隨後只處理 Bearer scheme。有效 Bearer 覆蓋 Session；壞 Bearer 清除當前身份並立即返回 401，不回退 Session 或匿名。沒有 Authorization 或使用 Basic/其他非 Bearer scheme 時保留 Session；如果 Session 也不存在，公共讀匿名而 `whoami` 返回 401。身份已驗證但 token scope 或資源許可權不足時返回 403。`whoami.email` 欄位始終存在，沒有郵箱時為 `null`。
 ```
 
 - [ ] **Step 2: Create the complete OpenAPI 3.0 document**

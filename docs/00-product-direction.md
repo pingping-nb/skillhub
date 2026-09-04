@@ -1,162 +1,162 @@
-# skillhub 产品定位与 MVP 范围
+# skillhub 產品定位與 MVP 範圍
 
 ## 1. 定位
 
-单实例共享技能注册中心（Skills Hub / Registry），不是多租户平台。
+單例項共享技能註冊中心（Skills Hub / Registry），不是多租戶平臺。
 
-- 平台只有一个共享注册中心实例
-- 隔离边界是 namespace，不是租户
-- `@global` 是平台级公共空间，由平台管理员管理
-- `@team-*` 是协作与治理边界（部门/团队），不是租户边界
-- 公共技能（visibility=PUBLIC）匿名可浏览和下载
+- 平臺只有一個共享註冊中心例項
+- 隔離邊界是 namespace，不是租戶
+- `@global` 是平臺級公共空間，由平臺管理員管理
+- `@team-*` 是協作與治理邊界（部門/團隊），不是租戶邊界
+- 公共技能（visibility=PUBLIC）匿名可瀏覽和下載
 
-以 ClawHub 为产品蓝本（继承产品模型，不照搬技术实现），以 OpenSkills 借鉴 SKILL.md 格式和目录结构约定（不兼容其客户端运行时行为）。
+以 ClawHub 為產品藍本（繼承產品模型，不照搬技術實現），以 OpenSkills 借鑑 SKILL.md 格式和目錄結構約定（不相容其客戶端執行時行為）。
 
-同时，一期必须提供 ClawHub CLI 协议兼容层：服务端需要暴露一组与 ClawHub CLI 兼容的 registry API，使现有 ClawHub CLI 在不修改或仅最小配置修改的前提下可完成 registry 侧查询、解析、下载、发布、校验等核心操作。
+同時，一期必須提供 ClawHub CLI 協議相容層：服務端需要暴露一組與 ClawHub CLI 相容的 registry API，使現有 ClawHub CLI 在不修改或僅最小配置修改的前提下可完成 registry 側查詢、解析、下載、發布、校驗等核心操作。
 
-## 1.2 身份主键约束（已冻结）
+## 1.2 身份主鍵約束（已凍結）
 
-- 用户身份主键全链路统一使用 `string`，不得使用 `int` / `long` / `bigint` 作为平台用户标识的正式契约类型。
-- 该约束覆盖认证主体、API 入参/出参、权限判定、审计、资源 owner、creator、updater、reviewer、actor、submittedBy 等全部用户关联字段。
-- 原因：平台需要兼容外部 SSO / OAuth / OIDC / SCIM 等身份源，外部 UID 通常是稳定字符串，不应先压缩为本地自增整数再作为系统主契约继续传播。
-- 旧版草案中任何“整型用户标识”写法都已失效，当前唯一有效约束是“平台用户标识全链路使用字符串主键”。
+- 使用者身份主鍵全鏈路統一使用 `string`，不得使用 `int` / `long` / `bigint` 作為平臺使用者標識的正式契約型別。
+- 該約束覆蓋認證主體、API 入參/出參、許可權判定、審計、資源 owner、creator、updater、reviewer、actor、submittedBy 等全部使用者關聯欄位。
+- 原因：平臺需要相容外部 SSO / OAuth / OIDC / SCIM 等身份源，外部 UID 通常是穩定字串，不應先壓縮為本地自增整數再作為系統主契約繼續傳播。
+- 舊版草案中任何“整型使用者標識”寫法都已失效，當前唯一有效約束是“平臺使用者標識全鏈路使用字串主鍵”。
 
-### 1.1 技能坐标体系（已冻结）
+### 1.1 技能座標體系（已凍結）
 
-skillhub 内部使用 namespace 坐标模型：`@{namespace_slug}/{skill_slug}`。
+skillhub 內部使用 namespace 座標模型：`@{namespace_slug}/{skill_slug}`。
 
-ClawHub CLI 使用单一 slug 模型，slug 校验规则为 `[a-z0-9]([a-z0-9-]*[a-z0-9])?`，不允许 `/` 出现。
+ClawHub CLI 使用單一 slug 模型，slug 校驗規則為 `[a-z0-9]([a-z0-9-]*[a-z0-9])?`，不允許 `/` 出現。
 
-为同时满足两套模型，定义以下双向映射规则：
+為同時滿足兩套模型，定義以下雙向對映規則：
 
-**映射规则：**
+**對映規則：**
 
-| skillhub 坐标 | 兼容层 canonical slug | 说明 |
+| skillhub 座標 | 相容層 canonical slug | 說明 |
 |---|---|---|
-| `@global/my-skill` | `my-skill` | 全局空间省略前缀，直接使用 skill slug |
-| `@team-name/my-skill` | `team-name--my-skill` | 团队空间使用 `{namespace_slug}--{skill_slug}` 格式 |
+| `@global/my-skill` | `my-skill` | 全域性空間省略字首，直接使用 skill slug |
+| `@team-name/my-skill` | `team-name--my-skill` | 團隊空間使用 `{namespace_slug}--{skill_slug}` 格式 |
 
-**约束规则：**
-- 分隔符为双连字符 `--`
-- skill slug 和 namespace slug 均禁止包含 `--`（在校验规则中追加此限制）
-- slug 格式校验更新为：`[a-z0-9]([a-z0-9-]*[a-z0-9])?`，且不得包含连续两个以上的连字符 `--`
-- 兼容层解析 canonical slug 时：包含 `--` 则拆分为 `namespace_slug` + `skill_slug`，不包含则视为 `@global/{slug}`
-- 冲突规则：如果 `@global/team-name--my-skill` 与 `@team-name/my-skill` 产生冲突，以 `--` 拆分优先（即优先解析为团队空间技能）。全局空间的 skill slug 禁止包含 `--` 以避免歧义
-- 保留字规则：namespace slug 保留词列表同样适用于 canonical slug 的 namespace 部分
+**約束規則：**
+- 分隔符為雙連字元 `--`
+- skill slug 和 namespace slug 均禁止包含 `--`（在校驗規則中追加此限制）
+- slug 格式校驗更新為：`[a-z0-9]([a-z0-9-]*[a-z0-9])?`，且不得包含連續兩個以上的連字元 `--`
+- 相容層解析 canonical slug 時：包含 `--` 則拆分為 `namespace_slug` + `skill_slug`，不包含則視為 `@global/{slug}`
+- 衝突規則：如果 `@global/team-name--my-skill` 與 `@team-name/my-skill` 產生衝突，以 `--` 拆分優先（即優先解析為團隊空間技能）。全域性空間的 skill slug 禁止包含 `--` 以避免歧義
+- 保留字規則：namespace slug 保留詞列表同樣適用於 canonical slug 的 namespace 部分
 
-**显示规则：**
-- Web 端始终显示完整坐标：`@global/my-skill`、`@team-name/my-skill`
-- ClawHub CLI 兼容层返回 canonical slug：`my-skill`、`team-name--my-skill`
-- skillhub 自有 CLI 支持两种格式输入，内部统一转换为 namespace 坐标
+**顯示規則：**
+- Web 端始終顯示完整座標：`@global/my-skill`、`@team-name/my-skill`
+- ClawHub CLI 相容層返回 canonical slug：`my-skill`、`team-name--my-skill`
+- skillhub 自有 CLI 支援兩種格式輸入，內部統一轉換為 namespace 座標
 
-**Well-known 发现：**
-- skillhub 服务端提供 `/.well-known/clawhub.json`，返回 `{ "apiBase": "/api/v1" }`
-- ClawHub CLI 通过此机制自动发现兼容层 API 基地址
+**Well-known 發現：**
+- skillhub 服務端提供 `/.well-known/clawhub.json`，返回 `{ "apiBase": "/api/v1" }`
+- ClawHub CLI 透過此機制自動發現相容層 API 基地址
 
-## 2. 参考项目取舍
+## 2. 參考專案取捨
 
-### 2.1 继承 ClawHub 的部分
+### 2.1 繼承 ClawHub 的部分
 
-- Skill Registry 的整体产品边界
-- 技能版本、标签、下载的业务模型
-- 发布后治理机制（报告、标记、隐藏、撤回）
-- Web 浏览、详情页、上传发布、管理后台的功能切分
-- 公共查询 API 与 CLI API 的双通道设计
-- ClawHub CLI 所依赖的 registry API 协议面
-- Skill 元数据提取与服务端校验思路
-- 审计、收藏、评分、统计、运营标签等扩展位
+- Skill Registry 的整體產品邊界
+- 技能版本、標籤、下載的業務模型
+- 發布後治理機制（報告、標記、隱藏、撤回）
+- Web 瀏覽、詳情頁、上傳發布、管理後臺的功能切分
+- 公共查詢 API 與 CLI API 的雙通道設計
+- ClawHub CLI 所依賴的 registry API 協議面
+- Skill 後設資料提取與服務端校驗思路
+- 審計、收藏、評分、統計、運營標籤等擴充套件位
 
-不直接继承：
-- Convex 数据模型与运行时
-- 向量检索的一期实现方式
+不直接繼承：
+- Convex 資料模型與執行時
+- 向量檢索的一期實現方式
 
-### 2.2 借鉴 OpenSkills 的部分
+### 2.2 借鑑 OpenSkills 的部分
 
-- `SKILL.md` 格式兼容（frontmatter + markdown body）
-- 技能包目录结构约定（SKILL.md + references/ + scripts/ + assets/）
-- 四级目录优先级（`.agents/skills` → `~/.agents/skills` → `.claude/skills` → `~/.claude/skills`）
-- 目录名作为 lookup key（安装后目录名 = skill slug）
-- AGENTS.md `<skill>` 描述块格式兼容
-- 目标：skillhub CLI 安装的技能可被 OpenSkills/Claude 兼容客户端发现和使用
+- `SKILL.md` 格式相容（frontmatter + markdown body）
+- 技能包目錄結構約定（SKILL.md + references/ + scripts/ + assets/）
+- 四級目錄優先順序（`.agents/skills` → `~/.agents/skills` → `.claude/skills` → `~/.claude/skills`）
+- 目錄名作為 lookup key（安裝後目錄名 = skill slug）
+- AGENTS.md `<skill>` 描述塊格式相容
+- 目標：skillhub CLI 安裝的技能可被 OpenSkills/Claude 相容客戶端發現和使用
 
-不直接继承：
-- 以 CLI 为中心的产品定位
-- "无服务端"的前提
+不直接繼承：
+- 以 CLI 為中心的產品定位
+- "無服務端"的前提
 
-## 3. 产品原则
+## 3. 產品原則
 
-- Hub 优先：服务端是核心，CLI 和 Agent 集成是入口能力
-- 兼容优先：兼容 `SKILL.md` 及常见目录约定
-- CLI 兼容优先：除 skillhub CLI 外，一期明确要求实现 ClawHub CLI 协议兼容层
-- 分层优先：搜索、对象存储都必须有可替换边界
-- 开放认证：基于标准 OAuth2 协议，一期 GitHub 登录，架构支持后续扩展多 Provider
-- 审计优先：企业内部分发平台必须保留发布、下载、删除、授权等审计链路
+- Hub 優先：服務端是核心，CLI 和 Agent 整合是入口能力
+- 相容優先：相容 `SKILL.md` 及常見目錄約定
+- CLI 相容優先：除 skillhub CLI 外，一期明確要求實現 ClawHub CLI 協議相容層
+- 分層優先：搜尋、物件儲存都必須有可替換邊界
+- 開放認證：基於標準 OAuth2 協議，一期 GitHub 登入，架構支援後續擴充套件多 Provider
+- 審計優先：企業內部分發平臺必須保留髮布、下載、刪除、授權等審計鏈路
 
 ## 4. 一期 MVP 功能
 
 核心能力：
-- 技能发布（当前版本采用“提交 → 审核 → 上线”；`SUPER_ADMIN` 保留直发能力）
-- 技能版本管理（semver + 标签）
-- 技能浏览、详情、下载（公共技能匿名可访问）
-- 标签管理（`latest` 系统保留只读 + 自定义标签人工维护）
-- 技能包文件校验与 SKILL.md 元数据抽取
-- 基于 PostgreSQL 全文索引的搜索
+- 技能發布（當前版本採用“提交 → 稽核 → 上線”；`SUPER_ADMIN` 保留直髮能力）
+- 技能版本管理（semver + 標籤）
+- 技能瀏覽、詳情、下載（公共技能匿名可訪問）
+- 標籤管理（`latest` 系統保留只讀 + 自定義標籤人工維護）
+- 技能包檔案校驗與 SKILL.md 後設資料抽取
+- 基於 PostgreSQL 全文索引的搜尋
 
-命名空间与组织：
-- 单一全局命名空间（`@global/skill-name`），由平台管理员管理，不支持多个平台级 namespace
-- 团队/部门命名空间（`@team-slug/skill-name`）
-- 命名空间成员管理
-- 创建技能时选择归属空间
+名稱空間與組織：
+- 單一全域性名稱空間（`@global/skill-name`），由平臺管理員管理，不支援多個平臺級 namespace
+- 團隊/部門名稱空間（`@team-slug/skill-name`）
+- 名稱空間成員管理
+- 建立技能時選擇歸屬空間
 
-审核流程：
-- 当前版本：普通用户发布后进入审核，审核通过后上线
-- `SUPER_ADMIN` 发布可直达 `PUBLISHED`
-- 分级审核：团队空间由团队管理员审核，全局空间由平台管理员审核
-- 团队技能提升到全局需平台管理员二次审核
-- 平台管理员只负责全局空间审核与提升审核，不介入团队空间审核
-- 当前不引入自动审核；`PrePublishValidator` 仅作为未来扩展点保留，默认实现为 `NoOp`
-- 撤回审核语义统一为 `PENDING_REVIEW → DRAFT`，不再走删除版本记录
-- skill 生命周期管理读模型统一为 `headlineVersion / publishedVersion / ownerPreviewVersion / resolutionMode`
-- `hidden` 是独立治理覆盖层，不属于 skill 容器状态机
+稽核流程：
+- 當前版本：普通使用者發布後進入稽核，稽核透過後上線
+- `SUPER_ADMIN` 發布可直達 `PUBLISHED`
+- 分級稽核：團隊空間由團隊管理員稽核，全域性空間由平臺管理員稽核
+- 團隊技能提升到全域性需平臺管理員二次稽核
+- 平臺管理員只負責全域性空間稽核與提升稽核，不介入團隊空間稽核
+- 當前不引入自動稽核；`PrePublishValidator` 僅作為未來擴充套件點保留，預設實現為 `NoOp`
+- 撤回稽核語義統一為 `PENDING_REVIEW → DRAFT`，不再走刪除版本記錄
+- skill 生命週期管理讀模型統一為 `headlineVersion / publishedVersion / ownerPreviewVersion / resolutionMode`
+- `hidden` 是獨立治理覆蓋層，不屬於 skill 容器狀態機
 
-认证与权限：
-- OAuth2 标准登录（一期 GitHub OAuth）
-- CLI 认证采用 OAuth Device Flow，由 Web 授权后签发 CLI 可用凭证
-- API Token 保留为平台通用凭证能力，用于自动化、兼容层和后续扩展
-- ClawHub CLI 协议兼容层（一期聚焦 search、resolve、download、publish、whoami 等核心接口）
-- RBAC 角色权限体系（平台角色：SUPER_ADMIN / SKILL_ADMIN / USER_ADMIN / AUDITOR + 命名空间角色）
-- 管理后台：用户角色管理、发布审核
+認證與許可權：
+- OAuth2 標準登入（一期 GitHub OAuth）
+- CLI 認證採用 OAuth Device Flow，由 Web 授權後簽發 CLI 可用憑證
+- API Token 保留為平臺通用憑證能力，用於自動化、相容層和後續擴充套件
+- ClawHub CLI 協議相容層（一期聚焦 search、resolve、download、publish、whoami 等核心介面）
+- RBAC 角色許可權體系（平臺角色：SUPER_ADMIN / SKILL_ADMIN / USER_ADMIN / AUDITOR + 名稱空間角色）
+- 管理後臺：使用者角色管理、發布稽核
 
 社交功能：
 - 收藏（star）
-- 评分（1-5 分）
+- 評分（1-5 分）
 
-审计：
-- 发布、审核、下载、删除等关键操作审计
+審計：
+- 發布、稽核、下載、刪除等關鍵操作審計
 
-## 5. 一期明确不做（含后续规划）
+## 5. 一期明確不做（含後續規劃）
 
-- 评论 → Phase 5 上线，含举报机制
-- 自动安全扫描 → Phase 5 上线，接入 `PrePublishValidator` 扩展点
-- 举报/标记机制 → Phase 5 上线，配合评论和治理闭环
-- 向量搜索 → 当前进入第一阶段规划，仅做搜索增强，不引入推荐系统
-- 在线编辑器 → 暂不规划
-- Webhook/事件通知 → Phase 5（预留扩展点）
-- 技能依赖/兼容性声明 → 暂不规划（预留 `parsed_metadata_json` 字段）
+- 評論 → Phase 5 上線，含舉報機制
+- 自動安全掃描 → Phase 5 上線，接入 `PrePublishValidator` 擴充套件點
+- 舉報/標記機制 → Phase 5 上線，配合評論和治理閉環
+- 向量搜尋 → 當前進入第一階段規劃，僅做搜尋增強，不引入推薦系統
+- 線上編輯器 → 暫不規劃
+- Webhook/事件通知 → Phase 5（預留擴充套件點）
+- 技能依賴/相容性宣告 → 暫不規劃（預留 `parsed_metadata_json` 欄位）
 
-### latest 语义说明
+### latest 語義說明
 
-这是有意的产品决策，不是继承 ClawHub 的回滚模型：
+這是有意的產品決策，不是繼承 ClawHub 的回滾模型：
 
-- `latest` 自动跟随最新已发布版本，只读，不可手动移动
-- 回滚/稳定通道管理通过自定义标签实现（如 `stable`、`beta`、`stable-2026q1`）
-- ClawHub 的"通过移动 latest 做回滚"能力被替换为"通过自定义标签做通道管理"
+- `latest` 自動跟隨最新已發布版本，只讀，不可手動移動
+- 回滾/穩定通道管理透過自定義標籤實現（如 `stable`、`beta`、`stable-2026q1`）
+- ClawHub 的"透過移動 latest 做回滾"能力被替換為"透過自定義標籤做通道管理"
 
-## 6. 一期核心约束
+## 6. 一期核心約束
 
-- Skill 包视为"文本资源包"，不接受二进制大文件
-- 技能包主入口文件固定为 `SKILL.md`
-- 元数据以 `SKILL.md` frontmatter 为主，数据库持久化解析结果
-- 文件内容原文存对象存储，检索面向数据库中的派生字段与可索引文本
-- Web 认证、CLI Device Flow 与 API Token 凭证统一汇聚到平台用户体系
-- 公共技能（visibility=PUBLIC）匿名可浏览和下载，无需登录
+- Skill 包視為"文字資源包"，不接受二進位制大檔案
+- 技能包主入口檔案固定為 `SKILL.md`
+- 後設資料以 `SKILL.md` frontmatter 為主，資料庫持久化解析結果
+- 檔案內容原文存物件儲存，檢索麵向資料庫中的派生欄位與可索引文字
+- Web 認證、CLI Device Flow 與 API Token 憑證統一匯聚到平臺使用者體系
+- 公共技能（visibility=PUBLIC）匿名可瀏覽和下載，無需登入

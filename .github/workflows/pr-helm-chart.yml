@@ -73,7 +73,7 @@ jobs:
       matrix:
         scenario:
           - name: bitnami-default
-            description: Bitnami 默认配置
+            description: Bitnami 預設配置
             args: ""
           - name: external-db-redis
             description: 外部 PostgreSQL + Redis
@@ -85,7 +85,7 @@ jobs:
               --set externalRedis.host=redis.example.com
               --set externalRedis.password=secret
           - name: postgresql-replication
-            description: PostgreSQL 主从 + Redis 主从
+            description: PostgreSQL 主從 + Redis 主從
             args: >-
               --set postgresql.architecture=replication
               --set redis.architecture=replication
@@ -108,7 +108,7 @@ jobs:
               --set-json 'ingress.tls=[{"hosts":["skills.example.com"],"secretName":"skills-tls"}]'
               --set ingress.certManager.enabled=true
           - name: s3-storage
-            description: S3 存储
+            description: S3 儲存
             args: >-
               --set s3.enabled=true
               --set s3.bucket=test-bucket

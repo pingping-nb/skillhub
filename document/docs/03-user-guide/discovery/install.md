@@ -1,53 +1,53 @@
 ---
-title: 安装使用
+title: 安裝使用
 sidebar_position: 2
-description: 安装和使用技能
+description: 安裝和使用技能
 ---
 
-# 安装使用
+# 安裝使用
 
-## 通过 CLI 安装
+## 透過 CLI 安裝
 
-### 安装最新版本
+### 安裝最新版本
 
 ```bash
 clawhub install @team/my-skill
 ```
 
-### 安装指定版本
+### 安裝指定版本
 
 ```bash
 clawhub install @team/my-skill@1.2.0
 ```
 
-### 按标签安装
+### 按標籤安裝
 
 ```bash
 clawhub install @team/my-skill@beta
 ```
 
-### 使用 ClawHub CLI 安装
+### 使用 ClawHub CLI 安裝
 
 ```bash
 clawhub install my-skill
 clawhub install team-name--my-skill
 ```
 
-## 安装目录
+## 安裝目錄
 
-按以下优先级安装：
+按以下優先順序安裝：
 
-| 优先级 | 路径 | 说明 |
+| 優先順序 | 路徑 | 說明 |
 |--------|------|------|
-| 1 | `./.agent/skills/` | 项目级，universal 模式 |
-| 2 | `~/.agent/skills/` | 全局级，universal 模式 |
-| 3 | `./.claude/skills/` | 项目级，Claude 默认 |
-| 4 | `~/.claude/skills/` | 全局级，Claude 默认 |
+| 1 | `./.agent/skills/` | 專案級，universal 模式 |
+| 2 | `~/.agent/skills/` | 全域性級，universal 模式 |
+| 3 | `./.claude/skills/` | 專案級，Claude 預設 |
+| 4 | `~/.claude/skills/` | 全域性級，Claude 預設 |
 
 ## 在 Claude Code 中使用
 
-安装后，技能会被 Claude Code 自动发现和加载。
+安裝後，技能會被 Claude Code 自動發現和載入。
 
 ## 下一步
 
-- [评分与收藏](./ratings) - 反馈和收藏技能
+- [評分與收藏](./ratings) - 反饋和收藏技能

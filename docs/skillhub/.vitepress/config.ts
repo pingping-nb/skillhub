@@ -18,47 +18,47 @@ export default defineConfig({
     root: {
       label: '中文',
       lang: 'zh-CN',
-      description: '企业级自托管 Agent Skill 注册中心',
+      description: '企業級自託管 Agent Skill 註冊中心',
       themeConfig: {
         nav: [
-          { text: '首页', link: '/' },
-          { text: '快速开始', link: '/quickstart' },
+          { text: '首頁', link: '/' },
+          { text: '快速開始', link: '/quickstart' },
           { text: '功能指南', link: '/guide/skill-publish' },
-          { text: '开源周报', link: 'https://iflytek.github.io/skillhub/weekly/' },
+          { text: '開源週報', link: 'https://iflytek.github.io/skillhub/weekly/' },
           { text: 'FAQ', link: '/faq' },
         ],
         sidebar: [
           {
-            text: '开始使用',
+            text: '開始使用',
             items: [
-              { text: '项目简介', link: '/introduction' },
-              { text: '快速开始', link: '/quickstart' },
+              { text: '專案簡介', link: '/introduction' },
+              { text: '快速開始', link: '/quickstart' },
             ],
           },
           {
             text: '核心功能',
             items: [
-              { text: 'Skill 发布与版本管理', link: '/guide/skill-publish' },
-              { text: 'Skill 搜索与发现', link: '/guide/skill-discovery' },
-              { text: '命名空间与团队管理', link: '/guide/namespace' },
-              { text: '审核与治理', link: '/guide/review' },
-              { text: '安全扫描', link: '/guide/scanner' },
-              { text: '用户交互与社交', link: '/guide/social' },
-              { text: 'Runtime 集成契约', link: '/guide/runtime-integration' },
+              { text: 'Skill 發布與版本管理', link: '/guide/skill-publish' },
+              { text: 'Skill 搜尋與發現', link: '/guide/skill-discovery' },
+              { text: '名稱空間與團隊管理', link: '/guide/namespace' },
+              { text: '稽核與治理', link: '/guide/review' },
+              { text: '安全掃描', link: '/guide/scanner' },
+              { text: '使用者互動與社交', link: '/guide/social' },
+              { text: 'Runtime 整合契約', link: '/guide/runtime-integration' },
             ],
           },
           {
             text: '更多',
             items: [
               { text: 'Kubernetes 部署', link: '/guide/kubernetes' },
-              { text: '常见问题', link: '/faq' },
+              { text: '常見問題', link: '/faq' },
             ],
           },
         ],
-        outline: { label: '页面导航', level: [2, 3] },
-        lastUpdated: { text: '最后更新' },
-        docFooter: { prev: '上一页', next: '下一页' },
-        footer: { message: '版权所有 © 科大讯飞股份有限公司' },
+        outline: { label: '頁面導航', level: [2, 3] },
+        lastUpdated: { text: '最後更新' },
+        docFooter: { prev: '上一頁', next: '下一頁' },
+        footer: { message: '版權所有 © 科大訊飛股份有限公司' },
       },
     },
     en: {
@@ -121,11 +121,11 @@ export default defineConfig({
         locales: {
           root: {
             translations: {
-              button: { buttonText: '搜索文档' },
+              button: { buttonText: '搜尋檔案' },
               modal: {
-                noResultsText: '未找到结果',
-                resetButtonTitle: '清除搜索',
-                footer: { selectText: '选择', navigateText: '切换' },
+                noResultsText: '未找到結果',
+                resetButtonTitle: '清除搜尋',
+                footer: { selectText: '選擇', navigateText: '切換' },
               },
             },
           },

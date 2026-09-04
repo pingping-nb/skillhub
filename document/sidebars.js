@@ -4,7 +4,7 @@ const sidebars = {
     'index',
     {
       type: 'category',
-      label: '快速入门',
+      label: '快速入門',
       link: {
         type: 'generated-index',
       },
@@ -16,7 +16,7 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: '管理员指南',
+      label: '管理員指南',
       link: {
         type: 'generated-index',
       },
@@ -32,7 +32,7 @@ const sidebars = {
         },
         {
           type: 'category',
-          label: '安全与合规',
+          label: '安全與合規',
           items: [
             'administration/security/authentication',
             'administration/security/authorization',
@@ -41,7 +41,7 @@ const sidebars = {
         },
         {
           type: 'category',
-          label: '治理与运营',
+          label: '治理與運營',
           items: [
             'administration/governance/namespaces',
             'administration/governance/review-workflow',
@@ -52,14 +52,14 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: '用户指南',
+      label: '使用者指南',
       link: {
         type: 'generated-index',
       },
       items: [
         {
           type: 'category',
-          label: '发布技能',
+          label: '發布技能',
           items: [
             'user-guide/publishing/create-skill',
             'user-guide/publishing/publish',
@@ -68,7 +68,7 @@ const sidebars = {
         },
         {
           type: 'category',
-          label: '发现与使用',
+          label: '發現與使用',
           items: [
             'user-guide/discovery/search',
             'user-guide/discovery/install',
@@ -77,7 +77,7 @@ const sidebars = {
         },
         {
           type: 'category',
-          label: '协作',
+          label: '協作',
           items: [
             'user-guide/collaboration/namespaces',
             'user-guide/collaboration/promotion',
@@ -87,14 +87,14 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: '开发者参考',
+      label: '開發者參考',
       link: {
         type: 'generated-index',
       },
       items: [
         {
           type: 'category',
-          label: 'API 参考',
+          label: 'API 參考',
           items: [
             'developer/api/overview',
             'developer/api/public',
@@ -104,7 +104,7 @@ const sidebars = {
         },
         {
           type: 'category',
-          label: '架构设计',
+          label: '架構設計',
           items: [
             'developer/architecture/overview',
             'developer/architecture/domain-model',
@@ -113,7 +113,7 @@ const sidebars = {
         },
         {
           type: 'category',
-          label: '扩展与集成',
+          label: '擴充套件與整合',
           items: [
             'developer/plugins/skill-protocol',
             'developer/plugins/storage-spi',
@@ -123,7 +123,7 @@ const sidebars = {
     },
     {
       type: 'category',
-      label: '参考资料',
+      label: '參考資料',
       link: {
         type: 'generated-index',
       },

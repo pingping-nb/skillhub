@@ -14,11 +14,11 @@ vi.mock('react-i18next', async () => {
         key === 'compliance.mappingCount'
           ? `${values?.count} mappings`
           : key === 'common.expand'
-            ? '展开详情'
+            ? '展開詳情'
             : key === 'common.collapse'
-              ? '收起详情'
+              ? '收起詳情'
               : key === 'compliance.title'
-                ? '合规声明'
+                ? '合規宣告'
                 : key,
     }),
   }
@@ -68,7 +68,7 @@ describe('ComplianceSnapshotPanel', () => {
       />,
     )
 
-    const toggle = screen.getByRole('button', { name: '展开详情' })
+    const toggle = screen.getByRole('button', { name: '展開詳情' })
     expect(toggle).toBeTruthy()
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
     expect(screen.getByText('mitre-attack · T1059')).toBeTruthy()
@@ -77,7 +77,7 @@ describe('ComplianceSnapshotPanel', () => {
 
     fireEvent.click(toggle)
 
-    const expandedToggle = screen.getByRole('button', { name: '收起详情' })
+    const expandedToggle = screen.getByRole('button', { name: '收起詳情' })
     expect(expandedToggle.getAttribute('aria-expanded')).toBe('true')
     expect(screen.getByText('references/standards.md')).toBeTruthy()
     expect(screen.getByText('soc2')).toBeTruthy()

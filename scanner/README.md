@@ -1,39 +1,39 @@
 # Skill Scanner
 
-本目录提供 Cisco skill-scanner 的本地 Docker 构建上下文，用于 `make dev-all` 开发流程。
+本目錄提供 Cisco skill-scanner 的本地 Docker 構建上下文，用於 `make dev-all` 開發流程。
 
-开发流程会将 `cisco-ai-skill-scanner` 构建到本地容器中，并在 `http://localhost:8000` 上暴露服务。
+開發流程會將 `cisco-ai-skill-scanner` 構建到本地容器中，並在 `http://localhost:8000` 上暴露服務。
 
-## 快速开始
+## 快速開始
 
-### 环境变量
+### 環境變數
 
-Scanner 服务的可选环境变量：
+Scanner 服務的可選環境變數：
 
-- `SKILL_SCANNER_LLM_API_KEY` - LLM API 密钥
-- `SKILL_SCANNER_LLM_BASE_URL` - LLM API 基础 URL
-- `SKILL_SCANNER_LLM_MODEL` - LLM 模型名称
+- `SKILL_SCANNER_LLM_API_KEY` - LLM API 金鑰
+- `SKILL_SCANNER_LLM_BASE_URL` - LLM API 基礎 URL
+- `SKILL_SCANNER_LLM_MODEL` - LLM 模型名稱
 
-### 启动服务
+### 啟動服務
 
 ```bash
-# 启动所有服务（包括 Scanner）
+# 啟動所有服務（包括 Scanner）
 make dev-all
 
-# 检查 Scanner 服务状态
+# 檢查 Scanner 服務狀態
 curl http://localhost:8000/health
 ```
 
-## 文档
+## 檔案
 
-- **[配置说明](./docs/configuration.md)** - 详细的配置项说明和最佳实践
-- **[故障影响分析](./docs/failure-impact-analysis.md)** - Scanner 接口故障时的影响分析
-- **[运维监控指南](./docs/monitoring-guide.md)** - 监控指标、告警规则和故障排查
-- **[改进建议](./docs/improvement-recommendations.md)** - 系统改进建议（待实施）
+- **[配置說明](./docs/configuration.md)** - 詳細的配置項說明和最佳實踐
+- **[故障影響分析](./docs/failure-impact-analysis.md)** - Scanner 介面故障時的影響分析
+- **[運維監控指南](./docs/monitoring-guide.md)** - 監控指標、告警規則和故障排查
+- **[改進建議](./docs/improvement-recommendations.md)** - 系統改進建議（待實施）
 
-## 架构说明
+## 架構說明
 
-Scanner 服务与 SkillHub 的集成架构：
+Scanner 服務與 SkillHub 的整合架構：
 
 ```
 SkillHub Backend
@@ -51,12 +51,12 @@ SkillScannerService (HTTP Client)
 Cisco skill-scanner API
 ```
 
-## 相关配置
+## 相關配置
 
-SkillHub 后端的 Scanner 配置位于：
+SkillHub 後端的 Scanner 配置位於：
 
 - `server/skillhub-app/src/main/resources/application.yml`
 - `deploy/k8s/configmap.yaml`
 - `deploy/k8s/secret.yaml`
 
-详见 [配置说明](./docs/configuration.md)。
+詳見 [配置說明](./docs/configuration.md)。

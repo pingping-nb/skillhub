@@ -1,5 +1,5 @@
 -- V2__phase2_skill_tables.sql
--- Phase 2: 命名空间 + Skill 核心链路
+-- Phase 2: 名稱空間 + Skill 核心鏈路
 
 -- 技能主表
 CREATE TABLE skill (
@@ -48,7 +48,7 @@ CREATE INDEX idx_skill_version_skill_status ON skill_version(skill_id, status);
 ALTER TABLE skill ADD CONSTRAINT fk_skill_latest_version
     FOREIGN KEY (latest_version_id) REFERENCES skill_version(id);
 
--- 技能文件表
+-- 技能檔案表
 CREATE TABLE skill_file (
     id BIGSERIAL PRIMARY KEY,
     version_id BIGINT NOT NULL REFERENCES skill_version(id),
@@ -61,7 +61,7 @@ CREATE TABLE skill_file (
     UNIQUE(version_id, file_path)
 );
 
--- 技能标签表
+-- 技能標籤表
 CREATE TABLE skill_tag (
     id BIGSERIAL PRIMARY KEY,
     skill_id BIGINT NOT NULL REFERENCES skill(id),
@@ -73,7 +73,7 @@ CREATE TABLE skill_tag (
     UNIQUE(skill_id, tag_name)
 );
 
--- 搜索文档表
+-- 搜尋檔案表
 CREATE TABLE skill_search_document (
     id BIGSERIAL PRIMARY KEY,
     skill_id BIGINT NOT NULL UNIQUE REFERENCES skill(id),

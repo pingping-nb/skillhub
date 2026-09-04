@@ -1,35 +1,35 @@
-# 认证扩展与私有 SSO 兼容设计
+# 認證擴充套件與私有 SSO 相容設計
 
-## 1. 目标
+## 1. 目標
 
-在不影响当前开源版 OAuth 和本地账号登录能力的前提下，为未来私有仓库接入企业 SSO 预留稳定扩展点，并把代码差异控制在 provider 实现层和少量配置层。
+在不影響當前開源版 OAuth 和本地賬號登入能力的前提下，為未來私有倉庫接入企業 SSO 預留穩定擴充套件點，並把程式碼差異控制在 provider 實現層和少量配置層。
 
-## 2. 已确认约束
+## 2. 已確認約束
 
-- 私有 SSO 能提供稳定唯一 UID
-- 用户名密码校验与 Cookie 会话校验都会返回同一稳定 UID
-- 生产部署预期为 `skill.xxx.com` 与 `sso.xxx.com`
-- 私有版可通过后端内部接口/RPC 代调用 SSO 校验用户名密码
-- 首次 SSO 登录自动创建 skillhub 账号
-- 不做账号合并设计，不依赖 email
-- 登出联动可保留扩展点，但不是近期目标
+- 私有 SSO 能提供穩定唯一 UID
+- 使用者名稱密碼校驗與 Cookie 會話校驗都會返回同一穩定 UID
+- 生產部署預期為 `skill.xxx.com` 與 `sso.xxx.com`
+- 私有版可透過後端內部介面/RPC 代呼叫 SSO 校驗使用者名稱密碼
+- 首次 SSO 登入自動建立 skillhub 賬號
+- 不做賬號合併設計，不依賴 email
+- 登出聯動可保留擴充套件點，但不是近期目標
 
-## 3. 开源版兼容策略
+## 3. 開源版相容策略
 
-### 3.1 不改变现有主链路
+### 3.1 不改變現有主鏈路
 
-- 现有 OAuth 登录流程保持不变
-- 现有本地用户名密码登录保持不变
-- 现有 `/api/v1/auth/providers` 协议保持不变
-- 不在开源版中引入私有 SSO 的真实实现
+- 現有 OAuth 登入流程保持不變
+- 現有本地使用者名稱密碼登入保持不變
+- 現有 `/api/v1/auth/providers` 協議保持不變
+- 不在開源版中引入私有 SSO 的真實實現
 
-### 3.2 新增的公共扩展协议
+### 3.2 新增的公共擴充套件協議
 
-开源版新增显式被动会话引导接口：
+開源版新增顯式被動會話引導介面：
 
 - `POST /api/v1/auth/session/bootstrap`
 
-请求：
+請求：
 
 ```json
 {
@@ -37,19 +37,19 @@
 }
 ```
 
-行为约束：
+行為約束：
 
-- 默认关闭，由 `skillhub.auth.session-bootstrap.enabled=false` 控制
-- 关闭时返回 `403`
-- provider 不存在时返回 `400`
-- 外部会话校验失败时返回 `401`
-- 成功时建立 skillhub Session，并返回当前用户信息
+- 預設關閉，由 `skillhub.auth.session-bootstrap.enabled=false` 控制
+- 關閉時返回 `403`
+- provider 不存在時返回 `400`
+- 外部會話校驗失敗時返回 `401`
+- 成功時建立 skillhub Session，並返回當前使用者資訊
 
-同时新增默认关闭的直连认证兼容接口：
+同時新增預設關閉的直連認證相容介面：
 
 - `POST /api/v1/auth/direct/login`
 
-请求：
+請求：
 
 ```json
 {
@@ -59,15 +59,15 @@
 }
 ```
 
-行为约束：
+行為約束：
 
-- 默认关闭，由 `skillhub.auth.direct.enabled=false` 控制
-- 关闭时返回 `403`
-- provider 不存在时返回 `400`
-- 成功时建立 skillhub Session，并返回当前用户信息
-- 开源版仍保留原始 `/api/v1/auth/local/login`
+- 預設關閉，由 `skillhub.auth.direct.enabled=false` 控制
+- 關閉時返回 `403`
+- provider 不存在時返回 `400`
+- 成功時建立 skillhub Session，並返回當前使用者資訊
+- 開源版仍保留原始 `/api/v1/auth/local/login`
 
-### 3.3 代码级扩展点
+### 3.3 程式碼級擴充套件點
 
 ```java
 public interface PassiveSessionAuthenticator {
@@ -83,41 +83,41 @@ public interface DirectAuthProvider {
 }
 ```
 
-私有版只需要新增实现，例如：
+私有版只需要新增實現，例如：
 
-- `private-sso-cookie`：读取共享 Cookie 并向 SSO 校验
-- 后续如果需要，也可以补“用户名密码直连认证 provider”扩展点
+- `private-sso-cookie`：讀取共享 Cookie 並向 SSO 校驗
+- 後續如果需要，也可以補“使用者名稱密碼直連認證 provider”擴充套件點
 
-为减少私有 fork 的前端硬编码，扩展 provider 可额外声明展示名称：
+為減少私有 fork 的前端硬編碼，擴充套件 provider 可額外宣告展示名稱：
 
-- `DirectAuthProvider.displayName()` 默认回退为 `providerCode()`
-- `PassiveSessionAuthenticator.displayName()` 默认回退为 `providerCode()`
-- `GET /api/v1/auth/methods` 会返回该展示名称，供登录页直接渲染
+- `DirectAuthProvider.displayName()` 預設回退為 `providerCode()`
+- `PassiveSessionAuthenticator.displayName()` 預設回退為 `providerCode()`
+- `GET /api/v1/auth/methods` 會返回該展示名稱，供登入頁直接渲染
 
-## 4. 本轮已落地内容
+## 4. 本輪已落地內容
 
 - 新增 `PassiveSessionAuthenticator` SPI
 - 新增 `DirectAuthProvider` SPI
-- 新增统一会话建立服务 `PlatformSessionService`
-- 新增 `POST /api/v1/auth/session/bootstrap` 协议
-- 新增 `POST /api/v1/auth/direct/login` 协议
-- 新增 `skillhub.auth.direct.enabled` 开关，默认关闭
-- 新增 `skillhub.auth.session-bootstrap.enabled` 开关，默认关闭
-- 前端新增基于运行时配置的账号密码兼容接入层
-- 前端新增基于运行时配置的被动会话兼容入口
-- 前端新增显式按钮和可选自动尝试逻辑，默认都不启用
-- 增加 controller 集成测试，验证：
-  - 默认关闭时不会影响现有系统
-  - 启用并提供 authenticator 时可以建立 skillhub Session
+- 新增統一會話建立服務 `PlatformSessionService`
+- 新增 `POST /api/v1/auth/session/bootstrap` 協議
+- 新增 `POST /api/v1/auth/direct/login` 協議
+- 新增 `skillhub.auth.direct.enabled` 開關，預設關閉
+- 新增 `skillhub.auth.session-bootstrap.enabled` 開關，預設關閉
+- 前端新增基於執行時配置的賬號密碼相容接入層
+- 前端新增基於執行時配置的被動會話相容入口
+- 前端新增顯式按鈕和可選自動嘗試邏輯，預設都不啟用
+- 增加 controller 整合測試，驗證：
+  - 預設關閉時不會影響現有系統
+  - 啟用並提供 authenticator 時可以建立 skillhub Session
 
-统一会话建立约束：
+統一會話建立約束：
 
-- 本地登录、OAuth 成功回调、direct auth、session bootstrap、mock 登录旁路都走 `PlatformSessionService`
-- 会话写入统一依赖 `HttpSession` 属性：`platformPrincipal` 与 `SPRING_SECURITY_CONTEXT`
-- 因此在生产环境启用 Spring Session Redis 时，不需要为不同登录方式分别处理 Session 序列化或存储逻辑
-- 交互式登录默认轮换 session id；OAuth 这类已在 Spring Security 认证链中的流程复用现有 `Authentication`
+- 本地登入、OAuth 成功回撥、direct auth、session bootstrap、mock 登入旁路都走 `PlatformSessionService`
+- 會話寫入統一依賴 `HttpSession` 屬性：`platformPrincipal` 與 `SPRING_SECURITY_CONTEXT`
+- 因此在生產環境啟用 Spring Session Redis 時，不需要為不同登入方式分別處理 Session 序列化或儲存邏輯
+- 互動式登入預設輪換 session id；OAuth 這類已在 Spring Security 認證鏈中的流程複用現有 `Authentication`
 
-前端运行时配置：
+前端執行時配置：
 
 - `SKILLHUB_WEB_AUTH_DIRECT_ENABLED`
 - `SKILLHUB_WEB_AUTH_DIRECT_PROVIDER`
@@ -127,22 +127,22 @@ public interface DirectAuthProvider {
 
 使用方式：
 
-1. 若要做密码直连，后端启用 `skillhub.auth.direct.enabled=true`
-2. 私有版提供 `DirectAuthProvider` 实现
-3. 前端设置 `SKILLHUB_WEB_AUTH_DIRECT_*`
-4. 若要做被动会话，后端启用 `skillhub.auth.session-bootstrap.enabled=true`
-5. 私有版提供 `PassiveSessionAuthenticator` 实现
-6. 前端设置 bootstrap provider 和开关
-7. 登录页显示兼容入口，或在配置允许时自动尝试一次 bootstrap
+1. 若要做密碼直連，後端啟用 `skillhub.auth.direct.enabled=true`
+2. 私有版提供 `DirectAuthProvider` 實現
+3. 前端設定 `SKILLHUB_WEB_AUTH_DIRECT_*`
+4. 若要做被動會話，後端啟用 `skillhub.auth.session-bootstrap.enabled=true`
+5. 私有版提供 `PassiveSessionAuthenticator` 實現
+6. 前端設定 bootstrap provider 和開關
+7. 登入頁顯示相容入口，或在配置允許時自動嘗試一次 bootstrap
 
-## 5. 后续建议
+## 5. 後續建議
 
-- 私有版实现 `DirectAuthProvider` 和 / 或 `PassiveSessionAuthenticator` 时，只扩展 provider 层，不复制 session 建立逻辑
-- 私有版优先采用显式 bootstrap，而不是透明全局拦截器自动登录
-- 如后续需要登出联动，只通过 `LogoutPropagationHandler` 扩展，不改动现有主登出链路
+- 私有版實現 `DirectAuthProvider` 和 / 或 `PassiveSessionAuthenticator` 時，只擴充套件 provider 層，不復制 session 建立邏輯
+- 私有版優先採用顯式 bootstrap，而不是透明全域性攔截器自動登入
+- 如後續需要登出聯動，只透過 `LogoutPropagationHandler` 擴充套件，不改動現有主登出鏈路
 
-## 6. 实施手册
+## 6. 實施手冊
 
-更详细的私有 SSO 接入步骤、最佳实践、测试矩阵和给后续 coding agent 的执行约束，见：
+更詳細的私有 SSO 接入步驟、最佳實踐、測試矩陣和給後續 coding agent 的執行約束，見：
 
 - [12-private-sso-integration-playbook.md](/Users/xudongsun/github/skillhub/docs/12-private-sso-integration-playbook.md)

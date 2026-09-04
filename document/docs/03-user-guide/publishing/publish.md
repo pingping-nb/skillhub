@@ -1,49 +1,49 @@
 ---
-title: 发布流程
+title: 發布流程
 sidebar_position: 2
-description: 发布技能到 SkillHub
+description: 發布技能到 SkillHub
 ---
 
-# 发布流程
+# 發布流程
 
-## 通过 Web 发布
+## 透過 Web 發布
 
-1. 登录 SkillHub
-2. 点击"发布技能"
-3. 选择目标命名空间
-4. 上传技能包 ZIP 文件
-5. 填写版本信息（变更日志等）
-6. 提交发布
-7. 等待审核（如需要）
-8. 审核通过后发布成功
+1. 登入 SkillHub
+2. 點選"發布技能"
+3. 選擇目標名稱空間
+4. 上傳技能包 ZIP 檔案
+5. 填寫版本資訊（變更日誌等）
+6. 提交發布
+7. 等待稽核（如需要）
+8. 稽核透過後發布成功
 
-## 通过 CLI 发布
+## 透過 CLI 發布
 
 ```bash
-# 1. 登录
+# 1. 登入
 clawhub login
 
-# 2. 发布
+# 2. 發布
 clawhub publish ./my-skill.zip --namespace @team-myteam
 ```
 
-## 通过 ClawHub CLI 发布
+## 透過 ClawHub CLI 發布
 
-配置 registry 后使用：
+配置 registry 後使用：
 
 ```bash
 clawhub publish ./my-skill.zip
 ```
 
-## 发布状态
+## 發布狀態
 
-| 状态 | 说明 |
+| 狀態 | 說明 |
 |------|------|
-| `DRAFT` | 草稿，未提交审核 |
-| `PENDING_REVIEW` | 等待审核 |
-| `PUBLISHED` | 已发布，可被发现和下载 |
-| `REJECTED` | 已拒绝，需修改后重新提交 |
-| `YANKED` | 已撤回，不再推荐使用 |
+| `DRAFT` | 草稿，未提交稽核 |
+| `PENDING_REVIEW` | 等待稽核 |
+| `PUBLISHED` | 已發布，可被發現和下載 |
+| `REJECTED` | 已拒絕，需修改後重新提交 |
+| `YANKED` | 已撤回，不再推薦使用 |
 
 ## 下一步
 

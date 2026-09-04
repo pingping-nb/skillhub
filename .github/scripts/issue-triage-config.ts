@@ -16,74 +16,74 @@ export const LABEL_DEFINITIONS: GitHubLabelDefinition[] = [
     name: TRIAGE_MANUAL_OVERRIDE_LABEL,
     color: "5319e7",
     description:
-      "暂停此 issue 的自动分流更新 / Pause automated triage updates for this issue.",
+      "暫停此 issue 的自動分流更新 / Pause automated triage updates for this issue.",
   },
   {
     name: "triage/needs-info",
     color: "d4c5f9",
     description:
-      "需要补充更多信息后才能分流 / Issue needs more detail before it can be routed.",
+      "需要補充更多資訊後才能分流 / Issue needs more detail before it can be routed.",
   },
   {
     name: "triage/deferred",
     color: "cfd3d7",
     description:
-      "暂留 backlog，由自动化定期重新评分 / Issue stays in backlog and is rescored by automation.",
+      "暫留 backlog，由自動化定期重新評分 / Issue stays in backlog and is rescored by automation.",
   },
   {
     name: "triage/core",
     color: "fbca04",
     description:
-      "交由 core maintainer 结合 AI 协同处理 / Issue should be handled by a core maintainer with AI support.",
+      "交由 core maintainer 結合 AI 協同處理 / Issue should be handled by a core maintainer with AI support.",
   },
   {
     name: "triage/agent-ready",
     color: "0e8a16",
     description:
-      "适合作为低风险 agent 独立执行候选 / Issue is a candidate for low-risk agent execution.",
+      "適合作為低風險 agent 獨立執行候選 / Issue is a candidate for low-risk agent execution.",
   },
   {
     name: "priority/p0",
     color: "b60205",
-    description: "最高优先级 / Highest priority triage bucket.",
+    description: "最高優先順序 / Highest priority triage bucket.",
   },
   {
     name: "priority/p1",
     color: "d93f0b",
-    description: "高优先级 / High priority triage bucket.",
+    description: "高優先順序 / High priority triage bucket.",
   },
   {
     name: "priority/p2",
     color: "fbca04",
-    description: "中优先级 / Medium priority triage bucket.",
+    description: "中優先順序 / Medium priority triage bucket.",
   },
   {
     name: "priority/p3",
     color: "ededed",
-    description: "低优先级 / Low priority triage bucket.",
+    description: "低優先順序 / Low priority triage bucket.",
   },
   {
     name: "effort/s",
     color: "bfd4f2",
-    description: "小改动或边界明确 / Small or well-bounded change.",
+    description: "小改動或邊界明確 / Small or well-bounded change.",
   },
   {
     name: "effort/m",
     color: "5319e7",
     description:
-      "中等改动，存在一定协同成本 / Medium change with noticeable coordination cost.",
+      "中等改動，存在一定協同成本 / Medium change with noticeable coordination cost.",
   },
   {
     name: "effort/l",
     color: "1d76db",
     description:
-      "大改动或高风险改动，需要 maintainer 负责 / Large or risky change requiring maintainer ownership.",
+      "大改動或高風險改動，需要 maintainer 負責 / Large or risky change requiring maintainer ownership.",
   },
   {
     name: "risk/high",
     color: "b60205",
     description:
-      "涉及安全、鉴权、迁移或公共契约 / Touches security, auth, migrations, or public contracts.",
+      "涉及安全、鑑權、遷移或公共契約 / Touches security, auth, migrations, or public contracts.",
   },
 ];
 

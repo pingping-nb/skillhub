@@ -28,7 +28,7 @@ export function mergeRuleAndLlm(ruleResult: TriageResult): TriageResult {
   const highRiskReasons = unique([
     ...ruleResult.highRiskReasons,
     ...llm.riskFlags.map((flag) =>
-      `LLM 标记了高风险区域：${flag} / LLM flagged high-risk area: ${flag}.`
+      `LLM 標記了高風險區域：${flag} / LLM flagged high-risk area: ${flag}.`
     ),
   ]);
   const requiresCoreMaintainer = ruleResult.requiresCoreMaintainer;
@@ -129,20 +129,20 @@ export function describeNextAction(
   missingFields: string[],
 ) {
   if (route === "needs-info") {
-    return `等待补充更多信息；作者更新 issue 或评论 \`/retriage\` 后重新分流 / Wait for more detail, then rerun triage after the author edits the issue or comments \`/retriage\`. Missing: ${
+    return `等待補充更多資訊；作者更新 issue 或評論 \`/retriage\` 後重新分流 / Wait for more detail, then rerun triage after the author edits the issue or comments \`/retriage\`. Missing: ${
       missingFields.join(", ")
     }.`;
   }
 
   if (route === "deferred") {
-    return "将 issue 保留在 deferred 队列，并由 6 小时一次的 rescore 持续抬升；最晚在第 10 天强制进入 active lane。若第 14 天仍未闭环，应按 SLA 视为 P0 升级目标，并在下一次 triage 中重点处理 / Keep the issue in the deferred queue and let the 6-hour rescore keep lifting it; it is forced into an active lane by day 10. If it is still open on day 14, treat it as a P0 escalation target under the SLA and prioritize it in the next triage pass.";
+    return "將 issue 保留在 deferred 佇列，並由 6 小時一次的 rescore 持續抬升；最晚在第 10 天強制進入 active lane。若第 14 天仍未閉環，應按 SLA 視為 P0 升級目標，並在下一次 triage 中重點處理 / Keep the issue in the deferred queue and let the 6-hour rescore keep lifting it; it is forced into an active lane by day 10. If it is still open on day 14, treat it as a P0 escalation target under the SLA and prioritize it in the next triage pass.";
   }
 
   if (route === "core") {
-    return "交给 core maintainer，并结合本地编程Agent协助完成复现、收敛范围与验证闭环 / Hand the issue to a core maintainer and use a local programming agent for reproduction, scoping, and validation.";
+    return "交給 core maintainer，並結合本地程式設計Agent協助完成復現、收斂範圍與驗證閉環 / Hand the issue to a core maintainer and use a local programming agent for reproduction, scoping, and validation.";
   }
 
-  return "在 self-hosted issue-agent runner 启用后，将其标记为低风险 agent 可执行候选 / Mark as a candidate for low-risk agent execution once the self-hosted issue-agent runner is enabled.";
+  return "在 self-hosted issue-agent runner 啟用後，將其標記為低風險 agent 可執行候選 / Mark as a candidate for low-risk agent execution once the self-hosted issue-agent runner is enabled.";
 }
 
 function nudgeScore(ruleScore: number, llmScore: number) {

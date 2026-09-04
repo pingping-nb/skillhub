@@ -4,47 +4,47 @@ const AREA_RULES: Array<{ keywords: string[]; area: string }> = [
   {
     keywords: ["clawhub publish", "publish skill", "publish", "namespace"],
     area:
-      "CLI 发布命令参数解析与 namespace 感知发布流程 / CLI publish command option parsing and namespace-aware publish flow",
+      "CLI 發布命令引數解析與 namespace 感知發布流程 / CLI publish command option parsing and namespace-aware publish flow",
   },
   {
     keywords: ["clawhub install", "install skill", "install"],
     area:
-      "技能安装流程与 registry/lockfile 集成 / Skill installation flow and registry/lockfile integration",
+      "技能安裝流程與 registry/lockfile 整合 / Skill installation flow and registry/lockfile integration",
   },
   {
     keywords: ["clawhub update", "update skill", "update"],
     area:
-      "已安装技能更新流程与版本解析 / Installed skill update flow and version resolution",
+      "已安裝技能更新流程與版本解析 / Installed skill update flow and version resolution",
   },
   {
     keywords: ["clawhub sync", "sync skill", "sync"],
     area:
-      "本地技能同步流程与发布 diff 检测 / Local skill sync flow and publish diff detection",
+      "本地技能同步流程與發布 diff 檢測 / Local skill sync flow and publish diff detection",
   },
   {
     keywords: ["inspect", "search", "explore"],
     area:
-      "Registry 发现与 CLI 查询流程 / Registry discovery and CLI query workflow",
+      "Registry 發現與 CLI 查詢流程 / Registry discovery and CLI query workflow",
   },
   {
     keywords: ["auth", "login", "ldap", "sso", "token"],
     area:
-      "认证、会话与身份集成 / Authentication, session, and identity integration",
+      "認證、會話與身份整合 / Authentication, session, and identity integration",
   },
   {
     keywords: ["openapi", "sdk", "api contract", "contract"],
     area:
-      "公开 API 契约、生成 SDK 与兼容性表面 / Public API contract, generated SDKs, and compatibility surface",
+      "公開 API 契約、生成 SDK 與相容性表面 / Public API contract, generated SDKs, and compatibility surface",
   },
   {
     keywords: ["docs", "documentation", "manual", "help", "--help"],
     area:
-      "文档、操作指引与 CLI help 输出 / Documentation, operator guidance, and CLI help output",
+      "檔案、操作指引與 CLI help 輸出 / Documentation, operator guidance, and CLI help output",
   },
   {
     keywords: ["scanner", "security", "audit"],
     area:
-      "安全扫描流程与审计/报告行为 / Security scanner pipeline and audit/reporting behavior",
+      "安全掃描流程與審計/報告行為 / Security scanner pipeline and audit/reporting behavior",
   },
 ];
 
@@ -58,16 +58,16 @@ export function buildMaintainerHandoffBrief(
   const summary = buildSummary(result);
   const whyCore = unique([
     result.requiresCoreMaintainer
-      ? "阻塞 OpenClaw/ClawHub 核心工作流，因此即便改动范围看起来可控，也需要 maintainer judgment / Blocks an OpenClaw/ClawHub core workflow, so maintainer judgment is required even if the code change looks bounded."
+      ? "阻塞 OpenClaw/ClawHub 核心工作流，因此即便改動範圍看起來可控，也需要 maintainer judgment / Blocks an OpenClaw/ClawHub core workflow, so maintainer judgment is required even if the code change looks bounded."
       : "",
     result.riskLevel === "high"
-      ? "触及高风险区域，未经 maintainer 审查不应直接信任自动修复 / Touches a higher-risk area where automated fixes should not be trusted without maintainer review."
+      ? "觸及高風險區域，未經 maintainer 審查不應直接信任自動修復 / Touches a higher-risk area where automated fixes should not be trusted without maintainer review."
       : "",
     result.effort >= 4
-      ? "大概率跨多个模块或公共兼容面 / Likely spans multiple modules or a public compatibility surface."
+      ? "大機率跨多個模組或公共相容面 / Likely spans multiple modules or a public compatibility surface."
       : "",
     result.confidence <= 3
-      ? "问题本身重要，但仍需要 maintainer 先收敛范围再实施 / The issue is important, but a maintainer still needs to tighten scope before implementation."
+      ? "問題本身重要，但仍需要 maintainer 先收斂範圍再實施 / The issue is important, but a maintainer still needs to tighten scope before implementation."
       : "",
     ...result.highRiskReasons,
   ]).slice(0, 4);
@@ -130,7 +130,7 @@ function buildReproduction(result: TriageResult) {
   }
 
   return [
-    "按 issue 中描述的操作路径复现，并确认当前失败模式 / Recreate the operator flow described in the issue and confirm the current failure mode.",
+    "按 issue 中描述的操作路徑復現，並確認當前失敗模式 / Recreate the operator flow described in the issue and confirm the current failure mode.",
   ];
 }
 
@@ -156,8 +156,8 @@ function inferSuspectedAreas(result: TriageResult) {
   }
 
   return [
-    "最接近该失败路径的 owner-facing 工作流模块 / The closest owner-facing workflow module for the issue's reported failure path",
-    "当前对外承诺该行为的文档或 help 文本 / Any docs or help text that currently promise the affected behavior",
+    "最接近該失敗路徑的 owner-facing 工作流模組 / The closest owner-facing workflow module for the issue's reported failure path",
+    "當前對外承諾該行為的檔案或 help 文字 / Any docs or help text that currently promise the affected behavior",
   ];
 }
 
@@ -165,42 +165,42 @@ function buildRisks(result: TriageResult, suspectedAreas: string[]) {
   const risks = unique([
     ...result.highRiskReasons,
     result.llm?.riskFlags.includes("cli-protocol")
-      ? "CLI 行为、文档和操作预期可能发生漂移，需要同步更新命令 help 与兼容性说明 / CLI behavior, docs, and operator expectations may drift unless command help and compatibility notes are updated together."
+      ? "CLI 行為、檔案和操作預期可能發生漂移，需要同步更新命令 help 與相容性說明 / CLI behavior, docs, and operator expectations may drift unless command help and compatibility notes are updated together."
       : "",
     suspectedAreas.some((area) => area.toLowerCase().includes("namespace"))
-      ? "namespace 范围行为如果没有保留 fallback routing，可能回归默认 publish/install 流程 / Namespace-scoped behavior can regress default publish/install flows if fallback routing is not preserved."
+      ? "namespace 範圍行為如果沒有保留 fallback routing，可能迴歸預設 publish/install 流程 / Namespace-scoped behavior can regress default publish/install flows if fallback routing is not preserved."
       : "",
     result.requiresCoreMaintainer
-      ? "该问题影响已定义主流程，回归会很快被终端用户感知 / This issue affects a documented primary workflow, so regressions would be visible to end users quickly."
+      ? "該問題影響已定義主流程，迴歸會很快被終端使用者感知 / This issue affects a documented primary workflow, so regressions would be visible to end users quickly."
       : "",
   ]);
 
   return risks.length > 0 ? risks.slice(0, 4) : [
-    "合并前检查相邻用户路径是否出现回归 / Check for regressions in adjacent user-facing workflow paths before merging.",
+    "合併前檢查相鄰使用者路徑是否出現迴歸 / Check for regressions in adjacent user-facing workflow paths before merging.",
   ];
 }
 
 function buildValidation(result: TriageResult, suspectedAreas: string[]) {
   const validation = unique([
     result.sections["steps to reproduce"]
-      ? "按 issue 中的复现步骤逐条回放，确认报告的问题已消失 / Replay the exact reproduction steps from the issue and confirm the reported failure disappears."
-      : "修复后端到端验证主报告流程 / Validate the primary reported workflow end-to-end after the fix.",
+      ? "按 issue 中的復現步驟逐條回放，確認報告的問題已消失 / Replay the exact reproduction steps from the issue and confirm the reported failure disappears."
+      : "修復後端到端驗證主報告流程 / Validate the primary reported workflow end-to-end after the fix.",
     result.sections["expected behavior"]
-      ? `确认最终行为符合 issue 期望 / Confirm the final behavior matches the issue's expected outcome: ${
+      ? `確認最終行為符合 issue 期望 / Confirm the final behavior matches the issue's expected outcome: ${
         compact(result.sections["expected behavior"])
       }`
       : "",
     suspectedAreas.some((area) => area.toLowerCase().includes("documentation"))
-      ? "更新或核对文档与 CLI help 输出，确保其与实现行为一致 / Update or verify documentation and CLI help output so they match the implemented behavior."
+      ? "更新或核對檔案與 CLI help 輸出，確保其與實現行為一致 / Update or verify documentation and CLI help output so they match the implemented behavior."
       : "",
     suspectedAreas.some((area) => area.toLowerCase().includes("api contract"))
-      ? "发布前检查下游 API/SDK/CLI 的兼容性预期 / Check for downstream API/SDK/CLI compatibility expectations before shipping."
+      ? "發布前檢查下游 API/SDK/CLI 的相容性預期 / Check for downstream API/SDK/CLI compatibility expectations before shipping."
       : "",
     suspectedAreas.some((area) => area.toLowerCase().includes("namespace"))
-      ? "同时验证 namespace 范围行为与默认非 namespace 流程 / Verify both namespace-scoped behavior and the default non-namespace flow."
+      ? "同時驗證 namespace 範圍行為與預設非 namespace 流程 / Verify both namespace-scoped behavior and the default non-namespace flow."
       : "",
     result.requiresCoreMaintainer
-      ? "围绕受影响的 OpenClaw/ClawHub 用户路径执行最小必要回归测试 / Run the smallest relevant regression test around the affected OpenClaw/ClawHub user journey."
+      ? "圍繞受影響的 OpenClaw/ClawHub 使用者路徑執行最小必要回歸測試 / Run the smallest relevant regression test around the affected OpenClaw/ClawHub user journey."
       : "",
   ]);
 

@@ -173,7 +173,7 @@ skillhub list
 make dev-all
 ```
 
-> **For developers in China**: If Maven dependency download times out, configure Aliyun mirror. See [Local Development Guide](https://iflytek.github.io/skillhub/quickstart.html#本地开发) for details.
+> **For developers in China**: If Maven dependency download times out, configure Aliyun mirror. See [Local Development Guide](https://iflytek.github.io/skillhub/quickstart.html#本地開發) for details.
 
 Then open:
 
@@ -305,7 +305,7 @@ docker compose --env-file .env.release -f compose.release.yml up -d
 
 Then open:
 
-- Web UI: `SKILLHUB_PUBLIC_BASE_URL` 对应的地址
+- Web UI: `SKILLHUB_PUBLIC_BASE_URL` 對應的地址
 - Backend API: `http://localhost:8080`
 
 Stop it with:

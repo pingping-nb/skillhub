@@ -3,7 +3,7 @@ import { themes as prismThemes } from 'prism-react-renderer';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'SkillHub',
-  tagline: '企业级 AI 技能注册表',
+  tagline: '企業級 AI 技能登入檔',
   favicon: 'img/favicon.ico',
 
   url: 'https://skillhub.iflytek.com',
@@ -59,7 +59,7 @@ const config = {
             type: 'docSidebar',
             sidebarId: 'docsSidebar',
             position: 'left',
-            label: '文档',
+            label: '檔案',
           },
           {
             type: 'localeDropdown',
@@ -76,10 +76,10 @@ const config = {
         style: 'dark',
         links: [
           {
-            title: '文档',
+            title: '檔案',
             items: [
               {
-                label: '快速开始',
+                label: '快速開始',
                 to: '/getting-started/quick-start',
               },
               {
@@ -87,13 +87,13 @@ const config = {
                 to: '/administration/deployment/single-machine',
               },
               {
-                label: 'API 参考',
+                label: 'API 參考',
                 to: '/developer/api/overview',
               },
             ],
           },
           {
-            title: '社区',
+            title: '社群',
             items: [
               {
                 label: 'GitHub',

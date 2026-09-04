@@ -2,12 +2,12 @@ import { expect, test } from '@playwright/test'
 import { setEnglishLocale, setUniqueClientIp } from './helpers/auth-fixtures'
 import { createFreshSession } from './helpers/session'
 
-// TC_UN_* 用户名输入框 / TC_EM_* 邮箱输入框 / TC_PW_* 密码输入框
-// TC_REG_* 注册/登录流程 / TC_UI_* UI/UX
+// TC_UN_* 使用者名稱輸入框 / TC_EM_* 郵箱輸入框 / TC_PW_* 密碼輸入框
+// TC_REG_* 註冊/登入流程 / TC_UI_* UI/UX
 
 let existingRegisteredUsername: string | null = null
 const DUPLICATE_USERNAME_ERROR = /already.*exist|taken|username.*used/i
-const REGISTER_RATE_LIMIT_ERROR = /too many|too frequent|rate limit|请求过于频繁/
+const REGISTER_RATE_LIMIT_ERROR = /too many|too frequent|rate limit|請求過於頻繁/
 
 test.describe('Register - Username Validation (Real API)', () => {
   test.beforeEach(async ({ page }, testInfo) => {
@@ -27,7 +27,7 @@ test.describe('Register - Username Validation (Real API)', () => {
   test('TC_UN_001: accepts valid username with minimum 3 characters', async ({ page }) => {
     await page.getByLabel(/username/i).fill('abc')
     await page.getByLabel(/username/i).blur()
-    await expect(page.getByText(/仅支持|only.*letter|username.*required/i)).not.toBeVisible()
+    await expect(page.getByText(/僅支援|only.*letter|username.*required/i)).not.toBeVisible()
   })
 
   // TC_UN_006 P1 - 2 chars below minimum
@@ -46,7 +46,7 @@ test.describe('Register - Username Validation (Real API)', () => {
 
   // TC_UN_010 P1 - Chinese chars
   test('TC_UN_010: shows error for username containing Chinese characters', async ({ page }) => {
-    await page.getByLabel(/username/i).fill('用户123')
+    await page.getByLabel(/username/i).fill('使用者123')
     await page.getByLabel(/username/i).blur()
     await expect(page.getByText(/letter|number|underscore|alphanumeric/i)).toBeVisible()
   })

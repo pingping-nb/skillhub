@@ -1,12 +1,12 @@
-# Phase 4: 运维增强 + 打磨 + 开源就绪 Implementation Plan
+# Phase 4: 運維增強 + 打磨 + 開源就緒 Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 扩展认证体系（本地密码登录 + 多账号合并）、完善治理（技能隐藏/撤回 + 审计日志查询）、提升可观测性（Prometheus）、优化性能（索引 + 预签名 URL + 前端代码分割）、加固安全、实现 Docker 一键启动和 K8s 部署，建立开源项目基础设施。
+**Goal:** 擴充套件認證體系（本地密碼登入 + 多賬號合併）、完善治理（技能隱藏/撤回 + 審計日誌查詢）、提升可觀測性（Prometheus）、最佳化效能（索引 + 預簽名 URL + 前端程式碼分割）、加固安全、實現 Docker 一鍵啟動和 K8s 部署，建立開源專案基礎設施。
 
-**Architecture:** 后端沿用 Spring Boot 3.x 分层架构（skillhub-auth / skillhub-domain / skillhub-app / skillhub-infra / skillhub-storage / skillhub-search），前端沿用 React 19 + TanStack Router + TanStack Query。新增本地认证独立于 OAuth 体系，通过 `local_credential` 表存在性判断认证来源。4 个 Chunk 渐进交付。
+**Architecture:** 後端沿用 Spring Boot 3.x 分層架構（skillhub-auth / skillhub-domain / skillhub-app / skillhub-infra / skillhub-storage / skillhub-search），前端沿用 React 19 + TanStack Router + TanStack Query。新增本地認證獨立於 OAuth 體系，透過 `local_credential` 表存在性判斷認證來源。4 個 Chunk 漸進交付。
 
-**身份主键约束：** 用户身份主键全链路统一使用 `string`。本计划里所有 `userId`、`primaryUserId`、`secondaryUserId`、`hiddenBy`、`yankedBy`、`actorUserId` 等用户标识字段均按字符串实现；历史 `Long` / `BIGINT` 描述不再有效。
+**身份主鍵約束：** 使用者身份主鍵全鏈路統一使用 `string`。本計劃裡所有 `userId`、`primaryUserId`、`secondaryUserId`、`hiddenBy`、`yankedBy`、`actorUserId` 等使用者標識欄位均按字串實現；歷史 `Long` / `BIGINT` 描述不再有效。
 
 **Tech Stack:** Java 21, Spring Boot 3.2, Spring Security, Spring Data JPA, Flyway, PostgreSQL 16, Redis 7, BCrypt, Micrometer/Prometheus, React 19, TypeScript, Vite, TanStack Router/Query, shadcn/ui, Docker, Kubernetes
 
@@ -16,27 +16,27 @@
 
 ## File Structure
 
-### Chunk 1: 本地认证 + 多账号合并
+### Chunk 1: 本地認證 + 多賬號合併
 
 **New files (backend):**
-- `server/skillhub-app/src/main/resources/db/migration/V4__phase4_auth_governance.sql` — Flyway 迁移
-- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/LocalCredential.java` — 本地凭证实体
-- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/LocalCredentialRepository.java` — 凭证仓储接口
-- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/PasswordPolicyValidator.java` — 密码策略校验
-- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/LocalAuthService.java` — 本地认证服务
-- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/AccountMergeRequest.java` — 合并请求实体
-- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/AccountMergeRequestRepository.java` — 合并仓储接口
-- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/AccountMergeService.java` — 合并服务
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/LocalAuthController.java` — 本地认证 Controller
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/AccountMergeController.java` — 合并 Controller
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/LocalRegisterRequest.java` — 注册请求 DTO
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/LocalLoginRequest.java` — 登录请求 DTO
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/ChangePasswordRequest.java` — 修改密码 DTO
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/MergeInitiateRequest.java` — 发起合并 DTO
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/MergeVerifyRequest.java` — 验证合并 DTO
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/config/SeedDataRunner.java` — 种子数据初始化
-- `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/LocalCredentialJpaRepository.java` — JPA 实现
-- `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/AccountMergeRequestJpaRepository.java` — JPA 实现
+- `server/skillhub-app/src/main/resources/db/migration/V4__phase4_auth_governance.sql` — Flyway 遷移
+- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/LocalCredential.java` — 本地憑證實體
+- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/LocalCredentialRepository.java` — 憑證倉儲介面
+- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/PasswordPolicyValidator.java` — 密碼策略校驗
+- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/LocalAuthService.java` — 本地認證服務
+- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/AccountMergeRequest.java` — 合併請求實體
+- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/AccountMergeRequestRepository.java` — 合併倉儲介面
+- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/AccountMergeService.java` — 合併服務
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/LocalAuthController.java` — 本地認證 Controller
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/AccountMergeController.java` — 合併 Controller
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/LocalRegisterRequest.java` — 註冊請求 DTO
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/LocalLoginRequest.java` — 登入請求 DTO
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/ChangePasswordRequest.java` — 修改密碼 DTO
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/MergeInitiateRequest.java` — 發起合併 DTO
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/MergeVerifyRequest.java` — 驗證合併 DTO
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/config/SeedDataRunner.java` — 種子資料初始化
+- `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/LocalCredentialJpaRepository.java` — JPA 實現
+- `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/AccountMergeRequestJpaRepository.java` — JPA 實現
 
 **New files (backend tests):**
 - `server/skillhub-auth/src/test/java/com/iflytek/skillhub/auth/local/PasswordPolicyValidatorTest.java`
@@ -46,31 +46,31 @@
 - `server/skillhub-app/src/test/java/com/iflytek/skillhub/controller/AccountMergeControllerTest.java`
 
 **Modified files (backend):**
-- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/config/SecurityConfig.java` — 添加本地认证端点 permitAll + BCrypt Bean
-- `server/skillhub-app/src/main/resources/messages.properties` — 新增 i18n 消息
-- `server/skillhub-app/src/main/resources/messages_zh.properties` — 新增中文消息
+- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/config/SecurityConfig.java` — 新增本地認證端點 permitAll + BCrypt Bean
+- `server/skillhub-app/src/main/resources/messages.properties` — 新增 i18n 訊息
+- `server/skillhub-app/src/main/resources/messages_zh.properties` — 新增中文訊息
 
 **New files (frontend):**
-- `web/src/pages/register.tsx` — 注册页
-- `web/src/pages/settings/security.tsx` — 密码修改页
-- `web/src/pages/settings/accounts.tsx` — 账号合并页
-- `web/src/features/auth/use-local-auth.ts` — 本地认证 Hook
-- `web/src/features/auth/use-account-merge.ts` — 账号合并 Hook
+- `web/src/pages/register.tsx` — 註冊頁
+- `web/src/pages/settings/security.tsx` — 密碼修改頁
+- `web/src/pages/settings/accounts.tsx` — 賬號合併頁
+- `web/src/features/auth/use-local-auth.ts` — 本地認證 Hook
+- `web/src/features/auth/use-account-merge.ts` — 賬號合併 Hook
 
 **Modified files (frontend):**
-- `web/src/pages/login.tsx` — 添加用户名密码 Tab
-- `web/src/app/router.tsx` — 添加新路由
+- `web/src/pages/login.tsx` — 新增使用者名稱密碼 Tab
+- `web/src/app/router.tsx` — 新增新路由
 
-### Chunk 2: 技能治理 + 审计日志 + 可观测性
+### Chunk 2: 技能治理 + 審計日誌 + 可觀測性
 
 **New files (backend):**
-- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/service/SkillGovernanceService.java` — 治理服务
-- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLog.java` — 审计日志实体（如不存在）
-- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLogRepository.java` — 审计日志仓储
-- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLogQueryService.java` — 审计日志查询
+- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/service/SkillGovernanceService.java` — 治理服務
+- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLog.java` — 審計日誌實體（如不存在）
+- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLogRepository.java` — 審計日誌倉儲
+- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLogQueryService.java` — 審計日誌查詢
 - `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/admin/AdminSkillController.java` — 技能治理 Controller
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/admin/AuditLogController.java` — 审计日志 Controller
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/config/MetricsConfig.java` — Prometheus 指标配置
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/admin/AuditLogController.java` — 審計日誌 Controller
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/config/MetricsConfig.java` — Prometheus 指標配置
 
 **New files (backend tests):**
 - `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/skill/service/SkillGovernanceServiceTest.java`
@@ -79,24 +79,24 @@
 - `server/skillhub-app/src/test/java/com/iflytek/skillhub/controller/admin/AuditLogControllerTest.java`
 
 **Modified files (backend):**
-- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/Skill.java` — 添加 hidden/hiddenAt/hiddenBy 字段
-- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/SkillVersion.java` — 添加 yankedAt/yankedBy/yankReason 字段
-- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/SkillVersionStatus.java` — 添加 YANKED 枚举值
+- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/Skill.java` — 新增 hidden/hiddenAt/hiddenBy 欄位
+- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/SkillVersion.java` — 新增 yankedAt/yankedBy/yankReason 欄位
+- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/SkillVersionStatus.java` — 新增 YANKED 列舉值
 - `server/skillhub-app/src/main/resources/application.yml` — Actuator + Prometheus 配置
 
 **New files (frontend):**
-- `web/src/pages/admin/audit-logs.tsx` — 审计日志页
-- `web/src/features/admin/use-audit-logs.ts` — 审计日志 Hook
-- `web/src/features/skill/skill-governance-actions.tsx` — 隐藏/撤回操作组件
+- `web/src/pages/admin/audit-logs.tsx` — 審計日誌頁
+- `web/src/features/admin/use-audit-logs.ts` — 審計日誌 Hook
+- `web/src/features/skill/skill-governance-actions.tsx` — 隱藏/撤回操作元件
 
-### Chunk 3: 性能优化 + 安全加固
+### Chunk 3: 效能最佳化 + 安全加固
 
 **Modified files (backend):**
-- `server/skillhub-storage/src/main/java/com/iflytek/skillhub/storage/ObjectStorageService.java` — 添加 generatePresignedUrl 方法
-- `server/skillhub-storage/src/main/java/com/iflytek/skillhub/storage/S3StorageService.java` — 实现预签名 URL
-- `server/skillhub-storage/src/main/java/com/iflytek/skillhub/storage/LocalFileStorageService.java` — 返回 null（降级）
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/SkillController.java` — 下载 302 重定向
-- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/config/SecurityConfig.java` — 安全响应头
+- `server/skillhub-storage/src/main/java/com/iflytek/skillhub/storage/ObjectStorageService.java` — 新增 generatePresignedUrl 方法
+- `server/skillhub-storage/src/main/java/com/iflytek/skillhub/storage/S3StorageService.java` — 實現預簽名 URL
+- `server/skillhub-storage/src/main/java/com/iflytek/skillhub/storage/LocalFileStorageService.java` — 返回 null（降級）
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/SkillController.java` — 下載 302 重定向
+- `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/config/SecurityConfig.java` — 安全響應頭
 - `server/skillhub-app/src/main/resources/application.yml` — Session Cookie 安全配置
 
 **New files (backend tests):**
@@ -104,12 +104,12 @@
 
 **Modified files (frontend):**
 - `web/src/app/router.tsx` — lazy routes 改造
-- `web/src/features/skill/markdown-renderer.tsx` — rehype-sanitize 集成
+- `web/src/features/skill/markdown-renderer.tsx` — rehype-sanitize 整合
 
-### Chunk 4: Docker 一键启动 + K8s + 开源基础设施
+### Chunk 4: Docker 一鍵啟動 + K8s + 開源基礎設施
 
 **New files:**
-- `Dockerfile` — 多阶段构建（根目录）
+- `Dockerfile` — 多階段構建（根目錄）
 - `deploy/nginx/default.conf` — Nginx SPA 配置
 - `deploy/k8s/backend-deployment.yaml`
 - `deploy/k8s/frontend-deployment.yaml`
@@ -117,32 +117,32 @@
 - `deploy/k8s/ingress.yaml`
 - `deploy/k8s/configmap.yaml`
 - `deploy/k8s/secret.yaml.example`
-- `README.md` — 项目 README
-- `CONTRIBUTING.md` — 贡献指南
+- `README.md` — 專案 README
+- `CONTRIBUTING.md` — 貢獻指南
 - `LICENSE` — Apache 2.0
-- `CODE_OF_CONDUCT.md` — 行为准则
+- `CODE_OF_CONDUCT.md` — 行為準則
 - `.github/ISSUE_TEMPLATE/bug_report.md`
 - `.github/ISSUE_TEMPLATE/feature_request.md`
 - `.github/pull_request_template.md`
 
 **Modified files:**
-- `docker-compose.yml` — 添加 backend/frontend 服务 + 健康检查
+- `docker-compose.yml` — 新增 backend/frontend 服務 + 健康檢查
 
 ---
 
-## Chunk 1: 本地认证 + 多账号合并
+## Chunk 1: 本地認證 + 多賬號合併
 
-### Task 1.1: Flyway 迁移 — local_credential + account_merge_request
+### Task 1.1: Flyway 遷移 — local_credential + account_merge_request
 
 **Files:**
 - Create: `server/skillhub-app/src/main/resources/db/migration/V4__phase4_auth_governance.sql`
 
-- [ ] **Step 1: 编写迁移脚本**
+- [ ] **Step 1: 編寫遷移指令碼**
 
 ```sql
 -- V4__phase4_auth_governance.sql
 
--- 本地密码凭证
+-- 本地密碼憑證
 CREATE TABLE local_credential (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(128) NOT NULL REFERENCES user_account(id),
@@ -156,7 +156,7 @@ CREATE TABLE local_credential (
 CREATE UNIQUE INDEX idx_local_credential_username ON local_credential(username);
 CREATE UNIQUE INDEX idx_local_credential_user_id ON local_credential(user_id);
 
--- 账号合并请求
+-- 賬號合併請求
 CREATE TABLE account_merge_request (
     id BIGSERIAL PRIMARY KEY,
     primary_user_id VARCHAR(128) NOT NULL REFERENCES user_account(id),
@@ -172,10 +172,10 @@ CREATE UNIQUE INDEX idx_merge_secondary_pending ON account_merge_request(seconda
 CREATE INDEX idx_merge_token_pending ON account_merge_request(verification_token) WHERE status = 'PENDING';
 ```
 
-- [ ] **Step 2: 验证迁移**
+- [ ] **Step 2: 驗證遷移**
 
 Run: `cd server && mvn flyway:migrate -pl skillhub-app`
-Expected: 迁移成功，V4 脚本执行无错误
+Expected: 遷移成功，V4 指令碼執行無錯誤
 
 - [ ] **Step 3: Commit**
 
@@ -184,13 +184,13 @@ git add server/skillhub-app/src/main/resources/db/migration/V4__phase4_auth_gove
 git commit -m "feat(db): add V4 migration for local_credential and account_merge_request"
 ```
 
-### Task 1.2: PasswordPolicyValidator — 密码策略校验
+### Task 1.2: PasswordPolicyValidator — 密碼策略校驗
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/PasswordPolicyValidator.java`
 - Test: `server/skillhub-auth/src/test/java/com/iflytek/skillhub/auth/local/PasswordPolicyValidatorTest.java`
 
-- [ ] **Step 1: 编写失败测试**
+- [ ] **Step 1: 編寫失敗測試**
 
 ```java
 package com.iflytek.skillhub.auth.local;
@@ -236,12 +236,12 @@ class PasswordPolicyValidatorTest {
 }
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [ ] **Step 2: 執行測試確認失敗**
 
 Run: `cd server && mvn test -pl skillhub-auth -Dtest=PasswordPolicyValidatorTest -Dsurefire.failIfNoSpecifiedTests=false`
-Expected: FAIL — 类不存在
+Expected: FAIL — 類不存在
 
-- [ ] **Step 3: 实现 PasswordPolicyValidator**
+- [ ] **Step 3: 實現 PasswordPolicyValidator**
 
 ```java
 package com.iflytek.skillhub.auth.local;
@@ -277,7 +277,7 @@ public class PasswordPolicyValidator {
 }
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [ ] **Step 4: 執行測試確認透過**
 
 Run: `cd server && mvn test -pl skillhub-auth -Dtest=PasswordPolicyValidatorTest`
 Expected: ALL PASS
@@ -290,14 +290,14 @@ git add server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/Passw
 git commit -m "feat(auth): add PasswordPolicyValidator with TDD"
 ```
 
-### Task 1.3: LocalCredential 实体 + Repository
+### Task 1.3: LocalCredential 實體 + Repository
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/LocalCredential.java`
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/LocalCredentialRepository.java`
 - Create: `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/LocalCredentialJpaRepository.java`
 
-- [ ] **Step 1: 创建 LocalCredential 实体**
+- [ ] **Step 1: 建立 LocalCredential 實體**
 
 ```java
 package com.iflytek.skillhub.auth.local;
@@ -383,7 +383,7 @@ public class LocalCredential {
 }
 ```
 
-- [ ] **Step 2: 创建 Repository 接口**
+- [ ] **Step 2: 建立 Repository 介面**
 
 ```java
 package com.iflytek.skillhub.auth.local;
@@ -398,7 +398,7 @@ public interface LocalCredentialRepository {
 }
 ```
 
-- [ ] **Step 3: 创建 JPA 实现**
+- [ ] **Step 3: 建立 JPA 實現**
 
 ```java
 package com.iflytek.skillhub.infra.jpa;
@@ -417,7 +417,7 @@ public interface LocalCredentialJpaRepository extends JpaRepository<LocalCredent
 }
 ```
 
-- [ ] **Step 4: 编译验证**
+- [ ] **Step 4: 編譯驗證**
 
 Run: `cd server && mvn compile -pl skillhub-auth,skillhub-infra`
 Expected: BUILD SUCCESS
@@ -431,13 +431,13 @@ git add server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/Local
 git commit -m "feat(auth): add LocalCredential entity and repository"
 ```
 
-### Task 1.4: LocalAuthService — 注册/登录/改密
+### Task 1.4: LocalAuthService — 註冊/登入/改密
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/LocalAuthService.java`
 - Test: `server/skillhub-auth/src/test/java/com/iflytek/skillhub/auth/local/LocalAuthServiceTest.java`
 
-- [ ] **Step 1: 编写注册测试**
+- [ ] **Step 1: 編寫註冊測試**
 
 ```java
 package com.iflytek.skillhub.auth.local;
@@ -458,7 +458,7 @@ import static org.mockito.Mockito.*;
 class LocalAuthServiceTest {
     @Mock private LocalCredentialRepository credentialRepo;
     @Mock private UserAccountRepository userRepo;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4); // 低 strength 加速测试
+    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4); // 低 strength 加速測試
     private final PasswordPolicyValidator policyValidator = new PasswordPolicyValidator();
     private LocalAuthService service;
 
@@ -472,7 +472,7 @@ class LocalAuthServiceTest {
         when(credentialRepo.existsByUsername("testuser")).thenReturn(false);
         when(userRepo.save(any())).thenAnswer(inv -> {
             var u = inv.getArgument(0, UserAccount.class);
-            return u; // 模拟保存
+            return u; // 模擬儲存
         });
         when(credentialRepo.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
@@ -496,12 +496,12 @@ class LocalAuthServiceTest {
 }
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [ ] **Step 2: 執行測試確認失敗**
 
 Run: `cd server && mvn test -pl skillhub-auth -Dtest=LocalAuthServiceTest`
 Expected: FAIL — LocalAuthService 不存在
 
-- [ ] **Step 3: 实现 LocalAuthService**
+- [ ] **Step 3: 實現 LocalAuthService**
 
 ```java
 package com.iflytek.skillhub.auth.local;
@@ -591,7 +591,7 @@ public class LocalAuthService {
 }
 ```
 
-- [ ] **Step 4: 添加登录测试**
+- [ ] **Step 4: 新增登入測試**
 
 在 `LocalAuthServiceTest` 中追加：
 
@@ -634,7 +634,7 @@ void login_lockedAccount_throws() {
 }
 ```
 
-- [ ] **Step 5: 运行全部测试**
+- [ ] **Step 5: 執行全部測試**
 
 Run: `cd server && mvn test -pl skillhub-auth -Dtest=LocalAuthServiceTest`
 Expected: ALL PASS
@@ -647,14 +647,14 @@ git add server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/local/Local
 git commit -m "feat(auth): add LocalAuthService with register/login/changePassword"
 ```
 
-### Task 1.5: DTO 类 — 请求/响应对象
+### Task 1.5: DTO 類 — 請求/響應物件
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/LocalRegisterRequest.java`
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/LocalLoginRequest.java`
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/ChangePasswordRequest.java`
 
-- [ ] **Step 1: 创建 LocalRegisterRequest**
+- [ ] **Step 1: 建立 LocalRegisterRequest**
 
 ```java
 package com.iflytek.skillhub.dto;
@@ -675,7 +675,7 @@ public record LocalRegisterRequest(
 ) {}
 ```
 
-- [ ] **Step 2: 创建 LocalLoginRequest**
+- [ ] **Step 2: 建立 LocalLoginRequest**
 
 ```java
 package com.iflytek.skillhub.dto;
@@ -688,7 +688,7 @@ public record LocalLoginRequest(
 ) {}
 ```
 
-- [ ] **Step 3: 创建 ChangePasswordRequest**
+- [ ] **Step 3: 建立 ChangePasswordRequest**
 
 ```java
 package com.iflytek.skillhub.dto;
@@ -702,7 +702,7 @@ public record ChangePasswordRequest(
 ) {}
 ```
 
-- [ ] **Step 4: 编译验证**
+- [ ] **Step 4: 編譯驗證**
 
 Run: `cd server && mvn compile -pl skillhub-app`
 Expected: BUILD SUCCESS
@@ -716,13 +716,13 @@ git add server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/LocalRegister
 git commit -m "feat(auth): add local auth request DTOs"
 ```
 
-### Task 1.6: LocalAuthController — 本地认证端点
+### Task 1.6: LocalAuthController — 本地認證端點
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/LocalAuthController.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/controller/LocalAuthControllerTest.java`
 
-- [ ] **Step 1: 编写 Controller 测试**
+- [ ] **Step 1: 編寫 Controller 測試**
 
 ```java
 package com.iflytek.skillhub.controller;
@@ -798,12 +798,12 @@ class LocalAuthControllerTest {
 }
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [ ] **Step 2: 執行測試確認失敗**
 
 Run: `cd server && mvn test -pl skillhub-app -Dtest=LocalAuthControllerTest -Dsurefire.failIfNoSpecifiedTests=false`
 Expected: FAIL — LocalAuthController 不存在
 
-- [ ] **Step 3: 实现 LocalAuthController**
+- [ ] **Step 3: 實現 LocalAuthController**
 
 ```java
 package com.iflytek.skillhub.controller;
@@ -836,7 +836,7 @@ public class LocalAuthController {
         try {
             var user = localAuthService.register(req.username(), req.password(), req.email());
             session.setAttribute("userId", user.getId());
-            return ResponseEntity.ok(Map.of("code", 0, "msg", "注册成功", "data", Map.of(
+            return ResponseEntity.ok(Map.of("code", 0, "msg", "註冊成功", "data", Map.of(
                 "userId", user.getId(), "displayName", user.getDisplayName())));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("code", 400, "msg", e.getMessage()));
@@ -849,7 +849,7 @@ public class LocalAuthController {
         try {
             var user = localAuthService.login(req.username(), req.password());
             session.setAttribute("userId", user.getId());
-            return ResponseEntity.ok(Map.of("code", 0, "msg", "登录成功", "data", Map.of(
+            return ResponseEntity.ok(Map.of("code", 0, "msg", "登入成功", "data", Map.of(
                 "userId", user.getId(), "displayName", user.getDisplayName())));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -870,11 +870,11 @@ public class LocalAuthController {
         var userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("code", 401, "msg", "请先登录"));
+                .body(Map.of("code", 401, "msg", "請先登入"));
         }
         try {
             localAuthService.changePassword(userId, req.oldPassword(), req.newPassword());
-            return ResponseEntity.ok(Map.of("code", 0, "msg", "密码修改成功"));
+            return ResponseEntity.ok(Map.of("code", 0, "msg", "密碼修改成功"));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(Map.of("code", 400, "msg", e.getMessage()));
         }
@@ -882,17 +882,17 @@ public class LocalAuthController {
 }
 ```
 
-- [ ] **Step 4: 修改 SecurityConfig — 添加本地认证端点 permitAll + BCrypt Bean**
+- [ ] **Step 4: 修改 SecurityConfig — 新增本地認證端點 permitAll + BCrypt Bean**
 
 在 `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/config/SecurityConfig.java` 中：
 
-1. 添加 import：
+1. 新增 import：
 ```java
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 ```
 
-2. 在 `authorizeHttpRequests` 的 `.permitAll()` 列表中添加：
+2. 在 `authorizeHttpRequests` 的 `.permitAll()` 列表中新增：
 ```java
 .requestMatchers(
     "/api/v1/health",
@@ -901,11 +901,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
     "/api/v1/auth/local/register",  // 新增
     "/api/v1/auth/local/login",     // 新增
     "/actuator/health",
-    // ... 其余不变
+    // ... 其餘不變
 ).permitAll()
 ```
 
-3. 添加 BCrypt Bean：
+3. 新增 BCrypt Bean：
 ```java
 @Bean
 public PasswordEncoder passwordEncoder() {
@@ -913,7 +913,7 @@ public PasswordEncoder passwordEncoder() {
 }
 ```
 
-- [ ] **Step 5: 运行测试**
+- [ ] **Step 5: 執行測試**
 
 Run: `cd server && mvn test -pl skillhub-app -Dtest=LocalAuthControllerTest`
 Expected: ALL PASS
@@ -927,14 +927,14 @@ git add server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/LocalA
 git commit -m "feat(auth): add LocalAuthController + SecurityConfig local auth endpoints"
 ```
 
-### Task 1.7: AccountMergeRequest 实体 + Repository
+### Task 1.7: AccountMergeRequest 實體 + Repository
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/AccountMergeRequest.java`
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/AccountMergeRequestRepository.java`
 - Create: `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/AccountMergeRequestJpaRepository.java`
 
-- [ ] **Step 1: 创建 AccountMergeRequest 实体**
+- [ ] **Step 1: 建立 AccountMergeRequest 實體**
 
 ```java
 package com.iflytek.skillhub.auth.merge;
@@ -1017,7 +1017,7 @@ public class AccountMergeRequest {
 }
 ```
 
-- [ ] **Step 2: 创建 Repository 接口**
+- [ ] **Step 2: 建立 Repository 介面**
 
 ```java
 package com.iflytek.skillhub.auth.merge;
@@ -1033,7 +1033,7 @@ public interface AccountMergeRequestRepository {
 }
 ```
 
-- [ ] **Step 3: 创建 JPA 实现**
+- [ ] **Step 3: 建立 JPA 實現**
 
 ```java
 package com.iflytek.skillhub.infra.jpa;
@@ -1053,7 +1053,7 @@ public interface AccountMergeRequestJpaRepository
 }
 ```
 
-- [ ] **Step 4: 编译验证**
+- [ ] **Step 4: 編譯驗證**
 
 Run: `cd server && mvn compile -pl skillhub-auth,skillhub-infra`
 Expected: BUILD SUCCESS
@@ -1067,13 +1067,13 @@ git add server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/Accou
 git commit -m "feat(auth): add AccountMergeRequest entity and repository"
 ```
 
-### Task 1.8: AccountMergeService — 合并服务
+### Task 1.8: AccountMergeService — 合併服務
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/AccountMergeService.java`
 - Test: `server/skillhub-auth/src/test/java/com/iflytek/skillhub/auth/merge/AccountMergeServiceTest.java`
 
-- [ ] **Step 1: 编写测试 — 发起合并**
+- [ ] **Step 1: 編寫測試 — 發起合併**
 
 ```java
 package com.iflytek.skillhub.auth.merge;
@@ -1137,12 +1137,12 @@ class AccountMergeServiceTest {
 }
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [ ] **Step 2: 執行測試確認失敗**
 
 Run: `cd server && mvn test -pl skillhub-auth -Dtest=AccountMergeServiceTest -Dsurefire.failIfNoSpecifiedTests=false`
 Expected: FAIL — AccountMergeService 不存在
 
-- [ ] **Step 3: 实现 AccountMergeService**
+- [ ] **Step 3: 實現 AccountMergeService**
 
 ```java
 package com.iflytek.skillhub.auth.merge;
@@ -1218,7 +1218,7 @@ public class AccountMergeService {
         if (!"VERIFIED".equals(request.getStatus())) {
             throw new IllegalStateException("Request is not verified");
         }
-        // 数据迁移逻辑（技能、收藏、角色等）在此扩展
+        // 資料遷移邏輯（技能、收藏、角色等）在此擴充套件
         var secondaryUser = userRepo.findById(request.getSecondaryUserId())
             .orElseThrow(() -> new IllegalStateException("Secondary user not found"));
         secondaryUser.setStatus(UserStatus.MERGED);
@@ -1245,7 +1245,7 @@ public class AccountMergeService {
 }
 ```
 
-- [ ] **Step 4: 运行测试**
+- [ ] **Step 4: 執行測試**
 
 Run: `cd server && mvn test -pl skillhub-auth -Dtest=AccountMergeServiceTest`
 Expected: ALL PASS
@@ -1258,7 +1258,7 @@ git add server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/merge/Accou
 git commit -m "feat(auth): add AccountMergeService with initiate/verify/confirm/cancel"
 ```
 
-### Task 1.9: AccountMergeController + 合并 DTO
+### Task 1.9: AccountMergeController + 合併 DTO
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/MergeInitiateRequest.java`
@@ -1266,7 +1266,7 @@ git commit -m "feat(auth): add AccountMergeService with initiate/verify/confirm/
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/AccountMergeController.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/controller/AccountMergeControllerTest.java`
 
-- [ ] **Step 1: 创建合并 DTO**
+- [ ] **Step 1: 建立合併 DTO**
 
 ```java
 // MergeInitiateRequest.java
@@ -1290,7 +1290,7 @@ public record MergeVerifyRequest(
 ) {}
 ```
 
-- [ ] **Step 2: 编写 Controller 测试**
+- [ ] **Step 2: 編寫 Controller 測試**
 
 ```java
 package com.iflytek.skillhub.controller;
@@ -1341,12 +1341,12 @@ class AccountMergeControllerTest {
 }
 ```
 
-- [ ] **Step 3: 运行测试确认失败**
+- [ ] **Step 3: 執行測試確認失敗**
 
 Run: `cd server && mvn test -pl skillhub-app -Dtest=AccountMergeControllerTest -Dsurefire.failIfNoSpecifiedTests=false`
 Expected: FAIL — AccountMergeController 不存在
 
-- [ ] **Step 4: 实现 AccountMergeController**
+- [ ] **Step 4: 實現 AccountMergeController**
 
 ```java
 package com.iflytek.skillhub.controller;
@@ -1376,11 +1376,11 @@ public class AccountMergeController {
         var userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("code", 401, "msg", "请先登录"));
+                .body(Map.of("code", 401, "msg", "請先登入"));
         }
         try {
             var result = mergeService.initiate(userId, req.secondaryUserId());
-            return ResponseEntity.ok(Map.of("code", 0, "msg", "合并请求已创建",
+            return ResponseEntity.ok(Map.of("code", 0, "msg", "合併請求已建立",
                 "data", Map.of("requestId", result.getId())));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("code", 400, "msg", e.getMessage()));
@@ -1392,7 +1392,7 @@ public class AccountMergeController {
                                      @Valid @RequestBody MergeVerifyRequest req) {
         try {
             mergeService.verify(requestId, req.token());
-            return ResponseEntity.ok(Map.of("code", 0, "msg", "验证成功"));
+            return ResponseEntity.ok(Map.of("code", 0, "msg", "驗證成功"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("code", 400, "msg", e.getMessage()));
         }
@@ -1403,11 +1403,11 @@ public class AccountMergeController {
         var userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("code", 401, "msg", "请先登录"));
+                .body(Map.of("code", 401, "msg", "請先登入"));
         }
         try {
             mergeService.confirm(requestId);
-            return ResponseEntity.ok(Map.of("code", 0, "msg", "合并完成"));
+            return ResponseEntity.ok(Map.of("code", 0, "msg", "合併完成"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("code", 400, "msg", e.getMessage()));
         }
@@ -1418,11 +1418,11 @@ public class AccountMergeController {
         var userId = (Long) session.getAttribute("userId");
         if (userId == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(Map.of("code", 401, "msg", "请先登录"));
+                .body(Map.of("code", 401, "msg", "請先登入"));
         }
         try {
             mergeService.cancel(requestId, userId);
-            return ResponseEntity.ok(Map.of("code", 0, "msg", "合并已取消"));
+            return ResponseEntity.ok(Map.of("code", 0, "msg", "合併已取消"));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(Map.of("code", 400, "msg", e.getMessage()));
         }
@@ -1430,7 +1430,7 @@ public class AccountMergeController {
 }
 ```
 
-- [ ] **Step 5: 运行测试**
+- [ ] **Step 5: 執行測試**
 
 Run: `cd server && mvn test -pl skillhub-app -Dtest=AccountMergeControllerTest`
 Expected: ALL PASS
@@ -1447,14 +1447,14 @@ git commit -m "feat(auth): add AccountMergeController with initiate/verify/confi
 
 ---
 
-### Task 1.10: SeedDataRunner — Docker 环境种子数据
+### Task 1.10: SeedDataRunner — Docker 環境種子資料
 
-**文件:**
+**檔案:**
 - `server/skillhub-app/src/main/java/com/iflytek/skillhub/config/SeedDataRunner.java`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 实现 SeedDataRunner**
+- [ ] **Step 1: 實現 SeedDataRunner**
 
 ```java
 package com.iflytek.skillhub.config;
@@ -1506,9 +1506,9 @@ public class SeedDataRunner implements CommandLineRunner {
 }
 ```
 
-- [ ] **Step 2: 添加 docker profile 配置**
+- [ ] **Step 2: 新增 docker profile 配置**
 
-在 `application.yml` 中添加:
+在 `application.yml` 中新增:
 ```yaml
 ---
 spring:
@@ -1521,7 +1521,7 @@ spring:
     password: ${DB_PASS:skillhub}
 ```
 
-- [ ] **Step 3: 验证编译通过**
+- [ ] **Step 3: 驗證編譯透過**
 
 Run: `cd server && mvn compile -pl skillhub-app`
 Expected: BUILD SUCCESS
@@ -1536,19 +1536,19 @@ git commit -m "feat(ops): add SeedDataRunner for docker profile with admin/demo 
 
 ---
 
-## Chunk 2: Skill 治理 + 审计日志 + Prometheus 指标
+## Chunk 2: Skill 治理 + 審計日誌 + Prometheus 指標
 
 ### Task 2.1: AuditLog Entity + Repository
 
-**文件:**
+**檔案:**
 - `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLog.java`
 - `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLogRepository.java`
 - `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/AuditLogJpaRepository.java`
 - `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/audit/AuditLogTest.java`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 写失败测试**
+- [ ] **Step 1: 寫失敗測試**
 
 ```java
 package com.iflytek.skillhub.domain.audit;
@@ -1579,12 +1579,12 @@ class AuditLogTest {
 }
 ```
 
-- [ ] **Step 2: 验证测试失败**
+- [ ] **Step 2: 驗證測試失敗**
 
 Run: `cd server && mvn test -pl skillhub-domain -Dtest=AuditLogTest`
 Expected: COMPILATION FAILURE
 
-- [ ] **Step 3: 实现 AuditLog Entity**
+- [ ] **Step 3: 實現 AuditLog Entity**
 
 ```java
 package com.iflytek.skillhub.domain.audit;
@@ -1632,7 +1632,7 @@ public class AuditLog {
 }
 ```
 
-- [ ] **Step 4: 实现 Repository**
+- [ ] **Step 4: 實現 Repository**
 
 ```java
 package com.iflytek.skillhub.domain.audit;
@@ -1648,7 +1648,7 @@ public interface AuditLogRepository {
 }
 ```
 
-JPA 实现:
+JPA 實現:
 ```java
 package com.iflytek.skillhub.infra.jpa;
 
@@ -1668,7 +1668,7 @@ public interface AuditLogJpaRepository
 }
 ```
 
-- [ ] **Step 5: 运行测试**
+- [ ] **Step 5: 執行測試**
 
 Run: `cd server && mvn test -pl skillhub-domain -Dtest=AuditLogTest`
 Expected: ALL PASS
@@ -1684,15 +1684,15 @@ git commit -m "feat(audit): add AuditLog entity and repository"
 
 ---
 
-### Task 2.2: AuditService + 关键操作埋点
+### Task 2.2: AuditService + 關鍵操作埋點
 
-**文件:**
+**檔案:**
 - `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditService.java`
 - `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/audit/AuditServiceTest.java`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 写失败测试**
+- [ ] **Step 1: 寫失敗測試**
 
 ```java
 package com.iflytek.skillhub.domain.audit;
@@ -1731,12 +1731,12 @@ class AuditServiceTest {
 }
 ```
 
-- [ ] **Step 2: 验证测试失败**
+- [ ] **Step 2: 驗證測試失敗**
 
 Run: `cd server && mvn test -pl skillhub-domain -Dtest=AuditServiceTest`
 Expected: COMPILATION FAILURE
 
-- [ ] **Step 3: 实现 AuditService**
+- [ ] **Step 3: 實現 AuditService**
 
 ```java
 package com.iflytek.skillhub.domain.audit;
@@ -1759,14 +1759,14 @@ public class AuditService {
 }
 ```
 
-- [ ] **Step 4: 运行测试**
+- [ ] **Step 4: 執行測試**
 
 Run: `cd server && mvn test -pl skillhub-domain -Dtest=AuditServiceTest`
 Expected: ALL PASS
 
-- [ ] **Step 5: 在关键 Controller 中埋点**
+- [ ] **Step 5: 在關鍵 Controller 中埋點**
 
-在以下位置添加 `auditService.log(...)` 调用:
+在以下位置新增 `auditService.log(...)` 呼叫:
 - `LocalAuthController.register()` → action: `USER_REGISTER`
 - `LocalAuthController.login()` → action: `USER_LOGIN`
 - `SkillPublishController.publish()` → action: `SKILL_PUBLISH`
@@ -1784,17 +1784,17 @@ git commit -m "feat(audit): add AuditService and embed audit logging in key oper
 
 ### Task 2.3: Flyway V4 — audit_log + skill_deprecation 表
 
-**文件:**
+**檔案:**
 - `server/skillhub-app/src/main/resources/db/migration/V4__phase4_audit_governance.sql`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 创建迁移脚本**
+- [ ] **Step 1: 建立遷移指令碼**
 
 ```sql
 -- V4__phase4_audit_governance.sql
 
--- 审计日志表
+-- 審計日誌表
 CREATE TABLE audit_log (
     id          VARCHAR(36) PRIMARY KEY,
     user_id     VARCHAR(36),
@@ -1809,13 +1809,13 @@ CREATE INDEX idx_audit_log_user    ON audit_log(user_id);
 CREATE INDEX idx_audit_log_action  ON audit_log(action, created_at);
 CREATE INDEX idx_audit_log_target  ON audit_log(target_id);
 
--- Skill 废弃标记字段
+-- Skill 廢棄標記欄位
 ALTER TABLE skill ADD COLUMN IF NOT EXISTS deprecated    BOOLEAN DEFAULT FALSE;
 ALTER TABLE skill ADD COLUMN IF NOT EXISTS deprecated_at TIMESTAMP WITH TIME ZONE;
 ALTER TABLE skill ADD COLUMN IF NOT EXISTS deprecated_by VARCHAR(36);
 ALTER TABLE skill ADD COLUMN IF NOT EXISTS deprecation_reason VARCHAR(500);
 
--- 账号合并请求表
+-- 賬號合併請求表
 CREATE TABLE account_merge_request (
     id                VARCHAR(36) PRIMARY KEY,
     primary_user_id   VARCHAR(36) NOT NULL,
@@ -1827,17 +1827,17 @@ CREATE TABLE account_merge_request (
     created_at        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now()
 );
 
--- 用户表扩展: 本地认证字段
+-- 使用者表擴充套件: 本地認證欄位
 ALTER TABLE user_account ADD COLUMN IF NOT EXISTS password_hash    VARCHAR(255);
 ALTER TABLE user_account ADD COLUMN IF NOT EXISTS failed_attempts  INT DEFAULT 0;
 ALTER TABLE user_account ADD COLUMN IF NOT EXISTS locked_until     TIMESTAMP WITH TIME ZONE;
 ALTER TABLE user_account ADD COLUMN IF NOT EXISTS merged_to_user_id VARCHAR(36);
 ```
 
-- [ ] **Step 2: 验证迁移**
+- [ ] **Step 2: 驗證遷移**
 
 Run: `cd server && mvn flyway:migrate -pl skillhub-app -Dflyway.configFiles=src/main/resources/application.yml`
-或在应用启动时自动执行。
+或在應用啟動時自動執行。
 
 - [ ] **Step 3: Commit**
 
@@ -1848,16 +1848,16 @@ git commit -m "feat(db): add V4 migration for audit_log, skill deprecation, acco
 
 ---
 
-### Task 2.4: Skill 废弃 (Deprecation) 功能
+### Task 2.4: Skill 廢棄 (Deprecation) 功能
 
-**文件:**
+**檔案:**
 - `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/service/SkillGovernanceService.java`
 - `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/skill/service/SkillGovernanceServiceTest.java`
 - `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/SkillGovernanceController.java`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 写失败测试**
+- [ ] **Step 1: 寫失敗測試**
 
 ```java
 package com.iflytek.skillhub.domain.skill.service;
@@ -1915,14 +1915,14 @@ class SkillGovernanceServiceTest {
 }
 ```
 
-- [ ] **Step 2: 验证测试失败**
+- [ ] **Step 2: 驗證測試失敗**
 
 Run: `cd server && mvn test -pl skillhub-domain -Dtest=SkillGovernanceServiceTest`
 Expected: COMPILATION FAILURE
 
-- [ ] **Step 3: 在 Skill Entity 中添加废弃方法**
+- [ ] **Step 3: 在 Skill Entity 中新增廢棄方法**
 
-在 `Skill.java` 中添加:
+在 `Skill.java` 中新增:
 ```java
 private boolean deprecated;
 private Instant deprecatedAt;
@@ -1947,7 +1947,7 @@ public boolean isDeprecated() { return deprecated; }
 public String getDeprecationReason() { return deprecationReason; }
 ```
 
-- [ ] **Step 4: 实现 SkillGovernanceService**
+- [ ] **Step 4: 實現 SkillGovernanceService**
 
 ```java
 package com.iflytek.skillhub.domain.skill.service;
@@ -1989,7 +1989,7 @@ public class SkillGovernanceService {
 }
 ```
 
-- [ ] **Step 5: 运行测试**
+- [ ] **Step 5: 執行測試**
 
 Run: `cd server && mvn test -pl skillhub-domain -Dtest=SkillGovernanceServiceTest`
 Expected: ALL PASS
@@ -2005,18 +2005,18 @@ git commit -m "feat(governance): add skill deprecation/undeprecation with audit 
 
 ---
 
-### Task 2.5: Prometheus 指标 + Actuator 配置
+### Task 2.5: Prometheus 指標 + Actuator 配置
 
-**文件:**
-- `server/skillhub-app/pom.xml` (添加 micrometer 依赖)
+**檔案:**
+- `server/skillhub-app/pom.xml` (新增 micrometer 依賴)
 - `server/skillhub-app/src/main/java/com/iflytek/skillhub/metrics/SkillHubMetrics.java`
 - `server/skillhub-app/src/main/resources/application.yml` (actuator 配置)
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 添加 Maven 依赖**
+- [ ] **Step 1: 新增 Maven 依賴**
 
-在 `skillhub-app/pom.xml` 的 `<dependencies>` 中添加:
+在 `skillhub-app/pom.xml` 的 `<dependencies>` 中新增:
 ```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -2030,7 +2030,7 @@ git commit -m "feat(governance): add skill deprecation/undeprecation with audit 
 
 - [ ] **Step 2: 配置 Actuator**
 
-在 `application.yml` 中添加:
+在 `application.yml` 中新增:
 ```yaml
 management:
   endpoints:
@@ -2045,7 +2045,7 @@ management:
       application: skillhub
 ```
 
-- [ ] **Step 3: 实现自定义指标**
+- [ ] **Step 3: 實現自定義指標**
 
 ```java
 package com.iflytek.skillhub.metrics;
@@ -2084,15 +2084,15 @@ public class SkillHubMetrics {
 }
 ```
 
-- [ ] **Step 4: 在 Controller 中埋点**
+- [ ] **Step 4: 在 Controller 中埋點**
 
-在 `LocalAuthController` 的 login/register 方法中调用对应 metrics 方法。
-在 `SkillPublishController` 的 publish 方法中调用 `metrics.incrementSkillPublish()`。
+在 `LocalAuthController` 的 login/register 方法中呼叫對應 metrics 方法。
+在 `SkillPublishController` 的 publish 方法中呼叫 `metrics.incrementSkillPublish()`。
 
-- [ ] **Step 5: 验证 Actuator 端点**
+- [ ] **Step 5: 驗證 Actuator 端點**
 
-启动应用后访问: `GET /actuator/prometheus`
-Expected: 返回 Prometheus 格式的指标数据，包含 `skillhub_skill_publish_total` 等。
+啟動應用後訪問: `GET /actuator/prometheus`
+Expected: 返回 Prometheus 格式的指標資料，包含 `skillhub_skill_publish_total` 等。
 
 - [ ] **Step 6: Commit**
 
@@ -2107,13 +2107,13 @@ git commit -m "feat(ops): add Prometheus metrics with Actuator and custom counte
 
 ### Task 2.6: SkillGovernanceController REST API
 
-**文件:**
+**檔案:**
 - `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/SkillGovernanceController.java`
 - `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/DeprecateRequest.java`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 实现 DTO**
+- [ ] **Step 1: 實現 DTO**
 
 ```java
 package com.iflytek.skillhub.dto;
@@ -2126,7 +2126,7 @@ public record DeprecateRequest(
 ) {}
 ```
 
-- [ ] **Step 2: 实现 Controller**
+- [ ] **Step 2: 實現 Controller**
 
 ```java
 package com.iflytek.skillhub.controller.portal;
@@ -2171,7 +2171,7 @@ public class SkillGovernanceController extends BaseApiController {
 }
 ```
 
-- [ ] **Step 3: 验证编译**
+- [ ] **Step 3: 驗證編譯**
 
 Run: `cd server && mvn compile -pl skillhub-app`
 Expected: BUILD SUCCESS
@@ -2186,17 +2186,17 @@ git commit -m "feat(governance): add SkillGovernanceController with deprecate/un
 
 ---
 
-## Chunk 3: 性能优化 + 安全加固
+## Chunk 3: 效能最佳化 + 安全加固
 
-### Task 3.1: HTTP 缓存头 + ETag 支持
+### Task 3.1: HTTP 快取頭 + ETag 支援
 
-**文件:**
+**檔案:**
 - `server/skillhub-app/src/main/java/com/iflytek/skillhub/filter/CacheControlFilter.java`
 - `server/skillhub-app/src/test/java/com/iflytek/skillhub/filter/CacheControlFilterTest.java`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 写失败测试**
+- [ ] **Step 1: 寫失敗測試**
 
 ```java
 package com.iflytek.skillhub.filter;
@@ -2237,12 +2237,12 @@ class CacheControlFilterTest {
 }
 ```
 
-- [ ] **Step 2: 验证测试失败**
+- [ ] **Step 2: 驗證測試失敗**
 
 Run: `cd server && mvn test -pl skillhub-app -Dtest=CacheControlFilterTest`
 Expected: COMPILATION FAILURE
 
-- [ ] **Step 3: 实现 CacheControlFilter**
+- [ ] **Step 3: 實現 CacheControlFilter**
 
 ```java
 package com.iflytek.skillhub.filter;
@@ -2275,7 +2275,7 @@ public class CacheControlFilter extends OncePerRequestFilter {
 }
 ```
 
-- [ ] **Step 4: 运行测试**
+- [ ] **Step 4: 執行測試**
 
 Run: `cd server && mvn test -pl skillhub-app -Dtest=CacheControlFilterTest`
 Expected: ALL PASS
@@ -2292,14 +2292,14 @@ git commit -m "feat(perf): add CacheControlFilter with immutable download cachin
 
 ### Task 3.2: CORS 配置 + Security Headers
 
-**文件:**
+**檔案:**
 - `server/skillhub-app/src/main/java/com/iflytek/skillhub/config/CorsConfig.java`
 - `server/skillhub-app/src/main/java/com/iflytek/skillhub/filter/SecurityHeadersFilter.java`
 - `server/skillhub-app/src/test/java/com/iflytek/skillhub/filter/SecurityHeadersFilterTest.java`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 写失败测试**
+- [ ] **Step 1: 寫失敗測試**
 
 ```java
 package com.iflytek.skillhub.filter;
@@ -2328,12 +2328,12 @@ class SecurityHeadersFilterTest {
 }
 ```
 
-- [ ] **Step 2: 验证测试失败**
+- [ ] **Step 2: 驗證測試失敗**
 
 Run: `cd server && mvn test -pl skillhub-app -Dtest=SecurityHeadersFilterTest`
 Expected: COMPILATION FAILURE
 
-- [ ] **Step 3: 实现 SecurityHeadersFilter**
+- [ ] **Step 3: 實現 SecurityHeadersFilter**
 
 ```java
 package com.iflytek.skillhub.filter;
@@ -2363,7 +2363,7 @@ public class SecurityHeadersFilter extends OncePerRequestFilter {
 }
 ```
 
-- [ ] **Step 4: 实现 CorsConfig**
+- [ ] **Step 4: 實現 CorsConfig**
 
 ```java
 package com.iflytek.skillhub.config;
@@ -2397,7 +2397,7 @@ public class CorsConfig {
 }
 ```
 
-- [ ] **Step 5: 运行测试**
+- [ ] **Step 5: 執行測試**
 
 Run: `cd server && mvn test -pl skillhub-app -Dtest=SecurityHeadersFilterTest`
 Expected: ALL PASS
@@ -2413,15 +2413,15 @@ git commit -m "feat(security): add CORS config and security response headers"
 
 ---
 
-### Task 3.3: Redis RateLimiter 增强 + 配置外部化
+### Task 3.3: Redis RateLimiter 增強 + 配置外部化
 
-**文件:**
+**檔案:**
 - `server/skillhub-app/src/main/java/com/iflytek/skillhub/ratelimit/RateLimitConfig.java`
 - `server/skillhub-app/src/main/resources/application.yml` (rate limit 配置)
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 实现 RateLimitConfig**
+- [ ] **Step 1: 實現 RateLimitConfig**
 
 ```java
 package com.iflytek.skillhub.ratelimit;
@@ -2461,9 +2461,9 @@ public class RateLimitConfig {
 }
 ```
 
-- [ ] **Step 2: 添加配置项**
+- [ ] **Step 2: 新增配置項**
 
-在 `application.yml` 中添加:
+在 `application.yml` 中新增:
 ```yaml
 skillhub:
   rate-limit:
@@ -2475,7 +2475,7 @@ skillhub:
     allowed-origins: http://localhost:5173
 ```
 
-- [ ] **Step 3: 验证编译**
+- [ ] **Step 3: 驗證編譯**
 
 Run: `cd server && mvn compile -pl skillhub-app`
 Expected: BUILD SUCCESS
@@ -2490,15 +2490,15 @@ git commit -m "feat(ops): externalize rate limit config with Redis/InMemory fall
 
 ---
 
-### Task 3.4: 请求参数校验 + 全局异常处理增强
+### Task 3.4: 請求引數校驗 + 全域性異常處理增強
 
-**文件:**
-- `server/skillhub-app/src/main/java/com/iflytek/skillhub/exception/GlobalExceptionHandler.java` (增强)
+**檔案:**
+- `server/skillhub-app/src/main/java/com/iflytek/skillhub/exception/GlobalExceptionHandler.java` (增強)
 - `server/skillhub-app/src/test/java/com/iflytek/skillhub/exception/GlobalExceptionHandlerTest.java`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 写失败测试**
+- [ ] **Step 1: 寫失敗測試**
 
 ```java
 package com.iflytek.skillhub.exception;
@@ -2548,14 +2548,14 @@ class GlobalExceptionHandlerTest {
 }
 ```
 
-- [ ] **Step 2: 验证测试失败**
+- [ ] **Step 2: 驗證測試失敗**
 
 Run: `cd server && mvn test -pl skillhub-app -Dtest=GlobalExceptionHandlerTest`
 Expected: COMPILATION FAILURE (新方法不存在)
 
-- [ ] **Step 3: 增强 GlobalExceptionHandler**
+- [ ] **Step 3: 增強 GlobalExceptionHandler**
 
-在现有 `GlobalExceptionHandler.java` 中添加:
+在現有 `GlobalExceptionHandler.java` 中新增:
 ```java
 @ExceptionHandler(MethodArgumentNotValidException.class)
 public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
@@ -2586,7 +2586,7 @@ public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
 }
 ```
 
-- [ ] **Step 4: 运行测试**
+- [ ] **Step 4: 執行測試**
 
 Run: `cd server && mvn test -pl skillhub-app -Dtest=GlobalExceptionHandlerTest`
 Expected: ALL PASS
@@ -2601,53 +2601,53 @@ git commit -m "feat(security): enhance GlobalExceptionHandler with validation an
 
 ---
 
-### Task 3.5: 数据库查询优化 — 索引 + 分页
+### Task 3.5: 資料庫查詢最佳化 — 索引 + 分頁
 
-**文件:**
+**檔案:**
 - `server/skillhub-app/src/main/resources/db/migration/V5__performance_indexes.sql`
-- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/SkillRepository.java` (增加分页方法)
+- `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/SkillRepository.java` (增加分頁方法)
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 创建索引迁移脚本**
+- [ ] **Step 1: 建立索引遷移指令碼**
 
 ```sql
 -- V5__performance_indexes.sql
 
--- Skill 查询优化
+-- Skill 查詢最佳化
 CREATE INDEX IF NOT EXISTS idx_skill_namespace_id ON skill(namespace_id);
 CREATE INDEX IF NOT EXISTS idx_skill_name ON skill(name);
 CREATE INDEX IF NOT EXISTS idx_skill_deprecated ON skill(deprecated) WHERE deprecated = true;
 
--- SkillVersion 查询优化
+-- SkillVersion 查詢最佳化
 CREATE INDEX IF NOT EXISTS idx_skill_version_skill_id ON skill_version(skill_id);
 CREATE INDEX IF NOT EXISTS idx_skill_version_created ON skill_version(created_at DESC);
 
--- NamespaceMember 查询优化
+-- NamespaceMember 查詢最佳化
 CREATE INDEX IF NOT EXISTS idx_ns_member_user ON namespace_member(user_id);
 CREATE INDEX IF NOT EXISTS idx_ns_member_ns ON namespace_member(namespace_id);
 
--- ReviewTask 查询优化
+-- ReviewTask 查詢最佳化
 CREATE INDEX IF NOT EXISTS idx_review_task_status ON review_task(status);
 CREATE INDEX IF NOT EXISTS idx_review_task_reviewer ON review_task(reviewer_id);
 
--- ApiToken 查询优化
+-- ApiToken 查詢最佳化
 CREATE INDEX IF NOT EXISTS idx_api_token_user ON api_token(user_id);
 CREATE INDEX IF NOT EXISTS idx_api_token_hash ON api_token(token_hash);
 
--- 全文搜索优化
+-- 全文搜尋最佳化
 CREATE INDEX IF NOT EXISTS idx_search_doc_tsv ON skill_search_document USING gin(search_vector);
 ```
 
-- [ ] **Step 2: 在 SkillRepository 中添加分页支持**
+- [ ] **Step 2: 在 SkillRepository 中新增分頁支援**
 
 ```java
-// 在 SkillRepository 接口中添加:
+// 在 SkillRepository 介面中新增:
 Page<Skill> findByNamespaceId(String namespaceId, Pageable pageable);
 Page<Skill> findByDeprecatedFalse(Pageable pageable);
 ```
 
-- [ ] **Step 3: 验证迁移**
+- [ ] **Step 3: 驗證遷移**
 
 Run: `cd server && mvn compile -pl skillhub-app`
 Expected: BUILD SUCCESS
@@ -2662,16 +2662,16 @@ git commit -m "feat(perf): add database indexes and pagination support"
 
 ---
 
-## Chunk 4: Docker 一键启动 + 开源基础设施
+## Chunk 4: Docker 一鍵啟動 + 開源基礎設施
 
-### Task 4.1: Dockerfile — 多阶段构建
+### Task 4.1: Dockerfile — 多階段構建
 
-**文件:**
+**檔案:**
 - `server/Dockerfile`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 创建 Dockerfile**
+- [ ] **Step 1: 建立 Dockerfile**
 
 ```dockerfile
 # ---- Build Stage ----
@@ -2705,7 +2705,7 @@ HEALTHCHECK --interval=30s --timeout=3s \
 ENTRYPOINT ["java", "-jar", "app.jar"]
 ```
 
-- [ ] **Step 2: 创建 .dockerignore**
+- [ ] **Step 2: 建立 .dockerignore**
 
 ```
 **/target/
@@ -2714,10 +2714,10 @@ ENTRYPOINT ["java", "-jar", "app.jar"]
 .git/
 ```
 
-- [ ] **Step 3: 验证构建**
+- [ ] **Step 3: 驗證構建**
 
 Run: `cd server && docker build -t skillhub-server:dev .`
-Expected: 构建成功
+Expected: 構建成功
 
 - [ ] **Step 4: Commit**
 
@@ -2730,13 +2730,13 @@ git commit -m "feat(ops): add multi-stage Dockerfile for server"
 
 ### Task 4.2: Web 前端 Dockerfile
 
-**文件:**
+**檔案:**
 - `web/Dockerfile`
 - `web/nginx.conf`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 创建 nginx.conf**
+- [ ] **Step 1: 建立 nginx.conf**
 
 ```nginx
 server {
@@ -2765,7 +2765,7 @@ server {
 }
 ```
 
-- [ ] **Step 2: 创建 Dockerfile**
+- [ ] **Step 2: 建立 Dockerfile**
 
 ```dockerfile
 # ---- Build Stage ----
@@ -2785,10 +2785,10 @@ HEALTHCHECK --interval=30s --timeout=3s \
   CMD wget -qO- http://localhost/ || exit 1
 ```
 
-- [ ] **Step 3: 验证构建**
+- [ ] **Step 3: 驗證構建**
 
 Run: `cd web && docker build -t skillhub-web:dev .`
-Expected: 构建成功
+Expected: 構建成功
 
 - [ ] **Step 4: Commit**
 
@@ -2799,14 +2799,14 @@ git commit -m "feat(ops): add multi-stage Dockerfile for web frontend with nginx
 
 ---
 
-### Task 4.3: docker-compose.yml — 一键启动
+### Task 4.3: docker-compose.yml — 一鍵啟動
 
-**文件:**
+**檔案:**
 - `docker-compose.yml`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 创建 docker-compose.yml**
+- [ ] **Step 1: 建立 docker-compose.yml**
 
 ```yaml
 version: "3.9"
@@ -2867,18 +2867,18 @@ volumes:
   pgdata:
 ```
 
-- [ ] **Step 2: 验证启动**
+- [ ] **Step 2: 驗證啟動**
 
 Run: `docker compose up -d --build`
-Expected: 所有服务启动成功，`docker compose ps` 显示 4 个 running 容器
+Expected: 所有服務啟動成功，`docker compose ps` 顯示 4 個 running 容器
 
-- [ ] **Step 3: 验证健康检查**
+- [ ] **Step 3: 驗證健康檢查**
 
 Run: `curl http://localhost:8080/actuator/health`
 Expected: `{"status":"UP"}`
 
 Run: `curl http://localhost/`
-Expected: 返回前端 HTML 页面
+Expected: 返回前端 HTML 頁面
 
 - [ ] **Step 4: Commit**
 
@@ -2889,45 +2889,45 @@ git commit -m "feat(ops): add docker-compose for one-click local deployment"
 
 ---
 
-### Task 4.4: Makefile — 常用命令封装
+### Task 4.4: Makefile — 常用命令封裝
 
-**文件:**
+**檔案:**
 - `Makefile`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 创建 Makefile**
+- [ ] **Step 1: 建立 Makefile**
 
 ```makefile
 .PHONY: help dev up down test build clean
 
-help: ## 显示帮助
+help: ## 顯示幫助
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-dev: ## 启动开发环境 (仅 postgres + redis)
+dev: ## 啟動開發環境 (僅 postgres + redis)
 	docker compose up -d postgres redis
 
-up: ## 一键启动全部服务
+up: ## 一鍵啟動全部服務
 	docker compose up -d --build
 
-down: ## 停止全部服务
+down: ## 停止全部服務
 	docker compose down
 
-test: ## 运行全部后端测试
+test: ## 執行全部後端測試
 	cd server && mvn test
 
-build: ## 构建后端
+build: ## 構建後端
 	cd server && mvn package -DskipTests
 
-clean: ## 清理构建产物
+clean: ## 清理構建產物
 	cd server && mvn clean
 	docker compose down -v
 
-logs: ## 查看服务日志
+logs: ## 檢視服務日誌
 	docker compose logs -f server
 
-db-reset: ## 重置数据库
+db-reset: ## 重置資料庫
 	docker compose down -v
 	docker compose up -d postgres
 	@echo "Waiting for postgres..."
@@ -2935,10 +2935,10 @@ db-reset: ## 重置数据库
 	cd server && mvn flyway:migrate -pl skillhub-app
 ```
 
-- [ ] **Step 2: 验证**
+- [ ] **Step 2: 驗證**
 
 Run: `make help`
-Expected: 显示所有可用命令
+Expected: 顯示所有可用命令
 
 - [ ] **Step 3: Commit**
 
@@ -2949,88 +2949,88 @@ git commit -m "feat(ops): add Makefile with dev/up/down/test/build commands"
 
 ---
 
-### Task 4.5: README.md — 项目文档
+### Task 4.5: README.md — 專案檔案
 
-**文件:**
+**檔案:**
 - `README.md`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 创建 README.md**
+- [ ] **Step 1: 建立 README.md**
 
 ```markdown
 # SkillHub
 
-AI Skill 共享平台 — 发布、发现、管理 AI 技能包。
+AI Skill 共享平臺 — 發布、發現、管理 AI 技能包。
 
-## 快速开始
+## 快速開始
 
-### 前置条件
+### 前置條件
 - Docker & Docker Compose
-- JDK 21+ (开发模式)
-- Node.js 20+ (前端开发)
+- JDK 21+ (開發模式)
+- Node.js 20+ (前端開發)
 
-### 一键启动
+### 一鍵啟動
 
 ```bash
 make up
 ```
 
-访问:
+訪問:
 - 前端: http://localhost
 - API: http://localhost:8080
-- Prometheus 指标: http://localhost:8080/actuator/prometheus
+- Prometheus 指標: http://localhost:8080/actuator/prometheus
 
-### 开发模式
+### 開發模式
 
 ```bash
-# 启动基础设施
+# 啟動基礎設施
 make dev
 
-# 启动后端
+# 啟動後端
 cd server && mvn spring-boot:run
 
-# 启动前端
+# 啟動前端
 cd web && npm run dev
 ```
 
-### 默认账号
+### 預設賬號
 
-| 用户名 | 密码 | 角色 |
+| 使用者名稱 | 密碼 | 角色 |
 |--------|------|------|
-| admin  | Admin@2026 | 管理员 |
-| demo   | Demo@2026  | 普通用户 |
+| admin  | Admin@2026 | 管理員 |
+| demo   | Demo@2026  | 普通使用者 |
 
-## 项目结构
+## 專案結構
 
 ```
 skillhub/
-├── server/                 # Spring Boot 后端
-│   ├── skillhub-app/       # 应用层 (Controller, DTO, Config)
-│   ├── skillhub-domain/    # 领域层 (Entity, Service, Repository)
-│   ├── skillhub-auth/      # 认证授权模块
-│   ├── skillhub-search/    # 搜索模块
-│   └── skillhub-infra/     # 基础设施层 (JPA 实现)
+├── server/                 # Spring Boot 後端
+│   ├── skillhub-app/       # 應用層 (Controller, DTO, Config)
+│   ├── skillhub-domain/    # 領域層 (Entity, Service, Repository)
+│   ├── skillhub-auth/      # 認證授權模組
+│   ├── skillhub-search/    # 搜尋模組
+│   └── skillhub-infra/     # 基礎設施層 (JPA 實現)
 ├── web/                    # React 前端
-├── docker-compose.yml      # 一键部署
+├── docker-compose.yml      # 一鍵部署
 └── Makefile                # 常用命令
 ```
 
 ## 常用命令
 
 ```bash
-make help      # 查看所有命令
-make test      # 运行测试
-make build     # 构建项目
-make logs      # 查看日志
-make db-reset  # 重置数据库
+make help      # 檢視所有命令
+make test      # 執行測試
+make build     # 構建專案
+make logs      # 檢視日誌
+make db-reset  # 重置資料庫
 ```
 
-## 技术栈
+## 技術棧
 
-- **后端:** Spring Boot 3, JDK 21, PostgreSQL, Redis, Flyway
+- **後端:** Spring Boot 3, JDK 21, PostgreSQL, Redis, Flyway
 - **前端:** React, TypeScript, Vite
-- **运维:** Docker, Prometheus, Actuator
+- **運維:** Docker, Prometheus, Actuator
 
 ## License
 
@@ -3046,15 +3046,15 @@ git commit -m "docs: add comprehensive README with quickstart guide"
 
 ---
 
-### Task 4.6: Prometheus + Grafana 监控栈 (可选)
+### Task 4.6: Prometheus + Grafana 監控棧 (可選)
 
-**文件:**
+**檔案:**
 - `monitoring/prometheus.yml`
 - `monitoring/docker-compose.monitoring.yml`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 创建 Prometheus 配置**
+- [ ] **Step 1: 建立 Prometheus 配置**
 
 ```yaml
 # monitoring/prometheus.yml
@@ -3068,7 +3068,7 @@ scrape_configs:
       - targets: ['server:8080']
 ```
 
-- [ ] **Step 2: 创建监控 compose 文件**
+- [ ] **Step 2: 建立監控 compose 檔案**
 
 ```yaml
 # monitoring/docker-compose.monitoring.yml
@@ -3094,12 +3094,12 @@ services:
       - prometheus
 ```
 
-- [ ] **Step 3: 验证**
+- [ ] **Step 3: 驗證**
 
 Run: `cd monitoring && docker compose -f docker-compose.monitoring.yml up -d`
-Expected: Prometheus 和 Grafana 启动成功
+Expected: Prometheus 和 Grafana 啟動成功
 
-访问:
+訪問:
 - Prometheus: http://localhost:9090
 - Grafana: http://localhost:3000 (admin/admin)
 
@@ -3112,14 +3112,14 @@ git commit -m "feat(ops): add Prometheus + Grafana monitoring stack"
 
 ---
 
-### Task 4.7: 端到端冒烟测试脚本
+### Task 4.7: 端到端冒煙測試指令碼
 
-**文件:**
+**檔案:**
 - `scripts/smoke-test.sh`
 
-**步骤:**
+**步驟:**
 
-- [ ] **Step 1: 创建冒烟测试脚本**
+- [ ] **Step 1: 建立冒煙測試指令碼**
 
 ```bash
 #!/usr/bin/env bash
@@ -3175,7 +3175,7 @@ echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ] && exit 0 || exit 1
 ```
 
-- [ ] **Step 2: 设置可执行权限**
+- [ ] **Step 2: 設定可執行許可權**
 
 Run: `chmod +x scripts/smoke-test.sh`
 
@@ -3188,15 +3188,15 @@ git commit -m "feat(ops): add end-to-end smoke test script"
 
 ---
 
-## 完成标志
+## 完成標誌
 
-所有 Chunk 完成后，执行最终验证:
+所有 Chunk 完成後，執行最終驗證:
 
-- [ ] `make up` — 一键启动全部服务
-- [ ] `make test` — 全部后端测试通过
-- [ ] `./scripts/smoke-test.sh` — 冒烟测试通过
-- [ ] `curl localhost:8080/actuator/prometheus` — 指标正常
-- [ ] 前端页面可正常访问和操作
+- [ ] `make up` — 一鍵啟動全部服務
+- [ ] `make test` — 全部後端測試透過
+- [ ] `./scripts/smoke-test.sh` — 冒煙測試透過
+- [ ] `curl localhost:8080/actuator/prometheus` — 指標正常
+- [ ] 前端頁面可正常訪問和操作
 
 ```bash
 git tag v0.4.0

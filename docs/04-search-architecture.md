@@ -1,6 +1,6 @@
-# skillhub 搜索架构
+# skillhub 搜尋架構
 
-## 1 SPI 接口
+## 1 SPI 介面
 
 ```java
 public interface SearchIndexService {
@@ -25,120 +25,120 @@ public interface SearchRebuildService {
 ```java
 public record SearchQuery(
     String keyword,
-    Long namespaceId,           // 可选，指定空间搜索
-    String namespaceSlug,       // 可选
-    SearchVisibilityScope scope, // ACL 投影，由应用服务层计算注入
+    Long namespaceId,           // 可選，指定空間搜尋
+    String namespaceSlug,       // 可選
+    SearchVisibilityScope scope, // ACL 投影，由應用服務層計算注入
     SortField sortBy,           // RELEVANCE / DOWNLOADS / RATING / NEWEST
     int page,
     int size
 ) {}
 
-// 搜索可见范围投影，由应用服务层根据当前用户计算
+// 搜尋可見範圍投影，由應用服務層根據當前使用者計算
 public record SearchVisibilityScope(
     boolean includeAllPublic,        // 是否包含所有 PUBLIC 技能
-    Set<Long> memberNamespaceIds,    // 用户是 MEMBER 的 namespace（可见 NAMESPACE_ONLY）
-    Set<Long> adminNamespaceIds,     // 用户是 ADMIN 的 namespace（可见 PRIVATE）
-    String userId                    // 当前用户 ID（可见自己的 PRIVATE skill），匿名为 null
+    Set<Long> memberNamespaceIds,    // 使用者是 MEMBER 的 namespace（可見 NAMESPACE_ONLY）
+    Set<Long> adminNamespaceIds,     // 使用者是 ADMIN 的 namespace（可見 PRIVATE）
+    String userId                    // 當前使用者 ID（可見自己的 PRIVATE skill），匿名為 null
 ) {}
 ```
 
-ACL 投影计算规则：
-- 匿名用户：`includeAllPublic=true`，其余为空集，`userId=null`
-- 已登录用户：`includeAllPublic=true`，`memberNamespaceIds` = 用户所属空间，`adminNamespaceIds` = 用户是 ADMIN 以上的空间，`userId` = 当前用户 ID
+ACL 投影計算規則：
+- 匿名使用者：`includeAllPublic=true`，其餘為空集，`userId=null`
+- 已登入使用者：`includeAllPublic=true`，`memberNamespaceIds` = 使用者所屬空間，`adminNamespaceIds` = 使用者是 ADMIN 以上的空間，`userId` = 當前使用者 ID
 
-一期 PostgreSQL 实现中，`SearchVisibilityScope` 转换为 WHERE 条件：
+一期 PostgreSQL 實現中，`SearchVisibilityScope` 轉換為 WHERE 條件：
 ```sql
 WHERE (visibility = 'PUBLIC')
    OR (visibility = 'NAMESPACE_ONLY' AND namespace_id IN (:memberNamespaceIds))
    OR (visibility = 'PRIVATE' AND (namespace_id IN (:adminNamespaceIds) OR owner_id = :userId))
 ```
 
-迁移到 ES 时，`SearchVisibilityScope` 可直接映射为 bool query 的 should/filter 子句。
+遷移到 ES 時，`SearchVisibilityScope` 可直接對映為 bool query 的 should/filter 子句。
 
-## 3 搜索文档表 skill_search_document
+## 3 搜尋檔案表 skill_search_document
 
-一个 skill 对应一条搜索文档，但文档内容的来源语义应严格收敛为“当前最新已发布版本”。实现上仍可由 `latest_version_id` 作为缓存指针承载，但它只允许指向 `PUBLISHED` 版本；搜索层不能再把它当作泛化的“当前版本”。
+一個 skill 對應一條搜尋檔案，但檔案內容的來源語義應嚴格收斂為“當前最新已發布版本”。實現上仍可由 `latest_version_id` 作為快取指標承載，但它只允許指向 `PUBLISHED` 版本；搜尋層不能再把它當作泛化的“當前版本”。
 
-| 字段 | 类型 | 说明 |
+| 欄位 | 型別 | 說明 |
 |------|------|------|
 | id | bigint | |
-| skill_id | bigint | 唯一，一 skill 一条 |
-| namespace_id | bigint | 用于空间过滤 |
-| owner_id | VARCHAR(128) | 用于 PRIVATE 可见性判定 |
+| skill_id | bigint | 唯一，一 skill 一條 |
+| namespace_id | bigint | 用於空間過濾 |
+| owner_id | VARCHAR(128) | 用於 PRIVATE 可見性判定 |
 | title | varchar(256) | |
 | summary | varchar(512) | |
 | keywords | varchar(512) | |
-| search_text | text | `displayName`、`slug`、`summary`，以及 frontmatter 中除 `name` / `description` / `version` 外的字段展开结果 |
-| visibility | enum | 冗余，避免搜索时 join |
+| search_text | text | `displayName`、`slug`、`summary`，以及 frontmatter 中除 `name` / `description` / `version` 外的欄位展開結果 |
+| visibility | enum | 冗餘，避免搜尋時 join |
 | status | enum | |
 | updated_at | datetime | |
 
-唯一约束：`(skill_id)`
+唯一約束：`(skill_id)`
 
-PostgreSQL 全文搜索索引：表增加 `search_vector tsvector` 生成列，基于 `title`、`summary`、`keywords`、`search_text` 自动维护，建立 GIN 索引。详见第 7 节。
+PostgreSQL 全文搜尋索引：表增加 `search_vector tsvector` 生成列，基於 `title`、`summary`、`keywords`、`search_text` 自動維護，建立 GIN 索引。詳見第 7 節。
 
-## 4 索引写入时机
+## 4 索引寫入時機
 
-以下场景触发搜索文档更新（upsert by skill_id）：
-- 审核通过（`PENDING_REVIEW → PUBLISHED`）：重算“最新已发布版本”指针，并用该发布版本内容更新搜索文档
-- 已发布版本被撤回（`PUBLISHED → YANKED`）：重算“最新已发布版本”指针；若不存在任何已发布版本，则移除搜索文档
-- 技能状态变更（隐藏/归档/恢复）：更新搜索文档的 status 字段
+以下場景觸發搜尋檔案更新（upsert by skill_id）：
+- 稽核透過（`PENDING_REVIEW → PUBLISHED`）：重算“最新已發布版本”指標，並用該發布版本內容更新搜尋檔案
+- 已發布版本被撤回（`PUBLISHED → YANKED`）：重算“最新已發布版本”指標；若不存在任何已發布版本，則移除搜尋檔案
+- 技能狀態變更（隱藏/歸檔/恢復）：更新搜尋檔案的 status 欄位
 
-## 5 搜索演进路线
+## 5 搜尋演進路線
 
-### 5.1 一期数据建模约束
+### 5.1 一期資料建模約束
 
-一期“每个 skill 一条搜索文档、内容永远取最新已发布版本”是有意的简化。当前实现仍使用 `latest_version_id` 作为持久化指针，但这里的语义已经收敛为 latest published pointer。这个模型在以下场景下会不够用：
+一期“每個 skill 一條搜尋檔案、內容永遠取最新已發布版本”是有意的簡化。當前實現仍使用 `latest_version_id` 作為持久化指標，但這裡的語義已經收斂為 latest published pointer。這個模型在以下場景下會不夠用：
 
-- 版本级检索（搜索某个旧版本的内容）
-- 自定义标签/通道检索（搜索 `@beta` 标签指向的版本内容）
-- 向量 chunk 索引（一个 skill 的 SKILL.md 拆成多个 embedding chunk）
+- 版本級檢索（搜尋某個舊版本的內容）
+- 自定義標籤/通道檢索（搜尋 `@beta` 標籤指向的版本內容）
+- 向量 chunk 索引（一個 skill 的 SKILL.md 拆成多個 embedding chunk）
 
-这些场景不是简单换 provider 能解决的，需要改表结构和索引写入逻辑。
+這些場景不是簡單換 provider 能解決的，需要改表結構和索引寫入邏輯。
 
-**一期搜索能力边界（产品限制）：**
-- 搜索只基于“最新已发布版本”的内容
-- 不支持按 version 或 tag 搜索内容
-- 搜索结果不区分 channel（`beta`、`stable` 等标签通道）
-- 用户通过 tag 安装的技能内容可能与搜索结果展示的内容不一致（搜索展示 latest，安装的是 tag 指向的版本）
-- 若要支持 channel-aware 搜索，必须升级到 version 级索引（二期 ES 实现）
+**一期搜尋能力邊界（產品限制）：**
+- 搜尋只基於“最新已發布版本”的內容
+- 不支援按 version 或 tag 搜尋內容
+- 搜尋結果不區分 channel（`beta`、`stable` 等標籤通道）
+- 使用者透過 tag 安裝的技能內容可能與搜尋結果展示的內容不一致（搜尋展示 latest，安裝的是 tag 指向的版本）
+- 若要支援 channel-aware 搜尋，必須升級到 version 級索引（二期 ES 實現）
 
-### 5.2 演进阶段
+### 5.2 演進階段
 
-| 阶段 | 实现 | 索引粒度 | 切换方式 |
+| 階段 | 實現 | 索引粒度 | 切換方式 |
 |------|------|---------|---------|
-| 一期 | PostgreSQL Full-Text (tsvector + GIN) | 每 skill 一条（latest published） | 默认 |
-| 一点五期 | PostgreSQL Full-Text + 语义向量重排 | 每 skill 一条（latest published） | 配置 `skillhub.search.semantic.enabled=true` |
-| 二期 | ES / OpenSearch | 每 skill_version 一条 + skill 聚合文档 | 配置 `search.provider=elasticsearch` |
-| 三期 | 向量检索 | 每 skill_version 多条（chunk 级） | 配置 `search.provider=vector` |
-| 四期 | 混合排序 | 关键词 + 向量混合 | 配置 `search.provider=hybrid` |
+| 一期 | PostgreSQL Full-Text (tsvector + GIN) | 每 skill 一條（latest published） | 預設 |
+| 一點五期 | PostgreSQL Full-Text + 語義向量重排 | 每 skill 一條（latest published） | 配置 `skillhub.search.semantic.enabled=true` |
+| 二期 | ES / OpenSearch | 每 skill_version 一條 + skill 聚合檔案 | 配置 `search.provider=elasticsearch` |
+| 三期 | 向量檢索 | 每 skill_version 多條（chunk 級） | 配置 `search.provider=vector` |
+| 四期 | 混合排序 | 關鍵詞 + 向量混合 | 配置 `search.provider=hybrid` |
 
-当前代码实现已落在“一点五期”：
-- 仍然使用 PostgreSQL 全文搜索作为主召回
-- 搜索文档表新增 `semantic_vector` 缓存字段
-- relevance 排序下，对全文候选集追加语义向量重排
-- 语义向量不可用时自动降级为现有全文相关度排序
+當前程式碼實現已落在“一點五期”：
+- 仍然使用 PostgreSQL 全文搜尋作為主召回
+- 搜尋檔案表新增 `semantic_vector` 快取欄位
+- relevance 排序下，對全文候選集追加語義向量重排
+- 語義向量不可用時自動降級為現有全文相關度排序
 
-### 5.3 SPI 演进策略
+### 5.3 SPI 演進策略
 
-一期 SPI 接口（`SearchIndexService` / `SearchQueryService`）的入参是 `SkillSearchDocument`（skill 粒度）。二期切换到 ES 时：
+一期 SPI 介面（`SearchIndexService` / `SearchQueryService`）的入參是 `SkillSearchDocument`（skill 粒度）。二期切換到 ES 時：
 
 1. 新增 `SkillVersionSearchDocument` 模型（version 粒度）
-2. `SearchIndexService` 新增 `indexVersion()` 方法（向下兼容，一期实现空方法）
-3. ES 实现同时写入 skill 聚合文档 + version 文档
-4. `SearchQueryService.search()` 的返回结果不变（仍返回 skill 级摘要），内部实现切换为 ES 查询
+2. `SearchIndexService` 新增 `indexVersion()` 方法（向下相容，一期實現空方法）
+3. ES 實現同時寫入 skill 聚合檔案 + version 檔案
+4. `SearchQueryService.search()` 的返回結果不變（仍返回 skill 級摘要），內部實現切換為 ES 查詢
 
-这意味着二期切换不是零成本的——需要新增模型、扩展 SPI、重建索引。但一期不为此过度设计，SPI 抽象保证了切换时不需要改业务层代码。
+這意味著二期切換不是零成本的——需要新增模型、擴充套件 SPI、重建索引。但一期不為此過度設計，SPI 抽象保證了切換時不需要改業務層程式碼。
 
-通过 `@ConditionalOnProperty` 或自定义 SPI 加载机制切换。
+透過 `@ConditionalOnProperty` 或自定義 SPI 載入機制切換。
 
-## 6 分布式安全
+## 6 分散式安全
 
-`rebuildAll()` / `rebuildByNamespace()` 执行前获取 Redis 分布式锁（key: `search:rebuild:{scope}`，TTL: 10min），获取失败则跳过。
+`rebuildAll()` / `rebuildByNamespace()` 執行前獲取 Redis 分散式鎖（key: `search:rebuild:{scope}`，TTL: 10min），獲取失敗則跳過。
 
-## 7 PostgreSQL 全文搜索中文支持
+## 7 PostgreSQL 全文搜尋中文支援
 
-PostgreSQL 全文搜索使用 `tsvector` + `tsquery` + GIN 索引：
+PostgreSQL 全文搜尋使用 `tsvector` + `tsquery` + GIN 索引：
 
 ```sql
 -- 增加 tsvector 生成列
@@ -155,9 +155,9 @@ GENERATED ALWAYS AS (
 CREATE INDEX idx_search_vector ON skill_search_document USING GIN (search_vector);
 ```
 
-中文支持方案：
-- 一期使用 `simple` 分词配置（按空格和标点分词），对中文支持有限但零依赖
-- 如需更好的中文分词，可安装 `zhparser` 或 `pg_jieba` 扩展，替换为对应的 text search configuration
-- PostgreSQL 的 `tsvector` 支持权重（A/B/C/D），可对 title 赋予更高权重，提升搜索相关性
+中文支援方案：
+- 一期使用 `simple` 分詞配置（按空格和標點分詞），對中文支援有限但零依賴
+- 如需更好的中文分詞，可安裝 `zhparser` 或 `pg_jieba` 擴充套件，替換為對應的 text search configuration
+- PostgreSQL 的 `tsvector` 支援權重（A/B/C/D），可對 title 賦予更高權重，提升搜尋相關性
 
-已知局限：`simple` 分词对中文的精度不如专业搜索引擎。建议 Phase 2 完成后评估搜索效果，如不满足需求则在 Phase 3 提前引入 ES。
+已知侷限：`simple` 分詞對中文的精度不如專業搜尋引擎。建議 Phase 2 完成後評估搜尋效果，如不滿足需求則在 Phase 3 提前引入 ES。

@@ -38,13 +38,13 @@ function countPasswordCharacterTypes(password: string) {
 function isDuplicateUsernameError(errorKey: string) {
   return errorKey === 'error.auth.local.username.exists'
     || errorKey.includes('Username already exists')
-    || errorKey.includes('用户名已存在')
+    || errorKey.includes('使用者名稱已存在')
 }
 
 function isDuplicateEmailError(errorKey: string) {
   return errorKey === 'error.auth.local.email.exists'
     || errorKey.includes('Email already exists')
-    || errorKey.includes('邮箱已存在')
+    || errorKey.includes('郵箱已存在')
 }
 
 /**

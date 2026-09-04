@@ -116,14 +116,14 @@ describe('AdminLabelsPage', () => {
       visibleInFilter: true,
       sortOrder: Number.NaN,
       translations: [
-        { locale: ' ZH_cn ', displayName: ' 代码生成 ' },
+        { locale: ' ZH_cn ', displayName: ' 程式碼生成 ' },
         { locale: ' ', displayName: ' ' },
       ],
     })
 
     expect(normalized.slug).toBe('code-generation')
     expect(normalized.sortOrder).toBe(0)
-    expect(normalized.translations).toEqual([{ locale: 'zh-cn', displayName: '代码生成' }])
+    expect(normalized.translations).toEqual([{ locale: 'zh-cn', displayName: '程式碼生成' }])
   })
 
   it('rejects invalid slug patterns and duplicate locales in validation', () => {

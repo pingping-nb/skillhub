@@ -1,51 +1,51 @@
-# Phase 3: 审核流程 + CLI API + 评分收藏 + 兼容层 Implementation Plan
+# Phase 3: 稽核流程 + CLI API + 評分收藏 + 相容層 Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 在 Phase 2 基础上建立完整的治理体系、CLI 生态和社交功能，实现审核流程、提升机制、评分收藏、CLI API、ClawHub 兼容层和管理后台。
+**Goal:** 在 Phase 2 基礎上建立完整的治理體系、CLI 生態和社交功能，實現稽核流程、提升機制、評分收藏、CLI API、ClawHub 相容層和管理後臺。
 
 **Architecture:**
-- 审核流程：乐观锁 + partial unique index 防止并发冲突，分级权限控制
-- 评分收藏：异步事件 + Redis 分布式锁更新计数器
-- CLI API：OAuth Device Flow 标准认证流程
-- 兼容层：Canonical slug 映射实现 ClawHub CLI 协议兼容
-- 幂等去重：Redis SETNX + PostgreSQL 双层防护
+- 稽核流程：樂觀鎖 + partial unique index 防止併發衝突，分級許可權控制
+- 評分收藏：非同步事件 + Redis 分散式鎖更新計數器
+- CLI API：OAuth Device Flow 標準認證流程
+- 相容層：Canonical slug 對映實現 ClawHub CLI 協議相容
+- 冪等去重：Redis SETNX + PostgreSQL 雙層防護
 
-**身份主键约束：** 用户身份主键全链路统一使用 `string`。本计划里所有 `userId`、`submittedBy`、`reviewedBy`、`ownerId`、`actorUserId` 等用户标识字段均按字符串实现；历史 `Long` / `BIGINT` 描述不再有效。
+**身份主鍵約束：** 使用者身份主鍵全鏈路統一使用 `string`。本計劃裡所有 `userId`、`submittedBy`、`reviewedBy`、`ownerId`、`actorUserId` 等使用者標識欄位均按字串實現；歷史 `Long` / `BIGINT` 描述不再有效。
 
 **Tech Stack:**
-- 后端：Spring Boot 3.x + JDK 21 + PostgreSQL 16 + Redis 7 + Spring Security + Flyway
+- 後端：Spring Boot 3.x + JDK 21 + PostgreSQL 16 + Redis 7 + Spring Security + Flyway
 - 前端：React 19 + TypeScript + Vite + TanStack Router + TanStack Query + shadcn/ui
-- 新增：react-rating-stars-component（评分组件）
+- 新增：react-rating-stars-component（評分元件）
 
 ---
 
-## Chunk 1: 审核流程核心（后端）
+## Chunk 1: 稽核流程核心（後端）
 
-**范围：** 数据库迁移 + 审核流程 + 提升流程 + 乐观锁 + 分级权限
+**範圍：** 資料庫遷移 + 稽核流程 + 提升流程 + 樂觀鎖 + 分級許可權
 
-**验收标准：**
-1. 用户可以提交审核，创建 review_task（status=PENDING）
-2. 审核人可以通过/拒绝审核，乐观锁防止并发冲突
-3. 审核通过后，skill_version.status → PUBLISHED，触发搜索索引更新
-4. 审核拒绝后，skill_version.status → REJECTED，记录拒绝原因
-5. 用户可以撤回 PENDING 状态的审核
-6. 团队管理员只能审核自己管理的 namespace 的技能
-7. 平台 SKILL_ADMIN 只能审核全局空间的技能
-8. 用户可以提交提升请求，创建 promotion_request（status=PENDING）
-9. 平台 SKILL_ADMIN 可以审核提升请求
-10. 提升通过后，在全局空间创建新 skill，复制版本和文件
-11. 所有审核操作写入 audit_log
-12. 所有测试通过
+**驗收標準：**
+1. 使用者可以提交稽核，建立 review_task（status=PENDING）
+2. 稽核人可以透過/拒絕稽核，樂觀鎖防止併發衝突
+3. 稽核透過後，skill_version.status → PUBLISHED，觸發搜尋索引更新
+4. 稽核拒絕後，skill_version.status → REJECTED，記錄拒絕原因
+5. 使用者可以撤回 PENDING 狀態的稽核
+6. 團隊管理員只能稽核自己管理的 namespace 的技能
+7. 平臺 SKILL_ADMIN 只能稽核全域性空間的技能
+8. 使用者可以提交提升請求，建立 promotion_request（status=PENDING）
+9. 平臺 SKILL_ADMIN 可以稽核提升請求
+10. 提升透過後，在全域性空間建立新 skill，複製版本和檔案
+11. 所有稽核操作寫入 audit_log
+12. 所有測試透過
 
-### Task 1: 数据库迁移脚本
+### Task 1: 資料庫遷移指令碼
 
 **Files:**
 - Create: `server/skillhub-app/src/main/resources/db/migration/V3__phase3_review_social_tables.sql`
 
-- [ ] **Step 1: 创建数据库迁移脚本**
+- [ ] **Step 1: 建立資料庫遷移指令碼**
 
-创建 `V3__phase3_review_social_tables.sql`，包含 5 个新表：
+建立 `V3__phase3_review_social_tables.sql`，包含 5 個新表：
 
 ```sql
 -- review_task 表
@@ -126,20 +126,20 @@ CREATE INDEX idx_idempotency_record_expires_at ON idempotency_record(expires_at)
 CREATE INDEX idx_idempotency_record_status_created ON idempotency_record(status, created_at);
 ```
 
-- [ ] **Step 2: 验证迁移脚本语法**
+- [ ] **Step 2: 驗證遷移指令碼語法**
 
-运行：`cd server && ./mvnw flyway:validate`
-预期：SUCCESS
+執行：`cd server && ./mvnw flyway:validate`
+預期：SUCCESS
 
-- [ ] **Step 3: 执行数据库迁移**
+- [ ] **Step 3: 執行資料庫遷移**
 
-运行：`cd server && ./mvnw flyway:migrate`
-预期：V3 迁移成功，5 个新表创建
+執行：`cd server && ./mvnw flyway:migrate`
+預期：V3 遷移成功，5 個新表建立
 
-- [ ] **Step 4: 验证表结构**
+- [ ] **Step 4: 驗證表結構**
 
-运行：`psql -d skillhub -c "\d review_task"`
-预期：显示表结构，包含 partial unique index
+執行：`psql -d skillhub -c "\d review_task"`
+預期：顯示錶結構，包含 partial unique index
 
 - [ ] **Step 5: Commit**
 
@@ -153,16 +153,16 @@ git commit -m "feat(db): add Phase 3 database migration
 - Add idempotency_record table"
 ```
 
-### Task 2: 审核流程领域实体
+### Task 2: 稽核流程領域實體
 
 **Files:**
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTask.java`
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTaskStatus.java`
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/PromotionRequest.java`
 
-- [ ] **Step 1: 创建 ReviewTaskStatus 枚举**
+- [ ] **Step 1: 建立 ReviewTaskStatus 列舉**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTaskStatus.java`:
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTaskStatus.java`:
 
 ```java
 package com.iflytek.skillhub.domain.review;
@@ -174,9 +174,9 @@ public enum ReviewTaskStatus {
 }
 ```
 
-- [ ] **Step 2: 创建 ReviewTask 实体**
+- [ ] **Step 2: 建立 ReviewTask 實體**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTask.java`:
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTask.java`:
 
 ```java
 package com.iflytek.skillhub.domain.review;
@@ -248,9 +248,9 @@ public class ReviewTask {
 }
 ```
 
-- [ ] **Step 3: 创建 PromotionRequest 实体**
+- [ ] **Step 3: 建立 PromotionRequest 實體**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/PromotionRequest.java`:
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/PromotionRequest.java`:
 
 ```java
 package com.iflytek.skillhub.domain.review;
@@ -333,10 +333,10 @@ public class PromotionRequest {
 }
 ```
 
-- [ ] **Step 4: 编译验证**
+- [ ] **Step 4: 編譯驗證**
 
-运行：`cd server && ./mvnw compile`
-预期：编译成功
+執行：`cd server && ./mvnw compile`
+預期：編譯成功
 
 - [ ] **Step 5: Commit**
 
@@ -349,7 +349,7 @@ git commit -m "feat(domain): add review entities
 - Add PromotionRequest entity"
 ```
 
-### Task 3: Repository 层实现
+### Task 3: Repository 層實現
 
 **Files:**
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTaskRepository.java`
@@ -357,9 +357,9 @@ git commit -m "feat(domain): add review entities
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/PromotionRequestRepository.java`
 - Create: `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/PromotionRequestJpaRepository.java`
 
-- [ ] **Step 1: 创建 ReviewTaskRepository 接口**
+- [ ] **Step 1: 建立 ReviewTaskRepository 介面**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTaskRepository.java`:
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTaskRepository.java`:
 
 ```java
 package com.iflytek.skillhub.domain.review;
@@ -380,9 +380,9 @@ public interface ReviewTaskRepository {
 }
 ```
 
-- [ ] **Step 2: 创建 ReviewTaskJpaRepository 实现**
+- [ ] **Step 2: 建立 ReviewTaskJpaRepository 實現**
 
-创建 `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/ReviewTaskJpaRepository.java`:
+建立 `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/ReviewTaskJpaRepository.java`:
 
 ```java
 package com.iflytek.skillhub.infra.jpa;
@@ -427,9 +427,9 @@ public interface ReviewTaskJpaRepository extends JpaRepository<ReviewTask, Long>
 }
 ```
 
-- [ ] **Step 3: 创建 PromotionRequestRepository 接口和实现**
+- [ ] **Step 3: 建立 PromotionRequestRepository 介面和實現**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/PromotionRequestRepository.java`:
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/PromotionRequestRepository.java`:
 
 ```java
 package com.iflytek.skillhub.domain.review;
@@ -448,7 +448,7 @@ public interface PromotionRequestRepository {
 }
 ```
 
-创建 `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/PromotionRequestJpaRepository.java`:
+建立 `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/PromotionRequestJpaRepository.java`:
 
 ```java
 package com.iflytek.skillhub.infra.jpa;
@@ -493,10 +493,10 @@ public interface PromotionRequestJpaRepository extends JpaRepository<PromotionRe
 }
 ```
 
-- [ ] **Step 4: 编译验证**
+- [ ] **Step 4: 編譯驗證**
 
-运行：`cd server && ./mvnw compile`
-预期：编译成功
+執行：`cd server && ./mvnw compile`
+預期：編譯成功
 
 - [ ] **Step 5: Commit**
 
@@ -510,15 +510,15 @@ git commit -m "feat(repo): add review repositories
 - Implement JPA repositories in infra module"
 ```
 
-### Task 4: 审核权限检查器
+### Task 4: 稽核許可權檢查器
 
 **Files:**
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewPermissionChecker.java`
 - Create: `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/review/ReviewPermissionCheckerTest.java`
 
-- [ ] **Step 1: 编写权限检查器测试**
+- [ ] **Step 1: 編寫許可權檢查器測試**
 
-创建测试文件，验证权限逻辑：
+建立測試檔案，驗證許可權邏輯：
 
 ```java
 package com.iflytek.skillhub.domain.review;
@@ -581,14 +581,14 @@ class ReviewPermissionCheckerTest {
 }
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [ ] **Step 2: 執行測試確認失敗**
 
-运行：`cd server && ./mvnw test -Dtest=ReviewPermissionCheckerTest`
-预期：测试失败（类不存在）
+執行：`cd server && ./mvnw test -Dtest=ReviewPermissionCheckerTest`
+預期：測試失敗（類不存在）
 
-- [ ] **Step 3: 实现权限检查器**
+- [ ] **Step 3: 實現許可權檢查器**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewPermissionChecker.java`:
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewPermissionChecker.java`:
 
 ```java
 package com.iflytek.skillhub.domain.review;
@@ -610,7 +610,7 @@ public class ReviewPermissionChecker {
             return false;
         }
 
-        // Get namespace type (需要从 task 中获取，这里简化处理)
+        // Get namespace type (需要從 task 中獲取，這裡簡化處理)
         NamespaceType namespaceType = getNamespaceType(task.getNamespaceId());
 
         // Global namespace: only SKILL_ADMIN or SUPER_ADMIN
@@ -632,17 +632,17 @@ public class ReviewPermissionChecker {
     }
 
     private NamespaceType getNamespaceType(Long namespaceId) {
-        // TODO: 实际实现需要查询 namespace 表
-        // 这里简化处理，假设 id=1 是 GLOBAL
+        // TODO: 實際實現需要查詢 namespace 表
+        // 這裡簡化處理，假設 id=1 是 GLOBAL
         return namespaceId == 1L ? NamespaceType.GLOBAL : NamespaceType.TEAM;
     }
 }
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [ ] **Step 4: 執行測試確認透過**
 
-运行：`cd server && ./mvnw test -Dtest=ReviewPermissionCheckerTest`
-预期：所有测试通过
+執行：`cd server && ./mvnw test -Dtest=ReviewPermissionCheckerTest`
+預期：所有測試透過
 
 - [ ] **Step 5: Commit**
 
@@ -657,15 +657,15 @@ git commit -m "feat(review): add permission checker with tests
 - Verify SKILL_ADMIN can only review global skills"
 ```
 
-### Task 5: 审核服务实现（核心逻辑）
+### Task 5: 稽核服務實現（核心邏輯）
 
 **Files:**
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewService.java`
 - Create: `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/review/ReviewServiceTest.java`
 
-由于篇幅限制，这里提供关键方法的实现框架：
+由於篇幅限制，這裡提供關鍵方法的實現框架：
 
-- [ ] **Step 1: 创建 ReviewService 接口**
+- [ ] **Step 1: 建立 ReviewService 介面**
 
 ```java
 package com.iflytek.skillhub.domain.review;
@@ -678,13 +678,13 @@ public interface ReviewService {
 }
 ```
 
-- [ ] **Step 2-5: 实现服务方法（TDD 循环）**
+- [ ] **Step 2-5: 實現服務方法（TDD 迴圈）**
 
-参考设计文档第 2.1 节的流程图实现每个方法，包括：
-- 乐观锁更新
-- 状态机转换
-- 事件发布
-- 审计日志
+參考設計檔案第 2.1 節的流程圖實現每個方法，包括：
+- 樂觀鎖更新
+- 狀態機轉換
+- 事件發布
+- 審計日誌
 
 - [ ] **Step 6: Commit**
 
@@ -697,7 +697,7 @@ git commit -m "feat(review): implement review service
 - Add withdrawReview with PENDING check"
 ```
 
-### Task 6: PromotionService（提升流程服务）
+### Task 6: PromotionService（提升流程服務）
 
 **Files:**
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/PromotionRequest.java`
@@ -706,9 +706,9 @@ git commit -m "feat(review): implement review service
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/service/PromotionService.java`
 - Create: `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/promotion/service/PromotionServiceTest.java`
 
-- [ ] **Step 1: 创建 PromotionStatus 枚举**
+- [ ] **Step 1: 建立 PromotionStatus 列舉**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/PromotionStatus.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/PromotionStatus.java`：
 
 ```java
 package com.iflytek.skillhub.domain.promotion;
@@ -721,9 +721,9 @@ public enum PromotionStatus {
 }
 ```
 
-- [ ] **Step 2: 创建 PromotionRequest 实体**
+- [ ] **Step 2: 建立 PromotionRequest 實體**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/PromotionRequest.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/PromotionRequest.java`：
 
 ```java
 package com.iflytek.skillhub.domain.promotion;
@@ -884,9 +884,9 @@ public class PromotionRequest {
 }
 ```
 
-- [ ] **Step 3: 创建 PromotionRequestRepository**
+- [ ] **Step 3: 建立 PromotionRequestRepository**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/PromotionRequestRepository.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/PromotionRequestRepository.java`：
 
 ```java
 package com.iflytek.skillhub.domain.promotion;
@@ -913,9 +913,9 @@ public interface PromotionRequestRepository extends JpaRepository<PromotionReque
 }
 ```
 
-- [ ] **Step 4: 创建 PromotionService**
+- [ ] **Step 4: 建立 PromotionService**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/service/PromotionService.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/service/PromotionService.java`：
 
 ```java
 package com.iflytek.skillhub.domain.promotion.service;
@@ -1160,9 +1160,9 @@ public class PromotionService {
 }
 ```
 
-- [ ] **Step 5: 创建 PromotionApprovedEvent**
+- [ ] **Step 5: 建立 PromotionApprovedEvent**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/PromotionApprovedEvent.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/PromotionApprovedEvent.java`：
 
 ```java
 package com.iflytek.skillhub.domain.event;
@@ -1175,9 +1175,9 @@ public record PromotionApprovedEvent(
 ) {}
 ```
 
-- [ ] **Step 6: 编写 PromotionService 测试**
+- [ ] **Step 6: 編寫 PromotionService 測試**
 
-创建 `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/promotion/service/PromotionServiceTest.java`：
+建立 `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/promotion/service/PromotionServiceTest.java`：
 
 ```java
 package com.iflytek.skillhub.domain.promotion.service;
@@ -1314,7 +1314,7 @@ class PromotionServiceTest {
 ---
 
 
-### Task 7: ReviewController + PromotionController（审核和提升 REST API）
+### Task 7: ReviewController + PromotionController（稽核和提升 REST API）
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/ReviewController.java`
@@ -1326,9 +1326,9 @@ class PromotionServiceTest {
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/PromotionResponseDto.java`
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/PromotionActionRequest.java`
 
-- [ ] **Step 1: 创建 Review DTOs**
+- [ ] **Step 1: 建立 Review DTOs**
 
-创建 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/ReviewTaskRequest.java`：
+建立 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/ReviewTaskRequest.java`：
 
 ```java
 package com.iflytek.skillhub.dto;
@@ -1338,7 +1338,7 @@ public record ReviewTaskRequest(
 ) {}
 ```
 
-创建 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/ReviewTaskResponse.java`：
+建立 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/ReviewTaskResponse.java`：
 
 ```java
 package com.iflytek.skillhub.dto;
@@ -1362,7 +1362,7 @@ public record ReviewTaskResponse(
 ) {}
 ```
 
-创建 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/ReviewActionRequest.java`：
+建立 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/ReviewActionRequest.java`：
 
 ```java
 package com.iflytek.skillhub.dto;
@@ -1372,9 +1372,9 @@ public record ReviewActionRequest(
 ) {}
 ```
 
-- [ ] **Step 2: 创建 Promotion DTOs**
+- [ ] **Step 2: 建立 Promotion DTOs**
 
-创建 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/PromotionRequestDto.java`：
+建立 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/PromotionRequestDto.java`：
 
 ```java
 package com.iflytek.skillhub.dto;
@@ -1386,7 +1386,7 @@ public record PromotionRequestDto(
 ) {}
 ```
 
-创建 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/PromotionResponseDto.java`：
+建立 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/PromotionResponseDto.java`：
 
 ```java
 package com.iflytek.skillhub.dto;
@@ -1412,7 +1412,7 @@ public record PromotionResponseDto(
 ) {}
 ```
 
-创建 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/PromotionActionRequest.java`：
+建立 `server/skillhub-app/src/main/java/com/iflytek/skillhub/dto/PromotionActionRequest.java`：
 
 ```java
 package com.iflytek.skillhub.dto;
@@ -1422,9 +1422,9 @@ public record PromotionActionRequest(
 ) {}
 ```
 
-- [ ] **Step 3: 创建 ReviewController**
+- [ ] **Step 3: 建立 ReviewController**
 
-创建 `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/ReviewController.java`：
+建立 `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/ReviewController.java`：
 
 ```java
 package com.iflytek.skillhub.controller.portal;
@@ -1607,9 +1607,9 @@ public class ReviewController {
 }
 ```
 
-- [ ] **Step 4: 创建 PromotionController**
+- [ ] **Step 4: 建立 PromotionController**
 
-创建 `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/PromotionController.java`：
+建立 `server/skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/PromotionController.java`：
 
 ```java
 package com.iflytek.skillhub.controller.portal;
@@ -1771,9 +1771,9 @@ public class PromotionController {
 }
 ```
 
-- [ ] **Step 5: 编写 Controller 集成测试**
+- [ ] **Step 5: 編寫 Controller 整合測試**
 
-创建 `server/skillhub-app/src/test/java/com/iflytek/skillhub/controller/portal/ReviewControllerTest.java`：
+建立 `server/skillhub-app/src/test/java/com/iflytek/skillhub/controller/portal/ReviewControllerTest.java`：
 
 ```java
 package com.iflytek.skillhub.controller.portal;
@@ -1842,16 +1842,16 @@ class ReviewControllerTest {
 ---
 
 
-### Task 8: 发布流程改造（修改 SkillPublishService）
+### Task 8: 發布流程改造（修改 SkillPublishService）
 
 **Files:**
 - Modify: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/service/SkillPublishService.java`
 - Modify: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/SkillVersionStatus.java`
 - Create: `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/skill/service/SkillPublishServiceReviewTest.java`
 
-- [ ] **Step 1: 修改 SkillVersionStatus 枚举（已完成）**
+- [ ] **Step 1: 修改 SkillVersionStatus 列舉（已完成）**
 
-确认 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/SkillVersionStatus.java` 已包含 `PENDING_REVIEW`：
+確認 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/SkillVersionStatus.java` 已包含 `PENDING_REVIEW`：
 
 ```java
 package com.iflytek.skillhub.domain.skill;
@@ -1864,43 +1864,43 @@ public enum SkillVersionStatus {
 }
 ```
 
-- [ ] **Step 2: 修改 SkillPublishService 创建 PENDING_REVIEW 版本**
+- [ ] **Step 2: 修改 SkillPublishService 建立 PENDING_REVIEW 版本**
 
 修改 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/service/SkillPublishService.java`：
 
-在 `publishFromEntries` 方法中，找到创建 `SkillVersion` 的代码（约第 120 行）：
+在 `publishFromEntries` 方法中，找到建立 `SkillVersion` 的程式碼（約第 120 行）：
 
 ```java
-// 原代码：
+// 原始碼：
 SkillVersion version = new SkillVersion(
         skill.getId(),
         metadata.version(),
-        SkillVersionStatus.PUBLISHED,  // <-- 修改这里
+        SkillVersionStatus.PUBLISHED,  // <-- 修改這裡
         publisherId
 );
 ```
 
-修改为：
+修改為：
 
 ```java
-// 新代码：
+// 新程式碼：
 SkillVersion version = new SkillVersion(
         skill.getId(),
         metadata.version(),
-        SkillVersionStatus.PENDING_REVIEW,  // <-- 改为 PENDING_REVIEW
+        SkillVersionStatus.PENDING_REVIEW,  // <-- 改為 PENDING_REVIEW
         publisherId
 );
 ```
 
-- [ ] **Step 3: 在 SkillPublishService 中自动创建 ReviewTask**
+- [ ] **Step 3: 在 SkillPublishService 中自動建立 ReviewTask**
 
-在 `SkillPublishService` 类中添加依赖注入：
+在 `SkillPublishService` 類中新增依賴注入：
 
 ```java
-// 在类的字段声明部分添加：
+// 在類的欄位宣告部分新增：
 private final ReviewTaskRepository reviewTaskRepository;
 
-// 在构造函数中添加参数：
+// 在建構函式中新增引數：
 public SkillPublishService(
         NamespaceRepository namespaceRepository,
         NamespaceMemberRepository namespaceMemberRepository,
@@ -1929,10 +1929,10 @@ public SkillPublishService(
 }
 ```
 
-在 `publishFromEntries` 方法的最后，在发布事件之前（约第 189 行），添加创建 ReviewTask 的代码：
+在 `publishFromEntries` 方法的最後，在發布事件之前（約第 189 行），新增建立 ReviewTask 的程式碼：
 
 ```java
-// 在 eventPublisher.publishEvent(...) 之前添加：
+// 在 eventPublisher.publishEvent(...) 之前新增：
 
 // 12.5. Auto-create ReviewTask
 ReviewTask reviewTask = new ReviewTask(
@@ -1943,32 +1943,32 @@ ReviewTask reviewTask = new ReviewTask(
 reviewTaskRepository.save(reviewTask);
 ```
 
-同时需要在文件顶部添加 import：
+同時需要在檔案頂部新增 import：
 
 ```java
 import com.iflytek.skillhub.domain.review.ReviewTask;
 import com.iflytek.skillhub.domain.review.ReviewTaskRepository;
 ```
 
-- [ ] **Step 4: 修改 SkillPublishedEvent 的触发时机**
+- [ ] **Step 4: 修改 SkillPublishedEvent 的觸發時機**
 
-在 `publishFromEntries` 方法中，找到发布事件的代码（约第 190 行）：
+在 `publishFromEntries` 方法中，找到發布事件的程式碼（約第 190 行）：
 
 ```java
-// 原代码：
+// 原始碼：
 eventPublisher.publishEvent(new SkillPublishedEvent(skill.getId(), version.getId(), publisherId));
 ```
 
-注释掉或删除这行代码，因为现在版本状态是 PENDING_REVIEW，不应该立即触发 SkillPublishedEvent。该事件将在审核通过后由 ReviewApprovedEvent 监听器触发。
+註釋掉或刪除這行程式碼，因為現在版本狀態是 PENDING_REVIEW，不應該立即觸發 SkillPublishedEvent。該事件將在稽核透過後由 ReviewApprovedEvent 監聽器觸發。
 
 ```java
-// 13. Publish SkillPublishedEvent - 移除，改为审核通过后触发
+// 13. Publish SkillPublishedEvent - 移除，改為稽核透過後觸發
 // eventPublisher.publishEvent(new SkillPublishedEvent(skill.getId(), version.getId(), publisherId));
 ```
 
-- [ ] **Step 5: 编写测试验证发布流程改造**
+- [ ] **Step 5: 編寫測試驗證發布流程改造**
 
-创建 `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/skill/service/SkillPublishServiceReviewTest.java`：
+建立 `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/skill/service/SkillPublishServiceReviewTest.java`：
 
 ```java
 package com.iflytek.skillhub.domain.skill.service;
@@ -2067,7 +2067,7 @@ class SkillPublishServiceReviewTest {
         // Assert
         assertEquals(SkillVersionStatus.PENDING_REVIEW, result.getStatus());
         verify(reviewTaskRepository, times(1)).save(any(ReviewTask.class));
-        verify(eventPublisher, never()).publishEvent(any());  // 不应该触发 SkillPublishedEvent
+        verify(eventPublisher, never()).publishEvent(any());  // 不應該觸發 SkillPublishedEvent
     }
 
     @Test
@@ -2114,7 +2114,7 @@ class SkillPublishServiceReviewTest {
 }
 ```
 
-- [ ] **Step 6: 运行测试验证**
+- [ ] **Step 6: 執行測試驗證**
 
 ```bash
 cd /Users/xudongsun/github/skillhub/server
@@ -2124,7 +2124,7 @@ cd /Users/xudongsun/github/skillhub/server
 ---
 
 
-### Task 9: 审核事件监听器（Event Listeners）
+### Task 9: 稽核事件監聽器（Event Listeners）
 
 **Files:**
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/ReviewApprovedEvent.java`
@@ -2136,9 +2136,9 @@ cd /Users/xudongsun/github/skillhub/server
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLogRepository.java`
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditAction.java`
 
-- [ ] **Step 1: 创建审核事件类**
+- [ ] **Step 1: 建立稽核事件類**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/ReviewApprovedEvent.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/ReviewApprovedEvent.java`：
 
 ```java
 package com.iflytek.skillhub.domain.event;
@@ -2152,7 +2152,7 @@ public record ReviewApprovedEvent(
 ) {}
 ```
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/ReviewRejectedEvent.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/ReviewRejectedEvent.java`：
 
 ```java
 package com.iflytek.skillhub.domain.event;
@@ -2166,7 +2166,7 @@ public record ReviewRejectedEvent(
 ) {}
 ```
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/PromotionApprovedEvent.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/PromotionApprovedEvent.java`：
 
 ```java
 package com.iflytek.skillhub.domain.event;
@@ -2180,9 +2180,9 @@ public record PromotionApprovedEvent(
 ) {}
 ```
 
-- [ ] **Step 2: 创建 AuditLog 实体和枚举**
+- [ ] **Step 2: 建立 AuditLog 實體和列舉**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditAction.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditAction.java`：
 
 ```java
 package com.iflytek.skillhub.domain.audit;
@@ -2201,7 +2201,7 @@ public enum AuditAction {
 }
 ```
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLog.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLog.java`：
 
 ```java
 package com.iflytek.skillhub.domain.audit;
@@ -2307,7 +2307,7 @@ public class AuditLog {
 }
 ```
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLogRepository.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLogRepository.java`：
 
 ```java
 package com.iflytek.skillhub.domain.audit;
@@ -2320,9 +2320,9 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 }
 ```
 
-- [ ] **Step 3: 创建 ReviewEventListener**
+- [ ] **Step 3: 建立 ReviewEventListener**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/event/ReviewEventListener.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/event/ReviewEventListener.java`：
 
 ```java
 package com.iflytek.skillhub.domain.review.event;
@@ -2440,9 +2440,9 @@ public class ReviewEventListener {
 }
 ```
 
-- [ ] **Step 4: 创建 PromotionEventListener**
+- [ ] **Step 4: 建立 PromotionEventListener**
 
-创建 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/event/PromotionEventListener.java`：
+建立 `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/event/PromotionEventListener.java`：
 
 ```java
 package com.iflytek.skillhub.domain.promotion.event;
@@ -2514,9 +2514,9 @@ public class PromotionEventListener {
 }
 ```
 
-- [ ] **Step 5: 配置异步执行器（如果尚未配置）**
+- [ ] **Step 5: 配置非同步執行器（如果尚未配置）**
 
-检查是否存在 `server/skillhub-app/src/main/java/com/iflytek/skillhub/config/AsyncConfig.java`，如果不存在则创建：
+檢查是否存在 `server/skillhub-app/src/main/java/com/iflytek/skillhub/config/AsyncConfig.java`，如果不存在則建立：
 
 ```java
 package com.iflytek.skillhub.config;
@@ -2545,9 +2545,9 @@ public class AsyncConfig {
 }
 ```
 
-- [ ] **Step 6: 编写测试验证事件监听器**
+- [ ] **Step 6: 編寫測試驗證事件監聽器**
 
-创建 `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/review/event/ReviewEventListenerTest.java`：
+建立 `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/review/event/ReviewEventListenerTest.java`：
 
 ```java
 package com.iflytek.skillhub.domain.review.event;
@@ -2664,38 +2664,38 @@ class ReviewEventListenerTest {
 ```
 
 
-### Task 10: Chunk 1 验收（编译、测试、验证脚本）
+### Task 10: Chunk 1 驗收（編譯、測試、驗證指令碼）
 
 **Files:**
 - Create: `server/verify-phase3-chunk1.sh`
 
-- [ ] **Step 1: 编译整个项目**
+- [ ] **Step 1: 編譯整個專案**
 
-在项目根目录执行：
+在專案根目錄執行：
 
 ```bash
 cd /Users/xudongsun/github/skillhub/server
 ./mvnw clean compile -DskipTests
 ```
 
-验证所有模块编译成功，无错误。
+驗證所有模組編譯成功，無錯誤。
 
-- [ ] **Step 2: 运行所有测试**
+- [ ] **Step 2: 執行所有測試**
 
 ```bash
 ./mvnw test
 ```
 
-验证所有测试通过，特别关注：
+驗證所有測試透過，特別關注：
 - `ReviewServiceTest`
 - `PromotionServiceTest`
 - `SkillPublishServiceReviewTest`
 - `ReviewEventListenerTest`
 - `PromotionEventListenerTest`
 
-- [ ] **Step 3: 创建验收验证脚本**
+- [ ] **Step 3: 建立驗收驗證指令碼**
 
-创建 `server/verify-phase3-chunk1.sh`：
+建立 `server/verify-phase3-chunk1.sh`：
 
 ```bash
 #!/bin/bash
@@ -2703,17 +2703,17 @@ cd /Users/xudongsun/github/skillhub/server
 set -e
 
 echo "=========================================="
-echo "Phase 3 Chunk 1 验收脚本"
+echo "Phase 3 Chunk 1 驗收指令碼"
 echo "=========================================="
 echo ""
 
-# 颜色定义
+# 顏色定義
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# 检查函数
+# 檢查函式
 check_file() {
     if [ -f "$1" ]; then
         echo -e "${GREEN}✓${NC} $1"
@@ -2728,45 +2728,45 @@ check_class() {
     local file="$1"
     local class_name="$2"
     if grep -q "class $class_name\|interface $class_name\|enum $class_name\|record $class_name" "$file" 2>/dev/null; then
-        echo -e "${GREEN}✓${NC} $class_name 定义正确"
+        echo -e "${GREEN}✓${NC} $class_name 定義正確"
         return 0
     else
-        echo -e "${RED}✗${NC} $class_name 定义缺失或错误"
+        echo -e "${RED}✗${NC} $class_name 定義缺失或錯誤"
         return 1
     fi
 }
 
 FAILED=0
 
-echo "1. 检查数据库迁移脚本..."
+echo "1. 檢查資料庫遷移指令碼..."
 check_file "skillhub-app/src/main/resources/db/migration/V3__phase3_review_social_tables.sql" || FAILED=1
 echo ""
 
-echo "2. 检查 Review 实体和 Repository..."
+echo "2. 檢查 Review 實體和 Repository..."
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTask.java" || FAILED=1
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewTaskRepository.java" || FAILED=1
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/ReviewStatus.java" || FAILED=1
 echo ""
 
-echo "3. 检查 Promotion 实体和 Repository..."
+echo "3. 檢查 Promotion 實體和 Repository..."
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/PromotionRequest.java" || FAILED=1
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/PromotionRequestRepository.java" || FAILED=1
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/PromotionStatus.java" || FAILED=1
 echo ""
 
-echo "4. 检查权限检查服务..."
+echo "4. 檢查許可權檢查服務..."
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/service/ReviewPermissionService.java" || FAILED=1
 echo ""
 
-echo "5. 检查 ReviewService..."
+echo "5. 檢查 ReviewService..."
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/service/ReviewService.java" || FAILED=1
 echo ""
 
-echo "6. 检查 PromotionService..."
+echo "6. 檢查 PromotionService..."
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/service/PromotionService.java" || FAILED=1
 echo ""
 
-echo "7. 检查 Controllers 和 DTOs..."
+echo "7. 檢查 Controllers 和 DTOs..."
 check_file "skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/ReviewController.java" || FAILED=1
 check_file "skillhub-app/src/main/java/com/iflytek/skillhub/controller/portal/PromotionController.java" || FAILED=1
 check_file "skillhub-app/src/main/java/com/iflytek/skillhub/dto/ReviewTaskRequest.java" || FAILED=1
@@ -2775,23 +2775,23 @@ check_file "skillhub-app/src/main/java/com/iflytek/skillhub/dto/PromotionRequest
 check_file "skillhub-app/src/main/java/com/iflytek/skillhub/dto/PromotionResponseDto.java" || FAILED=1
 echo ""
 
-echo "8. 检查 SkillPublishService 改造..."
+echo "8. 檢查 SkillPublishService 改造..."
 if grep -q "PENDING_REVIEW" "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/service/SkillPublishService.java" 2>/dev/null; then
-    echo -e "${GREEN}✓${NC} SkillPublishService 已改造为创建 PENDING_REVIEW 状态"
+    echo -e "${GREEN}✓${NC} SkillPublishService 已改造為建立 PENDING_REVIEW 狀態"
 else
     echo -e "${RED}✗${NC} SkillPublishService 未改造"
     FAILED=1
 fi
 
 if grep -q "ReviewTaskRepository" "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/service/SkillPublishService.java" 2>/dev/null; then
-    echo -e "${GREEN}✓${NC} SkillPublishService 已集成 ReviewTaskRepository"
+    echo -e "${GREEN}✓${NC} SkillPublishService 已整合 ReviewTaskRepository"
 else
-    echo -e "${RED}✗${NC} SkillPublishService 未集成 ReviewTaskRepository"
+    echo -e "${RED}✗${NC} SkillPublishService 未整合 ReviewTaskRepository"
     FAILED=1
 fi
 echo ""
 
-echo "9. 检查事件和监听器..."
+echo "9. 檢查事件和監聽器..."
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/ReviewApprovedEvent.java" || FAILED=1
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/ReviewRejectedEvent.java" || FAILED=1
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/event/PromotionApprovedEvent.java" || FAILED=1
@@ -2799,13 +2799,13 @@ check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/review/eve
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/promotion/event/PromotionEventListener.java" || FAILED=1
 echo ""
 
-echo "10. 检查 AuditLog..."
+echo "10. 檢查 AuditLog..."
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLog.java" || FAILED=1
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditLogRepository.java" || FAILED=1
 check_file "skillhub-domain/src/main/java/com/iflytek/skillhub/domain/audit/AuditAction.java" || FAILED=1
 echo ""
 
-echo "11. 检查测试文件..."
+echo "11. 檢查測試檔案..."
 check_file "skillhub-domain/src/test/java/com/iflytek/skillhub/domain/review/service/ReviewServiceTest.java" || FAILED=1
 check_file "skillhub-domain/src/test/java/com/iflytek/skillhub/domain/promotion/service/PromotionServiceTest.java" || FAILED=1
 check_file "skillhub-domain/src/test/java/com/iflytek/skillhub/domain/skill/service/SkillPublishServiceReviewTest.java" || FAILED=1
@@ -2814,61 +2814,61 @@ check_file "skillhub-domain/src/test/java/com/iflytek/skillhub/domain/promotion/
 echo ""
 
 echo "=========================================="
-echo "12. 编译项目..."
+echo "12. 編譯專案..."
 echo "=========================================="
 if ./mvnw clean compile -DskipTests > /tmp/compile.log 2>&1; then
-    echo -e "${GREEN}✓${NC} 编译成功"
+    echo -e "${GREEN}✓${NC} 編譯成功"
 else
-    echo -e "${RED}✗${NC} 编译失败，查看 /tmp/compile.log"
+    echo -e "${RED}✗${NC} 編譯失敗，檢視 /tmp/compile.log"
     FAILED=1
 fi
 echo ""
 
 echo "=========================================="
-echo "13. 运行测试..."
+echo "13. 執行測試..."
 echo "=========================================="
 if ./mvnw test -Dtest="ReviewServiceTest,PromotionServiceTest,SkillPublishServiceReviewTest,ReviewEventListenerTest,PromotionEventListenerTest" > /tmp/test.log 2>&1; then
-    echo -e "${GREEN}✓${NC} 所有测试通过"
+    echo -e "${GREEN}✓${NC} 所有測試透過"
 else
-    echo -e "${RED}✗${NC} 测试失败，查看 /tmp/test.log"
+    echo -e "${RED}✗${NC} 測試失敗，檢視 /tmp/test.log"
     FAILED=1
 fi
 echo ""
 
 echo "=========================================="
-echo "验收结果"
+echo "驗收結果"
 echo "=========================================="
 if [ $FAILED -eq 0 ]; then
-    echo -e "${GREEN}✓ Phase 3 Chunk 1 验收通过！${NC}"
+    echo -e "${GREEN}✓ Phase 3 Chunk 1 驗收透過！${NC}"
     echo ""
     echo "已完成功能："
-    echo "  1. ✓ 数据库迁移脚本（review_task, promotion_request, audit_log 等 5 张表）"
-    echo "  2. ✓ ReviewTask 实体和 Repository"
-    echo "  3. ✓ PromotionRequest 实体和 Repository"
-    echo "  4. ✓ ReviewPermissionService（分级权限检查）"
-    echo "  5. ✓ ReviewService（提交/审核/拒绝/撤回，乐观锁）"
-    echo "  6. ✓ PromotionService（提交/审核/拒绝，复制技能到全局空间）"
+    echo "  1. ✓ 資料庫遷移指令碼（review_task, promotion_request, audit_log 等 5 張表）"
+    echo "  2. ✓ ReviewTask 實體和 Repository"
+    echo "  3. ✓ PromotionRequest 實體和 Repository"
+    echo "  4. ✓ ReviewPermissionService（分級許可權檢查）"
+    echo "  5. ✓ ReviewService（提交/稽核/拒絕/撤回，樂觀鎖）"
+    echo "  6. ✓ PromotionService（提交/稽核/拒絕，複製技能到全域性空間）"
     echo "  7. ✓ ReviewController + PromotionController（REST API）"
-    echo "  8. ✓ SkillPublishService 改造（PENDING_REVIEW + 自动创建 ReviewTask）"
-    echo "  9. ✓ 审核事件监听器（更新状态 + 触发搜索索引 + 写入 audit_log）"
-    echo "  10. ✓ 所有测试通过"
+    echo "  8. ✓ SkillPublishService 改造（PENDING_REVIEW + 自動建立 ReviewTask）"
+    echo "  9. ✓ 稽核事件監聽器（更新狀態 + 觸發搜尋索引 + 寫入 audit_log）"
+    echo "  10. ✓ 所有測試透過"
     echo ""
     echo "下一步："
-    echo "  - 启动应用，手动测试审核流程"
-    echo "  - 使用 Postman/curl 测试 API 端点"
-    echo "  - 验证乐观锁并发控制"
-    echo "  - 验证分级权限（团队管理员 vs 平台管理员）"
-    echo "  - 开始 Chunk 2: 评分收藏功能"
+    echo "  - 啟動應用，手動測試稽核流程"
+    echo "  - 使用 Postman/curl 測試 API 端點"
+    echo "  - 驗證樂觀鎖併發控制"
+    echo "  - 驗證分級許可權（團隊管理員 vs 平臺管理員）"
+    echo "  - 開始 Chunk 2: 評分收藏功能"
     exit 0
 else
-    echo -e "${RED}✗ Phase 3 Chunk 1 验收失败${NC}"
+    echo -e "${RED}✗ Phase 3 Chunk 1 驗收失敗${NC}"
     echo ""
-    echo "请检查上述失败项，修复后重新运行验收脚本。"
+    echo "請檢查上述失敗項，修復後重新執行驗收指令碼。"
     exit 1
 fi
 ```
 
-- [ ] **Step 4: 赋予脚本执行权限并运行**
+- [ ] **Step 4: 賦予指令碼執行許可權並執行**
 
 ```bash
 chmod +x server/verify-phase3-chunk1.sh
@@ -2876,52 +2876,52 @@ cd server
 ./verify-phase3-chunk1.sh
 ```
 
-- [ ] **Step 5: 手动验证审核流程**
+- [ ] **Step 5: 手動驗證稽核流程**
 
-启动应用后，使用 Postman 或 curl 测试以下场景：
+啟動應用後，使用 Postman 或 curl 測試以下場景：
 
-**场景 1: 用户发布技能并提交审核**
+**場景 1: 使用者發布技能並提交稽核**
 
 ```bash
-# 1. 发布技能（自动创建 PENDING_REVIEW 版本和 ReviewTask）
+# 1. 發布技能（自動建立 PENDING_REVIEW 版本和 ReviewTask）
 curl -X POST http://localhost:8080/api/v1/skills/publish \
   -H "Authorization: Bearer <user_token>" \
   -F "file=@skill-package.zip" \
   -F "namespace=my-team" \
   -F "visibility=PUBLIC"
 
-# 2. 查看待审核列表（团队管理员）
+# 2. 檢視待稽核列表（團隊管理員）
 curl -X GET "http://localhost:8080/api/v1/reviews/pending?namespace=my-team" \
   -H "Authorization: Bearer <admin_token>"
 
-# 3. 审核通过
+# 3. 稽核透過
 curl -X POST http://localhost:8080/api/v1/reviews/123/approve \
   -H "Authorization: Bearer <admin_token>" \
   -H "Content-Type: application/json" \
   -d '{"comment": "LGTM"}'
 
-# 4. 验证版本状态变为 PUBLISHED
+# 4. 驗證版本狀態變為 PUBLISHED
 curl -X GET http://localhost:8080/api/v1/skills/my-team/my-skill \
   -H "Authorization: Bearer <user_token>"
 ```
 
-**场景 2: 审核拒绝**
+**場景 2: 稽核拒絕**
 
 ```bash
-# 1. 拒绝审核
+# 1. 拒絕稽核
 curl -X POST http://localhost:8080/api/v1/reviews/124/reject \
   -H "Authorization: Bearer <admin_token>" \
   -H "Content-Type: application/json" \
-  -d '{"comment": "需要修复安全问题"}'
+  -d '{"comment": "需要修復安全問題"}'
 
-# 2. 验证版本状态变为 REJECTED
+# 2. 驗證版本狀態變為 REJECTED
 curl -X GET http://localhost:8080/api/v1/skills/my-team/my-skill/versions/1.0.1
 ```
 
-**场景 3: 提升到全局空间**
+**場景 3: 提升到全域性空間**
 
 ```bash
-# 1. 提交提升请求
+# 1. 提交提升請求
 curl -X POST http://localhost:8080/api/v1/promotions \
   -H "Authorization: Bearer <user_token>" \
   -H "Content-Type: application/json" \
@@ -2931,134 +2931,134 @@ curl -X POST http://localhost:8080/api/v1/promotions \
     "targetNamespace": "global"
   }'
 
-# 2. 平台管理员审核通过
+# 2. 平臺管理員稽核透過
 curl -X POST http://localhost:8080/api/v1/promotions/10/approve \
   -H "Authorization: Bearer <platform_admin_token>" \
   -H "Content-Type: application/json" \
-  -d '{"comment": "优秀的技能，批准提升"}'
+  -d '{"comment": "優秀的技能，批准提升"}'
 
-# 3. 验证全局空间中创建了新技能
+# 3. 驗證全域性空間中建立了新技能
 curl -X GET http://localhost:8080/api/v1/skills/global/my-skill
 ```
 
-**场景 4: 并发审核（乐观锁验证）**
+**場景 4: 併發稽核（樂觀鎖驗證）**
 
-使用两个终端同时执行审核操作，验证只有一个成功，另一个返回 409 Conflict。
+使用兩個終端同時執行稽核操作，驗證只有一個成功，另一個返回 409 Conflict。
 
-**场景 5: 权限验证**
+**場景 5: 許可權驗證**
 
 ```bash
-# 1. 团队管理员尝试审核其他团队的技能（应失败）
+# 1. 團隊管理員嘗試稽核其他團隊的技能（應失敗）
 curl -X POST http://localhost:8080/api/v1/reviews/125/approve \
   -H "Authorization: Bearer <team_a_admin_token>"
-# 预期: 403 Forbidden
+# 預期: 403 Forbidden
 
-# 2. 平台管理员尝试审核团队空间的技能（应失败）
+# 2. 平臺管理員嘗試稽核團隊空間的技能（應失敗）
 curl -X POST http://localhost:8080/api/v1/reviews/126/approve \
   -H "Authorization: Bearer <platform_admin_token>"
-# 预期: 403 Forbidden（平台管理员只能审核全局空间）
+# 預期: 403 Forbidden（平臺管理員只能稽核全域性空間）
 
-# 3. 普通用户尝试审核（应失败）
+# 3. 普通使用者嘗試稽核（應失敗）
 curl -X POST http://localhost:8080/api/v1/reviews/127/approve \
   -H "Authorization: Bearer <normal_user_token>"
-# 预期: 403 Forbidden
+# 預期: 403 Forbidden
 ```
 
-- [ ] **Step 6: 验证 audit_log 记录**
+- [ ] **Step 6: 驗證 audit_log 記錄**
 
-连接数据库，检查 audit_log 表：
+連線資料庫，檢查 audit_log 表：
 
 ```sql
--- 查看所有审核操作的审计日志
+-- 檢視所有稽核操作的審計日誌
 SELECT * FROM audit_log 
 WHERE action IN ('REVIEW_SUBMITTED', 'REVIEW_APPROVED', 'REVIEW_REJECTED', 'REVIEW_WITHDRAWN')
 ORDER BY created_at DESC;
 
--- 查看所有提升操作的审计日志
+-- 檢視所有提升操作的審計日誌
 SELECT * FROM audit_log 
 WHERE action IN ('PROMOTION_SUBMITTED', 'PROMOTION_APPROVED', 'PROMOTION_REJECTED')
 ORDER BY created_at DESC;
 ```
 
-验证每个审核操作都有对应的审计日志记录。
+驗證每個稽核操作都有對應的審計日誌記錄。
 
-- [ ] **Step 7: 验证搜索索引更新**
+- [ ] **Step 7: 驗證搜尋索引更新**
 
 ```bash
-# 1. 审核通过后，搜索新发布的技能
+# 1. 稽核透過後，搜尋新發布的技能
 curl -X GET "http://localhost:8080/api/v1/search?q=my-skill"
 
-# 2. 验证搜索结果中包含新发布的技能
+# 2. 驗證搜尋結果中包含新發布的技能
 ```
 
-- [ ] **Step 8: Chunk 1 验收完成确认**
+- [ ] **Step 8: Chunk 1 驗收完成確認**
 
-确认以下所有验收标准已满足：
+確認以下所有驗收標準已滿足：
 
-1. ✓ 用户可以提交审核，创建 review_task（status=PENDING）
-2. ✓ 审核人可以通过/拒绝审核，乐观锁防止并发冲突
-3. ✓ 审核通过后，skill_version.status → PUBLISHED，触发搜索索引更新
-4. ✓ 审核拒绝后，skill_version.status → REJECTED，记录拒绝原因
-5. ✓ 用户可以撤回 PENDING 状态的审核
-6. ✓ 团队管理员只能审核自己管理的 namespace 的技能
-7. ✓ 平台 SKILL_ADMIN 只能审核全局空间的技能
-8. ✓ 用户可以提交提升请求，创建 promotion_request（status=PENDING）
-9. ✓ 平台 SKILL_ADMIN 可以审核提升请求
-10. ✓ 提升通过后，在全局空间创建新 skill，复制版本和文件
-11. ✓ 所有审核操作写入 audit_log
-12. ✓ 所有测试通过
+1. ✓ 使用者可以提交稽核，建立 review_task（status=PENDING）
+2. ✓ 稽核人可以透過/拒絕稽核，樂觀鎖防止併發衝突
+3. ✓ 稽核透過後，skill_version.status → PUBLISHED，觸發搜尋索引更新
+4. ✓ 稽核拒絕後，skill_version.status → REJECTED，記錄拒絕原因
+5. ✓ 使用者可以撤回 PENDING 狀態的稽核
+6. ✓ 團隊管理員只能稽核自己管理的 namespace 的技能
+7. ✓ 平臺 SKILL_ADMIN 只能稽核全域性空間的技能
+8. ✓ 使用者可以提交提升請求，建立 promotion_request（status=PENDING）
+9. ✓ 平臺 SKILL_ADMIN 可以稽核提升請求
+10. ✓ 提升透過後，在全域性空間建立新 skill，複製版本和檔案
+11. ✓ 所有稽核操作寫入 audit_log
+12. ✓ 所有測試透過
 
-**Chunk 1 完成！可以开始 Chunk 2: 评分收藏功能。**
+**Chunk 1 完成！可以開始 Chunk 2: 評分收藏功能。**
 
 ---
 
-## 总结
+## 總結
 
-Phase 3 Chunk 1 实现了完整的审核流程核心功能：
+Phase 3 Chunk 1 實現了完整的稽核流程核心功能：
 
-**核心组件：**
-1. 数据库迁移（5 张新表）
-2. ReviewTask + PromotionRequest 实体和 Repository
-3. ReviewPermissionService（分级权限检查）
-4. ReviewService + PromotionService（核心业务逻辑）
+**核心元件：**
+1. 資料庫遷移（5 張新表）
+2. ReviewTask + PromotionRequest 實體和 Repository
+3. ReviewPermissionService（分級許可權檢查）
+4. ReviewService + PromotionService（核心業務邏輯）
 5. ReviewController + PromotionController（REST API）
-6. SkillPublishService 改造（PENDING_REVIEW + 自动创建 ReviewTask）
-7. 事件监听器（更新状态 + 触发搜索索引 + 写入 audit_log）
+6. SkillPublishService 改造（PENDING_REVIEW + 自動建立 ReviewTask）
+7. 事件監聽器（更新狀態 + 觸發搜尋索引 + 寫入 audit_log）
 
-**关键技术点：**
-- 乐观锁（@Version）防止并发冲突
-- Partial unique index 防止重复提交
-- 分级权限控制（团队自治 + 平台管理）
-- 事件驱动架构（@TransactionalEventListener）
-- 审计日志（所有操作可追溯）
+**關鍵技術點：**
+- 樂觀鎖（@Version）防止併發衝突
+- Partial unique index 防止重複提交
+- 分級許可權控制（團隊自治 + 平臺管理）
+- 事件驅動架構（@TransactionalEventListener）
+- 審計日誌（所有操作可追溯）
 
 **下一步：**
-- Chunk 2: 评分收藏功能（rating, favorite, 异步计数器更新）
-- Chunk 3: CLI API（OAuth Device Flow, API 端点）
-- Chunk 4: ClawHub 兼容层（Canonical slug 映射）
-- Chunk 5: 幂等去重 + 管理后台
+- Chunk 2: 評分收藏功能（rating, favorite, 非同步計數器更新）
+- Chunk 3: CLI API（OAuth Device Flow, API 端點）
+- Chunk 4: ClawHub 相容層（Canonical slug 對映）
+- Chunk 5: 冪等去重 + 管理後臺
 
 ---
 
 
-## Chunk 2: 评分收藏 + 前端审核中心
+## Chunk 2: 評分收藏 + 前端稽核中心
 
-**范围：** 评分收藏后端 + 审核中心前端 + Token 管理前端
+**範圍：** 評分收藏後端 + 稽核中心前端 + Token 管理前端
 
-**验收标准：**
-1. 用户可以收藏技能，skill.star_count 异步更新
-2. 用户可以取消收藏，star_count 异步递减
-3. 用户可以对技能评分（1-5 分），skill.rating_avg 异步重算
-4. 用户可以修改评分，rating_avg 重新计算
-5. 匿名用户点击评分/收藏，提示登录
-6. 审核中心：审核人可以查看待审核任务列表
-7. 审核中心：审核人可以查看审核详情，通过/拒绝审核
-8. 审核中心：用户可以查看自己的提交列表，撤回 PENDING 审核
-9. 提升审核：平台管理员可以查看提升请求列表，审核提升
-10. Token 管理：用户可以创建 Token，查看 Token 列表，吊销 Token
-11. 前端测试通过
+**驗收標準：**
+1. 使用者可以收藏技能，skill.star_count 非同步更新
+2. 使用者可以取消收藏，star_count 非同步遞減
+3. 使用者可以對技能評分（1-5 分），skill.rating_avg 非同步重算
+4. 使用者可以修改評分，rating_avg 重新計算
+5. 匿名使用者點選評分/收藏，提示登入
+6. 稽核中心：稽核人可以檢視待稽核任務列表
+7. 稽核中心：稽核人可以檢視稽核詳情，透過/拒絕稽核
+8. 稽核中心：使用者可以檢視自己的提交列表，撤回 PENDING 稽核
+9. 提升稽核：平臺管理員可以檢視提升請求列表，稽核提升
+10. Token 管理：使用者可以建立 Token，檢視 Token 列表，吊銷 Token
+11. 前端測試透過
 
-### Task 1: SkillStar 和 SkillRating 领域实体
+### Task 1: SkillStar 和 SkillRating 領域實體
 
 **Files:**
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/social/SkillStar.java`
@@ -3068,7 +3068,7 @@ Phase 3 Chunk 1 实现了完整的审核流程核心功能：
 - Create: `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/JpaSkillStarRepository.java`
 - Create: `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/JpaSkillRatingRepository.java`
 
-- [ ] **Step 1: 创建 SkillStar 实体**
+- [ ] **Step 1: 建立 SkillStar 實體**
 
 ```java
 package com.iflytek.skillhub.domain.social;
@@ -3107,7 +3107,7 @@ public class SkillStar {
 }
 ```
 
-- [ ] **Step 2: 创建 SkillRating 实体**
+- [ ] **Step 2: 建立 SkillRating 實體**
 
 ```java
 package com.iflytek.skillhub.domain.social;
@@ -3162,7 +3162,7 @@ public class SkillRating {
 }
 ```
 
-- [ ] **Step 3: 创建 Repository 接口**
+- [ ] **Step 3: 建立 Repository 介面**
 
 `SkillStarRepository.java`:
 ```java
@@ -3195,7 +3195,7 @@ public interface SkillRatingRepository {
 }
 ```
 
-- [ ] **Step 4: 实现 JPA Repository**
+- [ ] **Step 4: 實現 JPA Repository**
 
 `JpaSkillStarRepository.java`:
 ```java
@@ -3239,10 +3239,10 @@ public interface JpaSkillRatingRepository extends JpaRepository<SkillRating, Lon
 }
 ```
 
-- [ ] **Step 5: 编译验证**
+- [ ] **Step 5: 編譯驗證**
 
-运行：`cd server && ./mvnw compile`
-预期：编译成功
+執行：`cd server && ./mvnw compile`
+預期：編譯成功
 
 - [ ] **Step 6: Commit**
 
@@ -3264,7 +3264,7 @@ git commit -m "feat(social): add SkillStar and SkillRating entities and reposito
 - Test: `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/social/SkillStarServiceTest.java`
 - Test: `server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/social/SkillRatingServiceTest.java`
 
-- [ ] **Step 1: 创建领域事件类**
+- [ ] **Step 1: 建立領域事件類**
 
 `SkillStarredEvent.java`:
 ```java
@@ -3287,7 +3287,7 @@ package com.iflytek.skillhub.domain.social.event;
 public record SkillRatedEvent(Long skillId, String userId, short score) {}
 ```
 
-- [ ] **Step 2: 编写 SkillStarService 测试**
+- [ ] **Step 2: 編寫 SkillStarService 測試**
 
 ```java
 package com.iflytek.skillhub.domain.social;
@@ -3364,12 +3364,12 @@ class SkillStarServiceTest {
 }
 ```
 
-- [ ] **Step 3: 运行测试验证失败**
+- [ ] **Step 3: 執行測試驗證失敗**
 
-运行：`cd server && ./mvnw test -pl skillhub-domain -Dtest=SkillStarServiceTest`
-预期：编译失败，SkillStarService 不存在
+執行：`cd server && ./mvnw test -pl skillhub-domain -Dtest=SkillStarServiceTest`
+預期：編譯失敗，SkillStarService 不存在
 
-- [ ] **Step 4: 实现 SkillStarService**
+- [ ] **Step 4: 實現 SkillStarService**
 
 ```java
 package com.iflytek.skillhub.domain.social;
@@ -3414,12 +3414,12 @@ public class SkillStarService {
 }
 ```
 
-- [ ] **Step 5: 运行测试验证通过**
+- [ ] **Step 5: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-domain -Dtest=SkillStarServiceTest`
-预期：5 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-domain -Dtest=SkillStarServiceTest`
+預期：5 個測試全部 PASS
 
-- [ ] **Step 6: 编写 SkillRatingService 测试**
+- [ ] **Step 6: 編寫 SkillRatingService 測試**
 
 ```java
 package com.iflytek.skillhub.domain.social;
@@ -3483,7 +3483,7 @@ class SkillRatingServiceTest {
 }
 ```
 
-- [ ] **Step 7: 实现 SkillRatingService**
+- [ ] **Step 7: 實現 SkillRatingService**
 
 ```java
 package com.iflytek.skillhub.domain.social;
@@ -3528,10 +3528,10 @@ public class SkillRatingService {
 }
 ```
 
-- [ ] **Step 8: 运行测试验证通过**
+- [ ] **Step 8: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-domain -Dtest=SkillRatingServiceTest`
-预期：4 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-domain -Dtest=SkillRatingServiceTest`
+預期：4 個測試全部 PASS
 
 - [ ] **Step 9: Commit**
 
@@ -3543,7 +3543,7 @@ git add server/skillhub-domain/src/test/java/com/iflytek/skillhub/domain/social/
 git commit -m "feat(social): add SkillStarService and SkillRatingService with events"
 ```
 
-### Task 3: 异步事件监听器（计数器更新）
+### Task 3: 非同步事件監聽器（計數器更新）
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/listener/SkillStarEventListener.java`
@@ -3551,7 +3551,7 @@ git commit -m "feat(social): add SkillStarService and SkillRatingService with ev
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/listener/SkillStarEventListenerTest.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/listener/SkillRatingEventListenerTest.java`
 
-- [ ] **Step 1: 编写 SkillStarEventListener 测试**
+- [ ] **Step 1: 編寫 SkillStarEventListener 測試**
 
 ```java
 package com.iflytek.skillhub.app.listener;
@@ -3589,7 +3589,7 @@ class SkillStarEventListenerTest {
 }
 ```
 
-- [ ] **Step 2: 实现 SkillStarEventListener**
+- [ ] **Step 2: 實現 SkillStarEventListener**
 
 ```java
 package com.iflytek.skillhub.app.listener;
@@ -3631,7 +3631,7 @@ public class SkillStarEventListener {
 }
 ```
 
-- [ ] **Step 3: 编写 SkillRatingEventListener 测试**
+- [ ] **Step 3: 編寫 SkillRatingEventListener 測試**
 
 ```java
 package com.iflytek.skillhub.app.listener;
@@ -3664,7 +3664,7 @@ class SkillRatingEventListenerTest {
 }
 ```
 
-- [ ] **Step 4: 实现 SkillRatingEventListener**
+- [ ] **Step 4: 實現 SkillRatingEventListener**
 
 ```java
 package com.iflytek.skillhub.app.listener;
@@ -3698,10 +3698,10 @@ public class SkillRatingEventListener {
 }
 ```
 
-- [ ] **Step 5: 运行测试验证通过**
+- [ ] **Step 5: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest="SkillStarEventListenerTest,SkillRatingEventListenerTest"`
-预期：3 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest="SkillStarEventListenerTest,SkillRatingEventListenerTest"`
+預期：3 個測試全部 PASS
 
 - [ ] **Step 6: Commit**
 
@@ -3719,7 +3719,7 @@ git commit -m "feat(social): add async event listeners for star_count and rating
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/controller/SkillStarControllerTest.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/controller/SkillRatingControllerTest.java`
 
-- [ ] **Step 1: 编写 SkillStarController 测试**
+- [ ] **Step 1: 編寫 SkillStarController 測試**
 
 ```java
 package com.iflytek.skillhub.app.controller;
@@ -3762,7 +3762,7 @@ class SkillStarControllerTest {
 }
 ```
 
-- [ ] **Step 2: 实现 SkillStarController**
+- [ ] **Step 2: 實現 SkillStarController**
 
 ```java
 package com.iflytek.skillhub.app.controller;
@@ -3803,7 +3803,7 @@ public class SkillStarController {
 }
 ```
 
-- [ ] **Step 3: 编写 SkillRatingController 测试**
+- [ ] **Step 3: 編寫 SkillRatingController 測試**
 
 ```java
 package com.iflytek.skillhub.app.controller;
@@ -3855,7 +3855,7 @@ class SkillRatingControllerTest {
 }
 ```
 
-- [ ] **Step 4: 实现 SkillRatingController**
+- [ ] **Step 4: 實現 SkillRatingController**
 
 ```java
 package com.iflytek.skillhub.app.controller;
@@ -3895,10 +3895,10 @@ public class SkillRatingController {
 }
 ```
 
-- [ ] **Step 5: 运行测试验证通过**
+- [ ] **Step 5: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest="SkillStarControllerTest,SkillRatingControllerTest"`
-预期：6 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest="SkillStarControllerTest,SkillRatingControllerTest"`
+預期：6 個測試全部 PASS
 
 - [ ] **Step 6: Commit**
 
@@ -3910,11 +3910,11 @@ git add server/skillhub-app/src/test/java/com/iflytek/skillhub/app/controller/Sk
 git commit -m "feat(social): add SkillStar and SkillRating controllers"
 ```
 
-### Task 5: 前端审核中心
+### Task 5: 前端稽核中心
 
-#### 5.1 创建审核列表 Hook
+#### 5.1 建立稽核列表 Hook
 
-**文件：** `web/src/features/review/use-review-list.ts`
+**檔案：** `web/src/features/review/use-review-list.ts`
 
 ```typescript
 import { useQuery } from '@tanstack/react-query'
@@ -3954,14 +3954,14 @@ export function useReviewList(status?: string) {
 }
 ```
 
-**验收：**
-- [ ] useReviewList hook 创建完成
-- [ ] 支持按状态筛选
-- [ ] 返回 ReviewTask 数组
+**驗收：**
+- [ ] useReviewList hook 建立完成
+- [ ] 支援按狀態篩選
+- [ ] 返回 ReviewTask 陣列
 
-#### 5.2 创建审核详情 Hook
+#### 5.2 建立稽核詳情 Hook
 
-**文件：** `web/src/features/review/use-review-detail.ts`
+**檔案：** `web/src/features/review/use-review-detail.ts`
 
 ```typescript
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -4029,15 +4029,15 @@ export function useRejectReview() {
 }
 ```
 
-**验收：**
-- [ ] useReviewDetail hook 创建完成
-- [ ] useApproveReview mutation 创建完成
-- [ ] useRejectReview mutation 创建完成
-- [ ] 审核操作后刷新列表
+**驗收：**
+- [ ] useReviewDetail hook 建立完成
+- [ ] useApproveReview mutation 建立完成
+- [ ] useRejectReview mutation 建立完成
+- [ ] 稽核操作後重新整理列表
 
-#### 5.3 创建审核列表页面
+#### 5.3 建立稽核列表頁面
 
-**文件：** `web/src/pages/dashboard/reviews.tsx`
+**檔案：** `web/src/pages/dashboard/reviews.tsx`
 
 ```typescript
 import { useState } from 'react'
@@ -4052,21 +4052,21 @@ export function ReviewsPage() {
   const { data: reviews, isLoading } = useReviewList(status)
 
   if (isLoading) {
-    return <div className="animate-pulse">加载中...</div>
+    return <div className="animate-pulse">載入中...</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">审核中心</h1>
-        <p className="text-muted-foreground">管理技能发布审核</p>
+        <h1 className="text-3xl font-bold mb-2">稽核中心</h1>
+        <p className="text-muted-foreground">管理技能發布稽核</p>
       </div>
 
       <Tabs value={status} onValueChange={setStatus}>
         <TabsList>
-          <TabsTrigger value="PENDING">待审核</TabsTrigger>
-          <TabsTrigger value="APPROVED">已通过</TabsTrigger>
-          <TabsTrigger value="REJECTED">已拒绝</TabsTrigger>
+          <TabsTrigger value="PENDING">待稽核</TabsTrigger>
+          <TabsTrigger value="APPROVED">已透過</TabsTrigger>
+          <TabsTrigger value="REJECTED">已拒絕</TabsTrigger>
         </TabsList>
 
         <TabsContent value={status} className="mt-4">
@@ -4084,12 +4084,12 @@ export function ReviewsPage() {
                       </p>
                       {review.reviewedBy && (
                         <p className="text-sm text-muted-foreground">
-                          审核者: {review.reviewedBy} · {new Date(review.reviewedAt!).toLocaleString('zh-CN')}
+                          稽核者: {review.reviewedBy} · {new Date(review.reviewedAt!).toLocaleString('zh-CN')}
                         </p>
                       )}
                     </div>
                     <Link to={`/dashboard/reviews/${review.id}`}>
-                      <Button variant="outline">查看详情</Button>
+                      <Button variant="outline">檢視詳情</Button>
                     </Link>
                   </div>
                 </Card>
@@ -4097,7 +4097,7 @@ export function ReviewsPage() {
             </div>
           ) : (
             <Card className="p-6 text-center text-muted-foreground">
-              暂无审核任务
+              暫無稽核任務
             </Card>
           )}
         </TabsContent>
@@ -4107,15 +4107,15 @@ export function ReviewsPage() {
 }
 ```
 
-**验收：**
-- [ ] 审核列表页面创建完成
-- [ ] 支持按状态切换（待审核/已通过/已拒绝）
-- [ ] 显示技能名称、版本、提交者、提交时间
-- [ ] 点击查看详情跳转到审核详情页
+**驗收：**
+- [ ] 稽核列表頁面建立完成
+- [ ] 支援按狀態切換（待稽核/已透過/已拒絕）
+- [ ] 顯示技能名稱、版本、提交者、提交時間
+- [ ] 點選檢視詳情跳轉到稽核詳情頁
 
-#### 5.4 创建审核详情页面
+#### 5.4 建立稽核詳情頁面
 
-**文件：** `web/src/pages/dashboard/reviews/[id].tsx`
+**檔案：** `web/src/pages/dashboard/reviews/[id].tsx`
 
 ```typescript
 import { useState } from 'react'
@@ -4138,39 +4138,39 @@ export function ReviewDetailPage() {
   const handleApprove = async () => {
     try {
       await approveMutation.mutateAsync({ taskId: Number(id), comment })
-      alert('审核通过')
+      alert('稽核透過')
       navigate({ to: '/dashboard/reviews' })
     } catch (error) {
-      alert('操作失败: ' + (error instanceof Error ? error.message : '未知错误'))
+      alert('操作失敗: ' + (error instanceof Error ? error.message : '未知錯誤'))
     }
   }
 
   const handleReject = async () => {
     if (!comment.trim()) {
-      alert('拒绝时必须填写原因')
+      alert('拒絕時必須填寫原因')
       return
     }
     try {
       await rejectMutation.mutateAsync({ taskId: Number(id), comment })
-      alert('审核拒绝')
+      alert('稽核拒絕')
       navigate({ to: '/dashboard/reviews' })
     } catch (error) {
-      alert('操作失败: ' + (error instanceof Error ? error.message : '未知错误'))
+      alert('操作失敗: ' + (error instanceof Error ? error.message : '未知錯誤'))
     }
   }
 
   if (isLoading) {
-    return <div className="animate-pulse">加载中...</div>
+    return <div className="animate-pulse">載入中...</div>
   }
 
   if (!review) {
-    return <div>审核任务不存在</div>
+    return <div>稽核任務不存在</div>
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">审核详情</h1>
+        <h1 className="text-3xl font-bold mb-2">稽核詳情</h1>
         <p className="text-muted-foreground">
           {review.namespace}/{review.skillSlug}@{review.version}
         </p>
@@ -4178,7 +4178,7 @@ export function ReviewDetailPage() {
 
       <Card className="p-6 space-y-4">
         <div>
-          <div className="text-sm text-muted-foreground mb-1">状态</div>
+          <div className="text-sm text-muted-foreground mb-1">狀態</div>
           <div className="font-semibold">{review.status}</div>
         </div>
 
@@ -4188,18 +4188,18 @@ export function ReviewDetailPage() {
         </div>
 
         <div>
-          <div className="text-sm text-muted-foreground mb-1">提交时间</div>
+          <div className="text-sm text-muted-foreground mb-1">提交時間</div>
           <div>{new Date(review.submittedAt).toLocaleString('zh-CN')}</div>
         </div>
 
         {review.reviewedBy && (
           <>
             <div>
-              <div className="text-sm text-muted-foreground mb-1">审核者</div>
+              <div className="text-sm text-muted-foreground mb-1">稽核者</div>
               <div>{review.reviewedBy}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground mb-1">审核时间</div>
+              <div className="text-sm text-muted-foreground mb-1">稽核時間</div>
               <div>{new Date(review.reviewedAt!).toLocaleString('zh-CN')}</div>
             </div>
           </>
@@ -4207,7 +4207,7 @@ export function ReviewDetailPage() {
 
         {review.comment && (
           <div>
-            <div className="text-sm text-muted-foreground mb-1">审核意见</div>
+            <div className="text-sm text-muted-foreground mb-1">稽核意見</div>
             <div className="whitespace-pre-wrap">{review.comment}</div>
           </div>
         )}
@@ -4216,12 +4216,12 @@ export function ReviewDetailPage() {
       {review.status === 'PENDING' && (
         <Card className="p-6 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="comment">审核意见</Label>
+            <Label htmlFor="comment">稽核意見</Label>
             <Textarea
               id="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="填写审核意见（拒绝时必填）"
+              placeholder="填寫稽核意見（拒絕時必填）"
               rows={4}
             />
           </div>
@@ -4232,7 +4232,7 @@ export function ReviewDetailPage() {
               onClick={handleApprove}
               disabled={approveMutation.isPending || rejectMutation.isPending}
             >
-              通过
+              透過
             </Button>
             <Button
               className="flex-1"
@@ -4240,7 +4240,7 @@ export function ReviewDetailPage() {
               onClick={handleReject}
               disabled={approveMutation.isPending || rejectMutation.isPending}
             >
-              拒绝
+              拒絕
             </Button>
           </div>
         </Card>
@@ -4250,16 +4250,16 @@ export function ReviewDetailPage() {
 }
 ```
 
-**验收：**
-- [ ] 审核详情页面创建完成
-- [ ] 显示审核任务详细信息
-- [ ] 待审核状态显示审核操作按钮
-- [ ] 支持通过/拒绝操作
-- [ ] 拒绝时必须填写原因
+**驗收：**
+- [ ] 稽核詳情頁面建立完成
+- [ ] 顯示稽核任務詳細資訊
+- [ ] 待稽核狀態顯示稽核操作按鈕
+- [ ] 支援透過/拒絕操作
+- [ ] 拒絕時必須填寫原因
 
-#### 5.5 创建我的提交页面
+#### 5.5 建立我的提交頁面
 
-**文件：** `web/src/pages/dashboard/my-submissions.tsx`
+**檔案：** `web/src/pages/dashboard/my-submissions.tsx`
 
 ```typescript
 import { useQuery } from '@tanstack/react-query'
@@ -4284,14 +4284,14 @@ export function MySubmissionsPage() {
   })
 
   if (isLoading) {
-    return <div className="animate-pulse">加载中...</div>
+    return <div className="animate-pulse">載入中...</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">我的提交</h1>
-        <p className="text-muted-foreground">查看我提交的审核任务</p>
+        <p className="text-muted-foreground">檢視我提交的稽核任務</p>
       </div>
 
       {submissions && submissions.length > 0 ? (
@@ -4304,16 +4304,16 @@ export function MySubmissionsPage() {
                     {submission.namespace}/{submission.skillSlug}@{submission.version}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    状态: {submission.status} · 提交时间: {new Date(submission.submittedAt).toLocaleString('zh-CN')}
+                    狀態: {submission.status} · 提交時間: {new Date(submission.submittedAt).toLocaleString('zh-CN')}
                   </p>
                   {submission.comment && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      审核意见: {submission.comment}
+                      稽核意見: {submission.comment}
                     </p>
                   )}
                 </div>
                 <Link to={`/@${submission.namespace}/${submission.skillSlug}`}>
-                  <Button variant="outline">查看技能</Button>
+                  <Button variant="outline">檢視技能</Button>
                 </Link>
               </div>
             </Card>
@@ -4321,7 +4321,7 @@ export function MySubmissionsPage() {
         </div>
       ) : (
         <Card className="p-6 text-center text-muted-foreground">
-          暂无提交记录
+          暫無提交記錄
         </Card>
       )}
     </div>
@@ -4329,19 +4329,19 @@ export function MySubmissionsPage() {
 }
 ```
 
-**验收：**
-- [ ] 我的提交页面创建完成
-- [ ] 显示当前用户提交的所有审核任务
-- [ ] 显示状态、提交时间、审核意见
-- [ ] 点击查看技能跳转到技能详情页
+**驗收：**
+- [ ] 我的提交頁面建立完成
+- [ ] 顯示當前使用者提交的所有稽核任務
+- [ ] 顯示狀態、提交時間、稽核意見
+- [ ] 點選檢視技能跳轉到技能詳情頁
 
 ---
 
-### Task 6: 前端提升页面
+### Task 6: 前端提升頁面
 
-#### 6.1 创建提升列表 Hook
+#### 6.1 建立提升列表 Hook
 
-**文件：** `web/src/features/promotion/use-promotion-list.ts`
+**檔案：** `web/src/features/promotion/use-promotion-list.ts`
 
 ```typescript
 import { useQuery } from '@tanstack/react-query'
@@ -4381,14 +4381,14 @@ export function usePromotionList(status?: string) {
 }
 ```
 
-**验收：**
-- [ ] usePromotionList hook 创建完成
-- [ ] 支持按状态筛选
-- [ ] 返回 PromotionTask 数组
+**驗收：**
+- [ ] usePromotionList hook 建立完成
+- [ ] 支援按狀態篩選
+- [ ] 返回 PromotionTask 陣列
 
-#### 6.2 创建提升详情 Hook
+#### 6.2 建立提升詳情 Hook
 
-**文件：** `web/src/features/promotion/use-promotion-detail.ts`
+**檔案：** `web/src/features/promotion/use-promotion-detail.ts`
 
 ```typescript
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -4456,15 +4456,15 @@ export function useRejectPromotion() {
 }
 ```
 
-**验收：**
-- [ ] usePromotionDetail hook 创建完成
-- [ ] useApprovePromotion mutation 创建完成
-- [ ] useRejectPromotion mutation 创建完成
-- [ ] 审核操作后刷新列表
+**驗收：**
+- [ ] usePromotionDetail hook 建立完成
+- [ ] useApprovePromotion mutation 建立完成
+- [ ] useRejectPromotion mutation 建立完成
+- [ ] 稽核操作後重新整理列表
 
-#### 6.3 创建提升列表页面
+#### 6.3 建立提升列表頁面
 
-**文件：** `web/src/pages/dashboard/promotions.tsx`
+**檔案：** `web/src/pages/dashboard/promotions.tsx`
 
 ```typescript
 import { useState } from 'react'
@@ -4479,21 +4479,21 @@ export function PromotionsPage() {
   const { data: promotions, isLoading } = usePromotionList(status)
 
   if (isLoading) {
-    return <div className="animate-pulse">加载中...</div>
+    return <div className="animate-pulse">載入中...</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">提升审核</h1>
-        <p className="text-muted-foreground">管理技能提升申请</p>
+        <h1 className="text-3xl font-bold mb-2">提升稽核</h1>
+        <p className="text-muted-foreground">管理技能提升申請</p>
       </div>
 
       <Tabs value={status} onValueChange={setStatus}>
         <TabsList>
-          <TabsTrigger value="PENDING">待审核</TabsTrigger>
-          <TabsTrigger value="APPROVED">已通过</TabsTrigger>
-          <TabsTrigger value="REJECTED">已拒绝</TabsTrigger>
+          <TabsTrigger value="PENDING">待稽核</TabsTrigger>
+          <TabsTrigger value="APPROVED">已透過</TabsTrigger>
+          <TabsTrigger value="REJECTED">已拒絕</TabsTrigger>
         </TabsList>
 
         <TabsContent value={status} className="mt-4">
@@ -4507,16 +4507,16 @@ export function PromotionsPage() {
                         {promotion.currentNamespace}/{promotion.skillSlug} → {promotion.targetNamespace}
                       </h3>
                       <p className="text-sm text-muted-foreground">
-                        申请者: {promotion.requestedBy} · {new Date(promotion.requestedAt).toLocaleString('zh-CN')}
+                        申請者: {promotion.requestedBy} · {new Date(promotion.requestedAt).toLocaleString('zh-CN')}
                       </p>
                       {promotion.reviewedBy && (
                         <p className="text-sm text-muted-foreground">
-                          审核者: {promotion.reviewedBy} · {new Date(promotion.reviewedAt!).toLocaleString('zh-CN')}
+                          稽核者: {promotion.reviewedBy} · {new Date(promotion.reviewedAt!).toLocaleString('zh-CN')}
                         </p>
                       )}
                     </div>
                     <Link to={`/dashboard/promotions/${promotion.id}`}>
-                      <Button variant="outline">查看详情</Button>
+                      <Button variant="outline">檢視詳情</Button>
                     </Link>
                   </div>
                 </Card>
@@ -4524,7 +4524,7 @@ export function PromotionsPage() {
             </div>
           ) : (
             <Card className="p-6 text-center text-muted-foreground">
-              暂无提升申请
+              暫無提升申請
             </Card>
           )}
         </TabsContent>
@@ -4534,15 +4534,15 @@ export function PromotionsPage() {
 }
 ```
 
-**验收：**
-- [ ] 提升列表页面创建完成
-- [ ] 支持按状态切换（待审核/已通过/已拒绝）
-- [ ] 显示技能名称、当前空间、目标空间、申请者、申请时间
-- [ ] 点击查看详情跳转到提升详情页
+**驗收：**
+- [ ] 提升列表頁面建立完成
+- [ ] 支援按狀態切換（待稽核/已透過/已拒絕）
+- [ ] 顯示技能名稱、當前空間、目標空間、申請者、申請時間
+- [ ] 點選檢視詳情跳轉到提升詳情頁
 
-#### 6.4 创建提升详情页面
+#### 6.4 建立提升詳情頁面
 
-**文件：** `web/src/pages/dashboard/promotions/[id].tsx`
+**檔案：** `web/src/pages/dashboard/promotions/[id].tsx`
 
 ```typescript
 import { useState } from 'react'
@@ -4565,39 +4565,39 @@ export function PromotionDetailPage() {
   const handleApprove = async () => {
     try {
       await approveMutation.mutateAsync({ taskId: Number(id), comment })
-      alert('提升通过')
+      alert('提升透過')
       navigate({ to: '/dashboard/promotions' })
     } catch (error) {
-      alert('操作失败: ' + (error instanceof Error ? error.message : '未知错误'))
+      alert('操作失敗: ' + (error instanceof Error ? error.message : '未知錯誤'))
     }
   }
 
   const handleReject = async () => {
     if (!comment.trim()) {
-      alert('拒绝时必须填写原因')
+      alert('拒絕時必須填寫原因')
       return
     }
     try {
       await rejectMutation.mutateAsync({ taskId: Number(id), comment })
-      alert('提升拒绝')
+      alert('提升拒絕')
       navigate({ to: '/dashboard/promotions' })
     } catch (error) {
-      alert('操作失败: ' + (error instanceof Error ? error.message : '未知错误'))
+      alert('操作失敗: ' + (error instanceof Error ? error.message : '未知錯誤'))
     }
   }
 
   if (isLoading) {
-    return <div className="animate-pulse">加载中...</div>
+    return <div className="animate-pulse">載入中...</div>
   }
 
   if (!promotion) {
-    return <div>提升申请不存在</div>
+    return <div>提升申請不存在</div>
   }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h1 className="text-3xl font-bold mb-2">提升详情</h1>
+        <h1 className="text-3xl font-bold mb-2">提升詳情</h1>
         <p className="text-muted-foreground">
           {promotion.currentNamespace}/{promotion.skillSlug} → {promotion.targetNamespace}
         </p>
@@ -4605,28 +4605,28 @@ export function PromotionDetailPage() {
 
       <Card className="p-6 space-y-4">
         <div>
-          <div className="text-sm text-muted-foreground mb-1">状态</div>
+          <div className="text-sm text-muted-foreground mb-1">狀態</div>
           <div className="font-semibold">{promotion.status}</div>
         </div>
 
         <div>
-          <div className="text-sm text-muted-foreground mb-1">申请者</div>
+          <div className="text-sm text-muted-foreground mb-1">申請者</div>
           <div>{promotion.requestedBy}</div>
         </div>
 
         <div>
-          <div className="text-sm text-muted-foreground mb-1">申请时间</div>
+          <div className="text-sm text-muted-foreground mb-1">申請時間</div>
           <div>{new Date(promotion.requestedAt).toLocaleString('zh-CN')}</div>
         </div>
 
         {promotion.reviewedBy && (
           <>
             <div>
-              <div className="text-sm text-muted-foreground mb-1">审核者</div>
+              <div className="text-sm text-muted-foreground mb-1">稽核者</div>
               <div>{promotion.reviewedBy}</div>
             </div>
             <div>
-              <div className="text-sm text-muted-foreground mb-1">审核时间</div>
+              <div className="text-sm text-muted-foreground mb-1">稽核時間</div>
               <div>{new Date(promotion.reviewedAt!).toLocaleString('zh-CN')}</div>
             </div>
           </>
@@ -4634,7 +4634,7 @@ export function PromotionDetailPage() {
 
         {promotion.comment && (
           <div>
-            <div className="text-sm text-muted-foreground mb-1">审核意见</div>
+            <div className="text-sm text-muted-foreground mb-1">稽核意見</div>
             <div className="whitespace-pre-wrap">{promotion.comment}</div>
           </div>
         )}
@@ -4643,12 +4643,12 @@ export function PromotionDetailPage() {
       {promotion.status === 'PENDING' && (
         <Card className="p-6 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="comment">审核意见</Label>
+            <Label htmlFor="comment">稽核意見</Label>
             <Textarea
               id="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="填写审核意见（拒绝时必填）"
+              placeholder="填寫稽核意見（拒絕時必填）"
               rows={4}
             />
           </div>
@@ -4659,7 +4659,7 @@ export function PromotionDetailPage() {
               onClick={handleApprove}
               disabled={approveMutation.isPending || rejectMutation.isPending}
             >
-              通过
+              透過
             </Button>
             <Button
               className="flex-1"
@@ -4667,7 +4667,7 @@ export function PromotionDetailPage() {
               onClick={handleReject}
               disabled={approveMutation.isPending || rejectMutation.isPending}
             >
-              拒绝
+              拒絕
             </Button>
           </div>
         </Card>
@@ -4677,20 +4677,20 @@ export function PromotionDetailPage() {
 }
 ```
 
-**验收：**
-- [ ] 提升详情页面创建完成
-- [ ] 显示提升申请详细信息
-- [ ] 待审核状态显示审核操作按钮
-- [ ] 支持通过/拒绝操作
-- [ ] 拒绝时必须填写原因
+**驗收：**
+- [ ] 提升詳情頁面建立完成
+- [ ] 顯示提升申請詳細資訊
+- [ ] 待稽核狀態顯示稽核操作按鈕
+- [ ] 支援透過/拒絕操作
+- [ ] 拒絕時必須填寫原因
 
 ---
 
-### Task 7: 前端收藏评分组件
+### Task 7: 前端收藏評分元件
 
-#### 7.1 创建收藏按钮组件
+#### 7.1 建立收藏按鈕元件
 
-**文件：** `web/src/features/skill/star-button.tsx`
+**檔案：** `web/src/features/skill/star-button.tsx`
 
 ```typescript
 import { useState } from 'react'
@@ -4788,15 +4788,15 @@ export function StarButton({ skillId }: StarButtonProps) {
 }
 ```
 
-**验收：**
-- [ ] StarButton 组件创建完成
-- [ ] 显示收藏/已收藏状态
-- [ ] 点击切换收藏状态
-- [ ] 使用自定义 SVG 星星图标
+**驗收：**
+- [ ] StarButton 元件建立完成
+- [ ] 顯示收藏/已收藏狀態
+- [ ] 點選切換收藏狀態
+- [ ] 使用自定義 SVG 星星圖示
 
-#### 7.2 创建评分组件
+#### 7.2 建立評分元件
 
-**文件：** `web/src/features/skill/star-rating.tsx`
+**檔案：** `web/src/features/skill/star-rating.tsx`
 
 ```typescript
 import { useState } from 'react'
@@ -4851,7 +4851,7 @@ export function StarRating({ skillId }: StarRatingProps) {
 
   return (
     <div className="space-y-2">
-      <div className="text-sm font-medium">评分</div>
+      <div className="text-sm font-medium">評分</div>
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
           <button
@@ -4881,7 +4881,7 @@ export function StarRating({ skillId }: StarRatingProps) {
       </div>
       {currentRating > 0 && (
         <div className="text-sm text-muted-foreground">
-          你的评分: {currentRating} 星
+          你的評分: {currentRating} 星
         </div>
       )}
     </div>
@@ -4889,53 +4889,53 @@ export function StarRating({ skillId }: StarRatingProps) {
 }
 ```
 
-**验收：**
-- [ ] StarRating 组件创建完成
-- [ ] 显示 1-5 星评分
-- [ ] 支持鼠标悬停预览
-- [ ] 点击提交评分
-- [ ] 显示当前用户评分
-- [ ] 使用自定义 SVG 星星图标
+**驗收：**
+- [ ] StarRating 元件建立完成
+- [ ] 顯示 1-5 星評分
+- [ ] 支援滑鼠懸停預覽
+- [ ] 點選提交評分
+- [ ] 顯示當前使用者評分
+- [ ] 使用自定義 SVG 星星圖示
 
-#### 7.3 集成到技能详情页
+#### 7.3 整合到技能詳情頁
 
-**文件：** `web/src/pages/skill-detail.tsx`（修改）
+**檔案：** `web/src/pages/skill-detail.tsx`（修改）
 
-在 Sidebar 部分添加收藏和评分组件：
+在 Sidebar 部分新增收藏和評分元件：
 
 ```typescript
 import { StarButton } from '@/features/skill/star-button'
 import { StarRating } from '@/features/skill/star-rating'
 
-// 在 Sidebar 的 Card 中添加：
+// 在 Sidebar 的 Card 中新增：
 <Card className="p-4 space-y-4">
   <div>
     <div className="text-sm text-muted-foreground mb-1">版本</div>
     <div className="font-semibold">
-      {skill.latestVersion ? `v${skill.latestVersion}` : '暂无版本'}
+      {skill.latestVersion ? `v${skill.latestVersion}` : '暫無版本'}
     </div>
   </div>
 
   <div>
-    <div className="text-sm text-muted-foreground mb-1">下载量</div>
+    <div className="text-sm text-muted-foreground mb-1">下載量</div>
     <div className="font-semibold">{skill.downloadCount}</div>
   </div>
 
   <div>
-    <div className="text-sm text-muted-foreground mb-1">收藏数</div>
+    <div className="text-sm text-muted-foreground mb-1">收藏數</div>
     <div className="font-semibold">{skill.starCount || 0}</div>
   </div>
 
   <div>
-    <div className="text-sm text-muted-foreground mb-1">平均评分</div>
+    <div className="text-sm text-muted-foreground mb-1">平均評分</div>
     <div className="font-semibold">
-      {skill.averageRating ? skill.averageRating.toFixed(1) : '暂无评分'} 
-      {skill.ratingCount > 0 && ` (${skill.ratingCount} 人评分)`}
+      {skill.averageRating ? skill.averageRating.toFixed(1) : '暫無評分'} 
+      {skill.ratingCount > 0 && ` (${skill.ratingCount} 人評分)`}
     </div>
   </div>
 
   <div>
-    <div className="text-sm text-muted-foreground mb-1">命名空间</div>
+    <div className="text-sm text-muted-foreground mb-1">名稱空間</div>
     <NamespaceBadge type="GLOBAL" name={namespace} />
   </div>
 </Card>
@@ -4947,14 +4947,14 @@ import { StarRating } from '@/features/skill/star-rating'
 </Card>
 ```
 
-**验收：**
-- [ ] 技能详情页集成收藏按钮
-- [ ] 技能详情页集成评分组件
-- [ ] 显示收藏数、平均评分、评分人数
+**驗收：**
+- [ ] 技能詳情頁整合收藏按鈕
+- [ ] 技能詳情頁整合評分元件
+- [ ] 顯示收藏數、平均評分、評分人數
 
-#### 7.4 创建我的收藏页面
+#### 7.4 建立我的收藏頁面
 
-**文件：** `web/src/pages/dashboard/my-stars.tsx`
+**檔案：** `web/src/pages/dashboard/my-stars.tsx`
 
 ```typescript
 import { useQuery } from '@tanstack/react-query'
@@ -5011,14 +5011,14 @@ export function MyStarsPage() {
   })
 
   if (isLoadingIds || isLoadingSkills) {
-    return <div className="animate-pulse">加载中...</div>
+    return <div className="animate-pulse">載入中...</div>
   }
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">我的收藏</h1>
-        <p className="text-muted-foreground">查看我收藏的技能</p>
+        <p className="text-muted-foreground">檢視我收藏的技能</p>
       </div>
 
       {skills && skills.length > 0 ? (
@@ -5037,7 +5037,7 @@ export function MyStarsPage() {
                 </p>
               )}
               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <span>{skill.downloadCount} 下载</span>
+                <span>{skill.downloadCount} 下載</span>
                 <span>{skill.starCount} 收藏</span>
                 {skill.averageRating && (
                   <span>{skill.averageRating.toFixed(1)} ⭐</span>
@@ -5045,7 +5045,7 @@ export function MyStarsPage() {
               </div>
               <Link to={`/@${skill.namespace}/${skill.slug}`}>
                 <Button variant="outline" className="w-full">
-                  查看详情
+                  檢視詳情
                 </Button>
               </Link>
             </Card>
@@ -5053,7 +5053,7 @@ export function MyStarsPage() {
         </div>
       ) : (
         <Card className="p-6 text-center text-muted-foreground">
-          暂无收藏
+          暫無收藏
         </Card>
       )}
     </div>
@@ -5061,19 +5061,19 @@ export function MyStarsPage() {
 }
 ```
 
-**验收：**
-- [ ] 我的收藏页面创建完成
-- [ ] 显示用户收藏的所有技能
-- [ ] 显示技能名称、命名空间、摘要、下载量、收藏数、评分
-- [ ] 点击查看详情跳转到技能详情页
+**驗收：**
+- [ ] 我的收藏頁面建立完成
+- [ ] 顯示使用者收藏的所有技能
+- [ ] 顯示技能名稱、名稱空間、摘要、下載量、收藏數、評分
+- [ ] 點選檢視詳情跳轉到技能詳情頁
 
 ---
 
 ### Task 8: 前端 Token 管理
 
-#### 8.1 创建 Token 列表 Hook
+#### 8.1 建立 Token 列表 Hook
 
-**文件：** `web/src/features/token/use-token-list.ts`
+**檔案：** `web/src/features/token/use-token-list.ts`
 
 ```typescript
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -5146,15 +5146,15 @@ export function useRevokeToken() {
 }
 ```
 
-**验收：**
-- [ ] useTokenList hook 创建完成
-- [ ] useCreateToken mutation 创建完成
-- [ ] useRevokeToken mutation 创建完成
-- [ ] 操作后刷新列表
+**驗收：**
+- [ ] useTokenList hook 建立完成
+- [ ] useCreateToken mutation 建立完成
+- [ ] useRevokeToken mutation 建立完成
+- [ ] 操作後重新整理列表
 
-#### 8.2 创建 Token 列表页面
+#### 8.2 建立 Token 列表頁面
 
-**文件：** `web/src/pages/dashboard/tokens.tsx`
+**檔案：** `web/src/pages/dashboard/tokens.tsx`
 
 ```typescript
 import { useState } from 'react'
@@ -5169,19 +5169,19 @@ export function TokensPage() {
   const revokeMutation = useRevokeToken()
 
   const handleRevoke = async (tokenId: number, tokenName: string) => {
-    if (!confirm(`确定要撤销 Token "${tokenName}" 吗？`)) {
+    if (!confirm(`確定要撤銷 Token "${tokenName}" 嗎？`)) {
       return
     }
     try {
       await revokeMutation.mutateAsync(tokenId)
-      alert('Token 已撤销')
+      alert('Token 已撤銷')
     } catch (error) {
-      alert('撤销失败: ' + (error instanceof Error ? error.message : '未知错误'))
+      alert('撤銷失敗: ' + (error instanceof Error ? error.message : '未知錯誤'))
     }
   }
 
   if (isLoading) {
-    return <div className="animate-pulse">加载中...</div>
+    return <div className="animate-pulse">載入中...</div>
   }
 
   return (
@@ -5189,10 +5189,10 @@ export function TokensPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold mb-2">API Tokens</h1>
-          <p className="text-muted-foreground">管理你的 API 访问令牌</p>
+          <p className="text-muted-foreground">管理你的 API 訪問令牌</p>
         </div>
         <Button onClick={() => setShowCreateDialog(true)}>
-          创建 Token
+          建立 Token
         </Button>
       </div>
 
@@ -5207,12 +5207,12 @@ export function TokensPage() {
                     {token.token}
                   </p>
                   <div className="text-sm text-muted-foreground mt-2">
-                    创建时间: {new Date(token.createdAt).toLocaleString('zh-CN')}
+                    建立時間: {new Date(token.createdAt).toLocaleString('zh-CN')}
                     {token.expiresAt && (
-                      <> · 过期时间: {new Date(token.expiresAt).toLocaleString('zh-CN')}</>
+                      <> · 過期時間: {new Date(token.expiresAt).toLocaleString('zh-CN')}</>
                     )}
                     {token.lastUsedAt && (
-                      <> · 最后使用: {new Date(token.lastUsedAt).toLocaleString('zh-CN')}</>
+                      <> · 最後使用: {new Date(token.lastUsedAt).toLocaleString('zh-CN')}</>
                     )}
                   </div>
                 </div>
@@ -5221,7 +5221,7 @@ export function TokensPage() {
                   onClick={() => handleRevoke(token.id, token.name)}
                   disabled={revokeMutation.isPending}
                 >
-                  撤销
+                  撤銷
                 </Button>
               </div>
             </Card>
@@ -5229,7 +5229,7 @@ export function TokensPage() {
         </div>
       ) : (
         <Card className="p-6 text-center text-muted-foreground">
-          暂无 Token
+          暫無 Token
         </Card>
       )}
 
@@ -5242,15 +5242,15 @@ export function TokensPage() {
 }
 ```
 
-**验收：**
-- [ ] Token 列表页面创建完成
-- [ ] 显示所有 Token 及其详细信息
-- [ ] 支持创建和撤销 Token
-- [ ] 显示创建时间、过期时间、最后使用时间
+**驗收：**
+- [ ] Token 列表頁面建立完成
+- [ ] 顯示所有 Token 及其詳細資訊
+- [ ] 支援建立和撤銷 Token
+- [ ] 顯示建立時間、過期時間、最後使用時間
 
-#### 8.3 创建 Token 创建对话框
+#### 8.3 建立 Token 建立對話方塊
 
-**文件：** `web/src/features/token/create-token-dialog.tsx`
+**檔案：** `web/src/features/token/create-token-dialog.tsx`
 
 ```typescript
 import { useState } from 'react'
@@ -5274,7 +5274,7 @@ export function CreateTokenDialog({ open, onClose }: CreateTokenDialogProps) {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      alert('请输入 Token 名称')
+      alert('請輸入 Token 名稱')
       return
     }
     try {
@@ -5286,7 +5286,7 @@ export function CreateTokenDialog({ open, onClose }: CreateTokenDialogProps) {
       setName('')
       setExpiresAt('')
     } catch (error) {
-      alert('创建失败: ' + (error instanceof Error ? error.message : '未知错误'))
+      alert('建立失敗: ' + (error instanceof Error ? error.message : '未知錯誤'))
     }
   }
 
@@ -5299,25 +5299,25 @@ export function CreateTokenDialog({ open, onClose }: CreateTokenDialogProps) {
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>创建 API Token</DialogTitle>
+          <DialogTitle>建立 API Token</DialogTitle>
         </DialogHeader>
 
         {createdToken ? (
           <div className="space-y-4">
             <div className="p-4 bg-muted rounded-md">
               <p className="text-sm text-muted-foreground mb-2">
-                请妥善保存你的 Token，关闭后将无法再次查看：
+                請妥善儲存你的 Token，關閉後將無法再次檢視：
               </p>
               <p className="font-mono text-sm break-all">{createdToken}</p>
             </div>
             <Button className="w-full" onClick={handleClose}>
-              关闭
+              關閉
             </Button>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Token 名称</Label>
+              <Label htmlFor="name">Token 名稱</Label>
               <Input
                 id="name"
                 value={name}
@@ -5327,7 +5327,7 @@ export function CreateTokenDialog({ open, onClose }: CreateTokenDialogProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="expiresAt">过期时间（可选）</Label>
+              <Label htmlFor="expiresAt">過期時間（可選）</Label>
               <Input
                 id="expiresAt"
                 type="datetime-local"
@@ -5342,7 +5342,7 @@ export function CreateTokenDialog({ open, onClose }: CreateTokenDialogProps) {
                 onClick={handleCreate}
                 disabled={createMutation.isPending}
               >
-                创建
+                建立
               </Button>
               <Button
                 className="flex-1"
@@ -5360,24 +5360,24 @@ export function CreateTokenDialog({ open, onClose }: CreateTokenDialogProps) {
 }
 ```
 
-**验收：**
-- [ ] 创建 Token 对话框创建完成
-- [ ] 支持输入 Token 名称和过期时间
-- [ ] 创建成功后显示 Token（仅一次）
-- [ ] 提示用户妥善保存 Token
+**驗收：**
+- [ ] 建立 Token 對話方塊建立完成
+- [ ] 支援輸入 Token 名稱和過期時間
+- [ ] 建立成功後顯示 Token（僅一次）
+- [ ] 提示使用者妥善儲存 Token
 
 ---
 
-### Task 9: 路由更新 + Chunk 2 验收
+### Task 9: 路由更新 + Chunk 2 驗收
 
 #### 9.1 更新路由配置
 
-**文件：** `web/src/router.tsx`（或路由配置文件）
+**檔案：** `web/src/router.tsx`（或路由配置檔案）
 
-添加以下路由：
+新增以下路由：
 
 ```typescript
-// 审核中心
+// 稽核中心
 {
   path: '/dashboard/reviews',
   component: ReviewsPage,
@@ -5391,7 +5391,7 @@ export function CreateTokenDialog({ open, onClose }: CreateTokenDialogProps) {
   component: MySubmissionsPage,
 },
 
-// 提升审核
+// 提升稽核
 {
   path: '/dashboard/promotions',
   component: PromotionsPage,
@@ -5414,104 +5414,104 @@ export function CreateTokenDialog({ open, onClose }: CreateTokenDialogProps) {
 },
 ```
 
-**验收：**
-- [ ] 所有新页面路由已添加
-- [ ] 路由参数正确配置
+**驗收：**
+- [ ] 所有新頁面路由已新增
+- [ ] 路由引數正確配置
 
-#### 9.2 更新导航菜单
+#### 9.2 更新導航選單
 
-**文件：** `web/src/layouts/dashboard-layout.tsx`（或导航组件）
+**檔案：** `web/src/layouts/dashboard-layout.tsx`（或導航元件）
 
-在 Dashboard 导航菜单中添加：
+在 Dashboard 導航選單中新增：
 
 ```typescript
 <nav>
   <Link to="/dashboard/skills">我的技能</Link>
-  <Link to="/dashboard/publish">发布技能</Link>
+  <Link to="/dashboard/publish">發布技能</Link>
   <Link to="/dashboard/my-submissions">我的提交</Link>
   <Link to="/dashboard/my-stars">我的收藏</Link>
-  <Link to="/dashboard/reviews">审核中心</Link>
-  <Link to="/dashboard/promotions">提升审核</Link>
+  <Link to="/dashboard/reviews">稽核中心</Link>
+  <Link to="/dashboard/promotions">提升稽核</Link>
   <Link to="/dashboard/tokens">API Tokens</Link>
 </nav>
 ```
 
-**验收：**
-- [ ] 导航菜单包含所有新页面链接
-- [ ] 链接正确跳转
+**驗收：**
+- [ ] 導航選單包含所有新頁面連結
+- [ ] 連結正確跳轉
 
-#### 9.3 Chunk 2 验收测试
+#### 9.3 Chunk 2 驗收測試
 
-**验收清单：**
+**驗收清單：**
 
-**后端 API：**
+**後端 API：**
 - [ ] POST /api/v1/skills/{skillId}/star - 收藏技能
 - [ ] DELETE /api/v1/skills/{skillId}/star - 取消收藏
-- [ ] GET /api/v1/skills/{skillId}/star - 查询收藏状态
-- [ ] GET /api/v1/skills/starred - 获取收藏列表
-- [ ] POST /api/v1/skills/{skillId}/rating - 评分
-- [ ] GET /api/v1/skills/{skillId}/rating - 获取用户评分
+- [ ] GET /api/v1/skills/{skillId}/star - 查詢收藏狀態
+- [ ] GET /api/v1/skills/starred - 獲取收藏列表
+- [ ] POST /api/v1/skills/{skillId}/rating - 評分
+- [ ] GET /api/v1/skills/{skillId}/rating - 獲取使用者評分
 
-**前端页面：**
-- [ ] /dashboard/reviews - 审核列表页
-- [ ] /dashboard/reviews/:id - 审核详情页
-- [ ] /dashboard/my-submissions - 我的提交页
-- [ ] /dashboard/promotions - 提升列表页
-- [ ] /dashboard/promotions/:id - 提升详情页
-- [ ] /dashboard/tokens - Token 管理页
-- [ ] /dashboard/my-stars - 我的收藏页
+**前端頁面：**
+- [ ] /dashboard/reviews - 稽核列表頁
+- [ ] /dashboard/reviews/:id - 稽核詳情頁
+- [ ] /dashboard/my-submissions - 我的提交頁
+- [ ] /dashboard/promotions - 提升列表頁
+- [ ] /dashboard/promotions/:id - 提升詳情頁
+- [ ] /dashboard/tokens - Token 管理頁
+- [ ] /dashboard/my-stars - 我的收藏頁
 
-**功能测试：**
-- [ ] 用户可以收藏/取消收藏技能
-- [ ] 用户可以对技能评分（1-5 星）
-- [ ] 技能详情页显示收藏数、平均评分、评分人数
-- [ ] 审核中心可以查看待审核任务
-- [ ] 审核中心可以通过/拒绝审核
-- [ ] 我的提交页显示用户提交的审核任务
-- [ ] 提升审核页可以查看提升申请
-- [ ] 提升审核页可以通过/拒绝提升
-- [ ] Token 管理页可以创建/撤销 Token
-- [ ] 我的收藏页显示用户收藏的技能
+**功能測試：**
+- [ ] 使用者可以收藏/取消收藏技能
+- [ ] 使用者可以對技能評分（1-5 星）
+- [ ] 技能詳情頁顯示收藏數、平均評分、評分人數
+- [ ] 稽核中心可以檢視待稽核任務
+- [ ] 稽核中心可以透過/拒絕稽核
+- [ ] 我的提交頁顯示使用者提交的稽核任務
+- [ ] 提升稽核頁可以檢視提升申請
+- [ ] 提升稽核頁可以透過/拒絕提升
+- [ ] Token 管理頁可以建立/撤銷 Token
+- [ ] 我的收藏頁顯示使用者收藏的技能
 
-**数据一致性：**
-- [ ] 收藏/取消收藏后，Skill 的 starCount 正确更新
-- [ ] 评分后，Skill 的 ratingCount 和 averageRating 正确更新
-- [ ] 使用 Redis 分布式锁防止评分并发重复计算
+**資料一致性：**
+- [ ] 收藏/取消收藏後，Skill 的 starCount 正確更新
+- [ ] 評分後，Skill 的 ratingCount 和 averageRating 正確更新
+- [ ] 使用 Redis 分散式鎖防止評分併發重複計算
 
 ---
 
-## Chunk 2 完成标志
+## Chunk 2 完成標誌
 
-- [ ] 所有 Task 11-19 验收项通过
-- [ ] 后端 API 测试通过
-- [ ] 前端页面功能正常
-- [ ] 数据一致性验证通过
-- [ ] 代码审查通过
-- [ ] 文档更新完成
+- [ ] 所有 Task 11-19 驗收項透過
+- [ ] 後端 API 測試透過
+- [ ] 前端頁面功能正常
+- [ ] 資料一致性驗證透過
+- [ ] 程式碼審查透過
+- [ ] 檔案更新完成
 
-**下一步：** 进入 Chunk 3（CLI API + Device Flow）
+**下一步：** 進入 Chunk 3（CLI API + Device Flow）
 
 EOF
 
 ---
 
 
-## Chunk 3: CLI API + Web 授权
+## Chunk 3: CLI API + Web 授權
 
-**范围：** OAuth Device Flow + CLI API 端点
+**範圍：** OAuth Device Flow + CLI API 端點
 
-**验收标准：**
-1. CLI 运行 `skillhub login`，获取 device code 和 user code
-2. CLI 打开浏览器，跳转到授权页面
-3. 用户输入 user code，确认授权
-4. CLI 轮询获取 token，保存到本地配置文件
-5. CLI 运行 `skillhub whoami`，返回当前用户信息
-6. CLI 运行 `skillhub publish`，上传技能包，提交审核
-7. CLI 运行 `skillhub resolve @team-ai/my-skill`，返回版本信息
-8. CLI 运行 `skillhub check skill.zip`，返回校验结果
-9. 所有 CLI API 端点测试通过
+**驗收標準：**
+1. CLI 執行 `skillhub login`，獲取 device code 和 user code
+2. CLI 開啟瀏覽器，跳轉到授權頁面
+3. 使用者輸入 user code，確認授權
+4. CLI 輪詢獲取 token，儲存到本地配置檔案
+5. CLI 執行 `skillhub whoami`，返回當前使用者資訊
+6. CLI 執行 `skillhub publish`，上傳技能包，提交稽核
+7. CLI 執行 `skillhub resolve @team-ai/my-skill`，返回版本資訊
+8. CLI 執行 `skillhub check skill.zip`，返回校驗結果
+9. 所有 CLI API 端點測試透過
 
-### Task 1: Device Flow 数据模型和 Redis 存储
+### Task 1: Device Flow 資料模型和 Redis 儲存
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/device/DeviceCodeData.java`
@@ -5519,7 +5519,7 @@ EOF
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/device/DeviceCodeResponse.java`
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/device/DeviceTokenResponse.java`
 
-- [ ] **Step 1: 创建 DeviceCodeStatus 枚举**
+- [ ] **Step 1: 建立 DeviceCodeStatus 列舉**
 
 ```java
 package com.iflytek.skillhub.auth.device;
@@ -5531,7 +5531,7 @@ public enum DeviceCodeStatus {
 }
 ```
 
-- [ ] **Step 2: 创建 DeviceCodeData**
+- [ ] **Step 2: 建立 DeviceCodeData**
 
 ```java
 package com.iflytek.skillhub.auth.device;
@@ -5563,7 +5563,7 @@ public class DeviceCodeData implements Serializable {
 }
 ```
 
-- [ ] **Step 3: 创建 DeviceCodeResponse**
+- [ ] **Step 3: 建立 DeviceCodeResponse**
 
 ```java
 package com.iflytek.skillhub.auth.device;
@@ -5577,7 +5577,7 @@ public record DeviceCodeResponse(
 ) {}
 ```
 
-- [ ] **Step 4: 创建 DeviceTokenResponse**
+- [ ] **Step 4: 建立 DeviceTokenResponse**
 
 ```java
 package com.iflytek.skillhub.auth.device;
@@ -5597,10 +5597,10 @@ public record DeviceTokenResponse(
 }
 ```
 
-- [ ] **Step 5: 编译验证**
+- [ ] **Step 5: 編譯驗證**
 
-运行：`cd server && ./mvnw compile -pl skillhub-auth`
-预期：编译成功
+執行：`cd server && ./mvnw compile -pl skillhub-auth`
+預期：編譯成功
 
 - [ ] **Step 6: Commit**
 
@@ -5609,13 +5609,13 @@ git add server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/device/
 git commit -m "feat(cli): add Device Flow data models"
 ```
 
-### Task 2: DeviceAuthService 实现
+### Task 2: DeviceAuthService 實現
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/iflytek/skillhub/auth/device/DeviceAuthService.java`
 - Test: `server/skillhub-auth/src/test/java/com/iflytek/skillhub/auth/device/DeviceAuthServiceTest.java`
 
-- [ ] **Step 1: 编写 DeviceAuthService 测试**
+- [ ] **Step 1: 編寫 DeviceAuthService 測試**
 
 ```java
 package com.iflytek.skillhub.auth.device;
@@ -5685,12 +5685,12 @@ class DeviceAuthServiceTest {
 }
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [ ] **Step 2: 執行測試驗證失敗**
 
-运行：`cd server && ./mvnw test -pl skillhub-auth -Dtest=DeviceAuthServiceTest`
-预期：编译失败，DeviceAuthService 不存在
+執行：`cd server && ./mvnw test -pl skillhub-auth -Dtest=DeviceAuthServiceTest`
+預期：編譯失敗，DeviceAuthService 不存在
 
-- [ ] **Step 3: 实现 DeviceAuthService**
+- [ ] **Step 3: 實現 DeviceAuthService**
 
 ```java
 package com.iflytek.skillhub.auth.device;
@@ -5762,7 +5762,7 @@ public class DeviceAuthService {
                 data.setStatus(DeviceCodeStatus.USED);
                 redisTemplate.opsForValue().set(
                     DEVICE_CODE_PREFIX + deviceCode, data, Duration.ofMinutes(1));
-                // Token 生成委托给调用方（Controller 层调用 ApiTokenService）
+                // Token 生成委託給呼叫方（Controller 層呼叫 ApiTokenService）
                 yield DeviceTokenResponse.success(null);
             }
             case USED -> throw new IllegalStateException("Device code already used");
@@ -5786,10 +5786,10 @@ public class DeviceAuthService {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [ ] **Step 4: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-auth -Dtest=DeviceAuthServiceTest`
-预期：4 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-auth -Dtest=DeviceAuthServiceTest`
+預期：4 個測試全部 PASS
 
 - [ ] **Step 5: Commit**
 
@@ -5799,14 +5799,14 @@ git add server/skillhub-auth/src/test/java/com/iflytek/skillhub/auth/device/Devi
 git commit -m "feat(cli): implement DeviceAuthService with Redis storage"
 ```
 
-### Task 3: Device Auth Controller 层
+### Task 3: Device Auth Controller 層
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/controller/DeviceAuthController.java`
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/controller/DeviceAuthWebController.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/controller/DeviceAuthControllerTest.java`
 
-- [ ] **Step 1: 编写 DeviceAuthController 测试**
+- [ ] **Step 1: 編寫 DeviceAuthController 測試**
 
 ```java
 package com.iflytek.skillhub.app.controller;
@@ -5856,7 +5856,7 @@ class DeviceAuthControllerTest {
 }
 ```
 
-- [ ] **Step 2: 实现 DeviceAuthController**
+- [ ] **Step 2: 實現 DeviceAuthController**
 
 ```java
 package com.iflytek.skillhub.app.controller;
@@ -5889,7 +5889,7 @@ public class DeviceAuthController {
 }
 ```
 
-- [ ] **Step 3: 实现 DeviceAuthWebController**
+- [ ] **Step 3: 實現 DeviceAuthWebController**
 
 ```java
 package com.iflytek.skillhub.app.controller;
@@ -5922,10 +5922,10 @@ public class DeviceAuthWebController {
 }
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [ ] **Step 4: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest=DeviceAuthControllerTest`
-预期：2 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest=DeviceAuthControllerTest`
+預期：2 個測試全部 PASS
 
 - [ ] **Step 5: Commit**
 
@@ -5935,13 +5935,13 @@ git add server/skillhub-app/src/test/java/com/iflytek/skillhub/app/controller/De
 git commit -m "feat(cli): add Device Auth controllers"
 ```
 
-### Task 4: CLI API 端点（whoami + resolve + check）
+### Task 4: CLI API 端點（whoami + resolve + check）
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/controller/CliApiController.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/controller/CliApiControllerTest.java`
 
-- [ ] **Step 1: 编写 CliApiController 测试**
+- [ ] **Step 1: 編寫 CliApiController 測試**
 
 ```java
 package com.iflytek.skillhub.app.controller;
@@ -5959,7 +5959,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WebMvcTest(CliApiController.class)
 class CliApiControllerTest {
     @Autowired MockMvc mockMvc;
-    // @MockBean 各依赖服务...
+    // @MockBean 各依賴服務...
 
     @Test
     @WithMockUser
@@ -5986,7 +5986,7 @@ class CliApiControllerTest {
 }
 ```
 
-- [ ] **Step 2: 实现 CliApiController**
+- [ ] **Step 2: 實現 CliApiController**
 
 ```java
 package com.iflytek.skillhub.app.controller;
@@ -6008,7 +6008,7 @@ public class CliApiController {
     @GetMapping("/whoami")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> whoami(@AuthenticationPrincipal String userId) {
-        // 查询用户信息 + 所属 namespace 列表
+        // 查詢使用者資訊 + 所屬 namespace 列表
         return ResponseEntity.ok(Map.of("code", 0, "data", Map.of("userId", userId)));
     }
 
@@ -6018,14 +6018,14 @@ public class CliApiController {
             @RequestParam(defaultValue = "latest") String version,
             @AuthenticationPrincipal String userId) {
         // 解析 @namespace/slug 格式
-        // 调用 SkillQueryService 获取版本详情
+        // 呼叫 SkillQueryService 獲取版本詳情
         return ResponseEntity.ok(Map.of("code", 0));
     }
 
     @PostMapping("/check")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> check(@RequestParam("file") MultipartFile file) {
-        // 解压 zip，调用 SkillPackageValidator 校验
+        // 解壓 zip，呼叫 SkillPackageValidator 校驗
         return ResponseEntity.ok(Map.of("code", 0));
     }
 
@@ -6036,16 +6036,16 @@ public class CliApiController {
             @RequestParam String namespace,
             @RequestParam(defaultValue = "PUBLIC") String visibility,
             @AuthenticationPrincipal String userId) {
-        // 调用 SkillPublishService
+        // 呼叫 SkillPublishService
         return ResponseEntity.ok(Map.of("code", 0));
     }
 }
 ```
 
-- [ ] **Step 3: 运行测试验证通过**
+- [ ] **Step 3: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest=CliApiControllerTest`
-预期：3 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest=CliApiControllerTest`
+預期：3 個測試全部 PASS
 
 - [ ] **Step 4: Commit**
 
@@ -6055,7 +6055,7 @@ git add server/skillhub-app/src/test/java/com/iflytek/skillhub/app/controller/Cl
 git commit -m "feat(cli): add CLI API endpoints (whoami, resolve, check, publish)"
 ```
 
-### Task 5: 前端 Device Auth 授权页面
+### Task 5: 前端 Device Auth 授權頁面
 
 **Files:**
 - Create: `web/src/pages/device-auth.tsx`
@@ -6064,7 +6064,7 @@ git commit -m "feat(cli): add CLI API endpoints (whoami, resolve, check, publish
 - Create: `web/src/features/device-auth/authorize-success.tsx`
 - Create: `web/src/features/device-auth/use-authorize-device.ts`
 
-- [ ] **Step 1: 创建 use-authorize-device hook**
+- [ ] **Step 1: 建立 use-authorize-device hook**
 
 ```typescript
 // web/src/features/device-auth/use-authorize-device.ts
@@ -6079,7 +6079,7 @@ export function useAuthorizeDevice() {
 }
 ```
 
-- [ ] **Step 2: 创建 UserCodeInput 组件**
+- [ ] **Step 2: 建立 UserCodeInput 元件**
 
 ```tsx
 // web/src/features/device-auth/user-code-input.tsx
@@ -6135,7 +6135,7 @@ export function UserCodeInput({ onComplete }: UserCodeInputProps) {
 }
 ```
 
-- [ ] **Step 3: 创建授权确认对话框和成功页面**
+- [ ] **Step 3: 建立授權確認對話方塊和成功頁面**
 
 `authorize-confirm-dialog.tsx`:
 ```tsx
@@ -6156,17 +6156,17 @@ export function AuthorizeConfirmDialog({ open, userCode, onConfirm, onCancel, lo
     <Dialog open={open} onOpenChange={v => !v && onCancel()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>确认授权 CLI 设备</DialogTitle>
+          <DialogTitle>確認授權 CLI 裝置</DialogTitle>
         </DialogHeader>
         <div className="space-y-3 text-sm">
-          <p>授权码：<span className="font-mono font-bold">{userCode}</span></p>
-          <p>权限：读取和管理你的技能、命名空间</p>
-          <p className="text-amber-600">请确认这是你正在使用的 CLI 设备</p>
+          <p>授權碼：<span className="font-mono font-bold">{userCode}</span></p>
+          <p>許可權：讀取和管理你的技能、名稱空間</p>
+          <p className="text-amber-600">請確認這是你正在使用的 CLI 裝置</p>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onCancel}>取消</Button>
           <Button onClick={onConfirm} disabled={loading}>
-            {loading ? '授权中...' : '确认授权'}
+            {loading ? '授權中...' : '確認授權'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -6184,15 +6184,15 @@ export function AuthorizeSuccess() {
   return (
     <div className="text-center space-y-4">
       <CheckCircle className="mx-auto h-16 w-16 text-green-500" />
-      <h2 className="text-xl font-semibold">授权成功</h2>
-      <p className="text-muted-foreground">你的 CLI 设备已成功授权，请返回 CLI 继续操作</p>
-      <Button variant="outline" onClick={() => window.close()}>关闭窗口</Button>
+      <h2 className="text-xl font-semibold">授權成功</h2>
+      <p className="text-muted-foreground">你的 CLI 裝置已成功授權，請返回 CLI 繼續操作</p>
+      <Button variant="outline" onClick={() => window.close()}>關閉視窗</Button>
     </div>
   );
 }
 ```
 
-- [ ] **Step 4: 创建 Device Auth 主页面**
+- [ ] **Step 4: 建立 Device Auth 主頁面**
 
 ```tsx
 // web/src/pages/device-auth.tsx
@@ -6226,13 +6226,13 @@ export default function DeviceAuthPage() {
     <div className="flex min-h-screen items-center justify-center">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>授权 CLI 设备访问</CardTitle>
+          <CardTitle>授權 CLI 裝置訪問</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <p className="text-sm text-muted-foreground">请输入 CLI 显示的授权码：</p>
+          <p className="text-sm text-muted-foreground">請輸入 CLI 顯示的授權碼：</p>
           <UserCodeInput onComplete={handleComplete} />
           {mutation.isError && (
-            <p className="text-sm text-red-500">授权码无效，请检查后重试</p>
+            <p className="text-sm text-red-500">授權碼無效，請檢查後重試</p>
           )}
         </CardContent>
       </Card>
@@ -6245,9 +6245,9 @@ export default function DeviceAuthPage() {
 }
 ```
 
-- [ ] **Step 5: 添加路由配置**
+- [ ] **Step 5: 新增路由配置**
 
-在 `web/src/router.tsx` 中添加 `/device` 路由（需要登录守卫）。
+在 `web/src/router.tsx` 中新增 `/device` 路由（需要登入守衛）。
 
 - [ ] **Step 6: Commit**
 
@@ -6257,45 +6257,45 @@ git add web/src/features/device-auth/
 git commit -m "feat(cli): add Device Auth frontend page"
 ```
 
-### Task 6: Chunk 3 验收
+### Task 6: Chunk 3 驗收
 
-- [ ] **Step 1: 运行后端测试**
+- [ ] **Step 1: 執行後端測試**
 
-运行：`cd server && ./mvnw test`
-预期：所有测试通过
+執行：`cd server && ./mvnw test`
+預期：所有測試透過
 
-- [ ] **Step 2: 运行前端测试**
+- [ ] **Step 2: 執行前端測試**
 
-运行：`cd web && npm test`
-预期：所有测试通过
+執行：`cd web && npm test`
+預期：所有測試透過
 
-- [ ] **Step 3: 验证 9 个验收标准**
+- [ ] **Step 3: 驗證 9 個驗收標準**
 
-逐一验证 Chunk 3 的验收标准。
+逐一驗證 Chunk 3 的驗收標準。
 
 ---
 
-## Chunk 4: ClawHub 兼容层
+## Chunk 4: ClawHub 相容層
 
-**范围：** Canonical slug 映射 + 兼容层端点
+**範圍：** Canonical slug 對映 + 相容層端點
 
-**验收标准：**
-1. ClawHub CLI 可以通过 `/.well-known/clawhub.json` 发现兼容层 API
-2. ClawHub CLI 可以搜索技能，返回 canonical slug 格式
+**驗收標準：**
+1. ClawHub CLI 可以透過 `/.well-known/clawhub.json` 發現相容層 API
+2. ClawHub CLI 可以搜尋技能，返回 canonical slug 格式
 3. ClawHub CLI 可以解析技能版本（`my-skill` 和 `team-ai--my-skill`）
-4. ClawHub CLI 可以下载技能包
-5. ClawHub CLI 可以发布技能（需要 Token 认证）
-6. ClawHub CLI 可以查询当前用户信息
-7. 所有兼容层端点测试通过
+4. ClawHub CLI 可以下載技能包
+5. ClawHub CLI 可以發布技能（需要 Token 認證）
+6. ClawHub CLI 可以查詢當前使用者資訊
+7. 所有相容層端點測試透過
 
-### Task 1: CanonicalSlugMapper 实现
+### Task 1: CanonicalSlugMapper 實現
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/compat/CanonicalSlugMapper.java`
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/compat/SkillCoordinate.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/compat/CanonicalSlugMapperTest.java`
 
-- [ ] **Step 1: 编写 CanonicalSlugMapper 测试**
+- [ ] **Step 1: 編寫 CanonicalSlugMapper 測試**
 
 ```java
 package com.iflytek.skillhub.app.compat;
@@ -6340,12 +6340,12 @@ class CanonicalSlugMapperTest {
 }
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [ ] **Step 2: 執行測試驗證失敗**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest=CanonicalSlugMapperTest`
-预期：编译失败
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest=CanonicalSlugMapperTest`
+預期：編譯失敗
 
-- [ ] **Step 3: 创建 SkillCoordinate record**
+- [ ] **Step 3: 建立 SkillCoordinate record**
 
 ```java
 package com.iflytek.skillhub.app.compat;
@@ -6353,7 +6353,7 @@ package com.iflytek.skillhub.app.compat;
 public record SkillCoordinate(String namespaceSlug, String skillSlug) {}
 ```
 
-- [ ] **Step 4: 实现 CanonicalSlugMapper**
+- [ ] **Step 4: 實現 CanonicalSlugMapper**
 
 ```java
 package com.iflytek.skillhub.app.compat;
@@ -6383,10 +6383,10 @@ public class CanonicalSlugMapper {
 }
 ```
 
-- [ ] **Step 5: 运行测试验证通过**
+- [ ] **Step 5: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest=CanonicalSlugMapperTest`
-预期：5 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest=CanonicalSlugMapperTest`
+預期：5 個測試全部 PASS
 
 - [ ] **Step 6: Commit**
 
@@ -6396,7 +6396,7 @@ git add server/skillhub-app/src/test/java/com/iflytek/skillhub/app/compat/
 git commit -m "feat(compat): add CanonicalSlugMapper with tests"
 ```
 
-### Task 2: Well-Known 端点 + 兼容层 DTO
+### Task 2: Well-Known 端點 + 相容層 DTO
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/compat/WellKnownController.java`
@@ -6407,7 +6407,7 @@ git commit -m "feat(compat): add CanonicalSlugMapper with tests"
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/compat/dto/ClawHubWhoamiResponse.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/compat/WellKnownControllerTest.java`
 
-- [ ] **Step 1: 编写 WellKnownController 测试**
+- [ ] **Step 1: 編寫 WellKnownController 測試**
 
 ```java
 package com.iflytek.skillhub.app.compat;
@@ -6433,7 +6433,7 @@ class WellKnownControllerTest {
 }
 ```
 
-- [ ] **Step 2: 实现 WellKnownController**
+- [ ] **Step 2: 實現 WellKnownController**
 
 ```java
 package com.iflytek.skillhub.app.compat;
@@ -6451,7 +6451,7 @@ public class WellKnownController {
 }
 ```
 
-- [ ] **Step 3: 创建兼容层 DTO**
+- [ ] **Step 3: 建立相容層 DTO**
 
 ```java
 // ClawHubSkillItem.java
@@ -6487,10 +6487,10 @@ package com.iflytek.skillhub.app.compat.dto;
 public record ClawHubWhoamiResponse(String userId, String username, String email) {}
 ```
 
-- [ ] **Step 4: 运行测试验证通过**
+- [ ] **Step 4: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest=WellKnownControllerTest`
-预期：PASS
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest=WellKnownControllerTest`
+預期：PASS
 
 - [ ] **Step 5: Commit**
 
@@ -6500,13 +6500,13 @@ git add server/skillhub-app/src/test/java/com/iflytek/skillhub/app/compat/
 git commit -m "feat(compat): add well-known endpoint and compat DTOs"
 ```
 
-### Task 3: ClawHubCompatController 实现
+### Task 3: ClawHubCompatController 實現
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/compat/ClawHubCompatController.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/compat/ClawHubCompatControllerTest.java`
 
-- [ ] **Step 1: 编写 ClawHubCompatController 测试**
+- [ ] **Step 1: 編寫 ClawHubCompatController 測試**
 
 ```java
 package com.iflytek.skillhub.app.compat;
@@ -6549,7 +6549,7 @@ class ClawHubCompatControllerTest {
 }
 ```
 
-- [ ] **Step 2: 实现 ClawHubCompatController**
+- [ ] **Step 2: 實現 ClawHubCompatController**
 
 ```java
 package com.iflytek.skillhub.app.compat;
@@ -6579,8 +6579,8 @@ public class ClawHubCompatController {
             @RequestParam(required = false) String q,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        // 调用 skillhub 搜索服务，转换为 canonical slug 格式
-        // TODO: 注入 SkillSearchAppService 并调用
+        // 呼叫 skillhub 搜尋服務，轉換為 canonical slug 格式
+        // TODO: 注入 SkillSearchAppService 並呼叫
         return new ClawHubSearchResponse(List.of(), 0, page, size);
     }
 
@@ -6589,7 +6589,7 @@ public class ClawHubCompatController {
             @RequestParam String slug,
             @RequestParam(defaultValue = "latest") String version) {
         SkillCoordinate coord = slugMapper.fromCanonical(slug);
-        // TODO: 调用 SkillQueryService 获取版本详情
+        // TODO: 呼叫 SkillQueryService 獲取版本詳情
         return new ClawHubResolveResponse(slug, "", version,
             "/api/v1/download/" + slug + "/" + version, 0, 0);
     }
@@ -6599,7 +6599,7 @@ public class ClawHubCompatController {
             @PathVariable String slug,
             @PathVariable String version) {
         SkillCoordinate coord = slugMapper.fromCanonical(slug);
-        // TODO: 调用 SkillDownloadService
+        // TODO: 呼叫 SkillDownloadService
         return ResponseEntity.notFound().build();
     }
 
@@ -6609,23 +6609,23 @@ public class ClawHubCompatController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(defaultValue = "global") String namespace,
             @AuthenticationPrincipal String userId) {
-        // TODO: 调用 SkillPublishService
+        // TODO: 呼叫 SkillPublishService
         return new ClawHubPublishResponse("", "", "pending_review");
     }
 
     @GetMapping("/whoami")
     @PreAuthorize("isAuthenticated()")
     public ClawHubWhoamiResponse whoami(@AuthenticationPrincipal String userId) {
-        // TODO: 查询用户信息
+        // TODO: 查詢使用者資訊
         return new ClawHubWhoamiResponse(userId, "", "");
     }
 }
 ```
 
-- [ ] **Step 3: 运行测试验证通过**
+- [ ] **Step 3: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest=ClawHubCompatControllerTest`
-预期：3 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest=ClawHubCompatControllerTest`
+預期：3 個測試全部 PASS
 
 - [ ] **Step 4: Commit**
 
@@ -6635,34 +6635,34 @@ git add server/skillhub-app/src/test/java/com/iflytek/skillhub/app/compat/ClawHu
 git commit -m "feat(compat): add ClawHub compatibility controller"
 ```
 
-### Task 4: Chunk 4 验收
+### Task 4: Chunk 4 驗收
 
-- [ ] **Step 1: 运行所有测试**
+- [ ] **Step 1: 執行所有測試**
 
-运行：`cd server && ./mvnw test`
-预期：所有测试通过
+執行：`cd server && ./mvnw test`
+預期：所有測試透過
 
-- [ ] **Step 2: 验证 7 个验收标准**
+- [ ] **Step 2: 驗證 7 個驗收標準**
 
-逐一验证 Chunk 4 的验收标准。
+逐一驗證 Chunk 4 的驗收標準。
 
 ---
 
-## Chunk 5: 幂等去重 + 管理后台
+## Chunk 5: 冪等去重 + 管理後臺
 
-**范围：** 幂等拦截器 + 管理后台前端
+**範圍：** 冪等攔截器 + 管理後臺前端
 
-**验收标准：**
-1. 写操作带 `X-Request-Id` 时，重复请求返回原始结果
-2. Redis 不可用时，PostgreSQL 兜底去重
-3. 定时任务清理过期幂等记录
-4. 管理后台：USER_ADMIN 可以查看用户列表，编辑角色，封禁/解封用户
-5. 管理后台：AUDITOR 可以查看审计日志，筛选和搜索
-6. 管理后台：SUPER_ADMIN 可以访问所有管理功能
-7. 前端路由守卫：非管理员访问 `/admin` 跳转到 403 页面
-8. 所有测试通过
+**驗收標準：**
+1. 寫操作帶 `X-Request-Id` 時，重複請求返回原始結果
+2. Redis 不可用時，PostgreSQL 兜底去重
+3. 定時任務清理過期冪等記錄
+4. 管理後臺：USER_ADMIN 可以檢視使用者列表，編輯角色，封禁/解封使用者
+5. 管理後臺：AUDITOR 可以檢視審計日誌，篩選和搜尋
+6. 管理後臺：SUPER_ADMIN 可以訪問所有管理功能
+7. 前端路由守衛：非管理員訪問 `/admin` 跳轉到 403 頁面
+8. 所有測試透過
 
-### Task 1: IdempotencyRecord 实体和 Repository
+### Task 1: IdempotencyRecord 實體和 Repository
 
 **Files:**
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/idempotency/IdempotencyRecord.java`
@@ -6670,7 +6670,7 @@ git commit -m "feat(compat): add ClawHub compatibility controller"
 - Create: `server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/idempotency/IdempotencyRecordRepository.java`
 - Create: `server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/JpaIdempotencyRecordRepository.java`
 
-- [ ] **Step 1: 创建 IdempotencyStatus 枚举**
+- [ ] **Step 1: 建立 IdempotencyStatus 列舉**
 
 ```java
 package com.iflytek.skillhub.domain.idempotency;
@@ -6682,7 +6682,7 @@ public enum IdempotencyStatus {
 }
 ```
 
-- [ ] **Step 2: 创建 IdempotencyRecord 实体**
+- [ ] **Step 2: 建立 IdempotencyRecord 實體**
 
 ```java
 package com.iflytek.skillhub.domain.idempotency;
@@ -6739,7 +6739,7 @@ public class IdempotencyRecord {
 }
 ```
 
-- [ ] **Step 3: 创建 Repository 接口**
+- [ ] **Step 3: 建立 Repository 介面**
 
 ```java
 package com.iflytek.skillhub.domain.idempotency;
@@ -6757,7 +6757,7 @@ public interface IdempotencyRecordRepository {
 }
 ```
 
-- [ ] **Step 4: 实现 JPA Repository**
+- [ ] **Step 4: 實現 JPA Repository**
 
 ```java
 package com.iflytek.skillhub.infra.jpa;
@@ -6800,10 +6800,10 @@ public interface JpaIdempotencyRecordRepository
 }
 ```
 
-- [ ] **Step 5: 编译验证**
+- [ ] **Step 5: 編譯驗證**
 
-运行：`cd server && ./mvnw compile`
-预期：编译成功
+執行：`cd server && ./mvnw compile`
+預期：編譯成功
 
 - [ ] **Step 6: Commit**
 
@@ -6813,14 +6813,14 @@ git add server/skillhub-infra/src/main/java/com/iflytek/skillhub/infra/jpa/JpaId
 git commit -m "feat(idempotency): add IdempotencyRecord entity and repository"
 ```
 
-### Task 2: IdempotencyInterceptor 实现
+### Task 2: IdempotencyInterceptor 實現
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/interceptor/IdempotencyInterceptor.java`
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/config/WebMvcIdempotencyConfig.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/interceptor/IdempotencyInterceptorTest.java`
 
-- [ ] **Step 1: 编写 IdempotencyInterceptor 测试**
+- [ ] **Step 1: 編寫 IdempotencyInterceptor 測試**
 
 ```java
 package com.iflytek.skillhub.app.interceptor;
@@ -6917,12 +6917,12 @@ class IdempotencyInterceptorTest {
 }
 ```
 
-- [ ] **Step 2: 运行测试验证失败**
+- [ ] **Step 2: 執行測試驗證失敗**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest=IdempotencyInterceptorTest`
-预期：编译失败
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest=IdempotencyInterceptorTest`
+預期：編譯失敗
 
-- [ ] **Step 3: 实现 IdempotencyInterceptor**
+- [ ] **Step 3: 實現 IdempotencyInterceptor**
 
 ```java
 package com.iflytek.skillhub.app.interceptor;
@@ -6985,7 +6985,7 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
             return handleDuplicate(requestId, response);
         }
 
-        // 新请求，插入 PROCESSING 记录
+        // 新請求，插入 PROCESSING 記錄
         IdempotencyRecord record = new IdempotencyRecord(
             requestId, "unknown", IdempotencyStatus.PROCESSING,
             Instant.now().plus(24, ChronoUnit.HOURS));
@@ -6998,7 +6998,7 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
             throws Exception {
         var record = recordRepository.findById(requestId).orElse(null);
         if (record == null) {
-            // Redis 有但 DB 无，可能脏数据，允许重试
+            // Redis 有但 DB 無，可能髒資料，允許重試
             redisTemplate.delete("idempotent:" + requestId);
             return true;
         }
@@ -7026,7 +7026,7 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
 }
 ```
 
-- [ ] **Step 4: 注册拦截器**
+- [ ] **Step 4: 註冊攔截器**
 
 ```java
 package com.iflytek.skillhub.app.config;
@@ -7057,10 +7057,10 @@ public class WebMvcIdempotencyConfig implements WebMvcConfigurer {
 }
 ```
 
-- [ ] **Step 5: 运行测试验证通过**
+- [ ] **Step 5: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest=IdempotencyInterceptorTest`
-预期：5 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest=IdempotencyInterceptorTest`
+預期：5 個測試全部 PASS
 
 - [ ] **Step 6: Commit**
 
@@ -7071,13 +7071,13 @@ git add server/skillhub-app/src/test/java/com/iflytek/skillhub/app/interceptor/
 git commit -m "feat(idempotency): add IdempotencyInterceptor with Redis + PostgreSQL"
 ```
 
-### Task 3: 幂等记录定时清理
+### Task 3: 冪等記錄定時清理
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/task/IdempotencyCleanupTask.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/task/IdempotencyCleanupTaskTest.java`
 
-- [ ] **Step 1: 编写清理任务测试**
+- [ ] **Step 1: 編寫清理任務測試**
 
 ```java
 package com.iflytek.skillhub.app.task;
@@ -7114,7 +7114,7 @@ class IdempotencyCleanupTaskTest {
 }
 ```
 
-- [ ] **Step 2: 实现清理任务**
+- [ ] **Step 2: 實現清理任務**
 
 ```java
 package com.iflytek.skillhub.app.task;
@@ -7154,10 +7154,10 @@ public class IdempotencyCleanupTask {
 }
 ```
 
-- [ ] **Step 3: 运行测试验证通过**
+- [ ] **Step 3: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest=IdempotencyCleanupTaskTest`
-预期：2 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest=IdempotencyCleanupTaskTest`
+預期：2 個測試全部 PASS
 
 - [ ] **Step 4: Commit**
 
@@ -7167,7 +7167,7 @@ git add server/skillhub-app/src/test/java/com/iflytek/skillhub/app/task/
 git commit -m "feat(idempotency): add cleanup scheduled tasks"
 ```
 
-### Task 4: 管理后台 API（用户管理 + 审计日志）
+### Task 4: 管理後臺 API（使用者管理 + 審計日誌）
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/iflytek/skillhub/app/controller/admin/UserManagementController.java`
@@ -7175,7 +7175,7 @@ git commit -m "feat(idempotency): add cleanup scheduled tasks"
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/controller/admin/UserManagementControllerTest.java`
 - Test: `server/skillhub-app/src/test/java/com/iflytek/skillhub/app/controller/admin/AuditLogControllerTest.java`
 
-- [ ] **Step 1: 编写 UserManagementController 测试**
+- [ ] **Step 1: 編寫 UserManagementController 測試**
 
 ```java
 package com.iflytek.skillhub.app.controller.admin;
@@ -7215,7 +7215,7 @@ class UserManagementControllerTest {
 }
 ```
 
-- [ ] **Step 2: 实现 UserManagementController**
+- [ ] **Step 2: 實現 UserManagementController**
 
 ```java
 package com.iflytek.skillhub.app.controller.admin;
@@ -7238,13 +7238,13 @@ public class UserManagementController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
-        // TODO: 注入 UserAccountRepository 查询
+        // TODO: 注入 UserAccountRepository 查詢
         return ResponseEntity.ok(Map.of("items", List.of(), "total", 0));
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUserDetail(@PathVariable String userId) {
-        // TODO: 查询用户详情 + 角色 + namespace 成员
+        // TODO: 查詢使用者詳情 + 角色 + namespace 成員
         return ResponseEntity.ok(Map.of("userId", userId));
     }
 
@@ -7252,7 +7252,7 @@ public class UserManagementController {
     public ResponseEntity<Void> updateUserRoles(
             @PathVariable String userId,
             @RequestBody Map<String, List<String>> body) {
-        // TODO: 更新用户平台角色
+        // TODO: 更新使用者平臺角色
         return ResponseEntity.noContent().build();
     }
 
@@ -7260,13 +7260,13 @@ public class UserManagementController {
     public ResponseEntity<Void> updateUserStatus(
             @PathVariable String userId,
             @RequestBody Map<String, String> body) {
-        // TODO: 封禁/解封用户
+        // TODO: 封禁/解封使用者
         return ResponseEntity.noContent().build();
     }
 }
 ```
 
-- [ ] **Step 3: 编写 AuditLogController 测试**
+- [ ] **Step 3: 編寫 AuditLogController 測試**
 
 ```java
 package com.iflytek.skillhub.app.controller.admin;
@@ -7299,7 +7299,7 @@ class AuditLogControllerTest {
 }
 ```
 
-- [ ] **Step 4: 实现 AuditLogController**
+- [ ] **Step 4: 實現 AuditLogController**
 
 ```java
 package com.iflytek.skillhub.app.controller.admin;
@@ -7325,16 +7325,16 @@ public class AuditLogController {
             @RequestParam(required = false) String endTime,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "50") int size) {
-        // TODO: 注入 AuditLogRepository 查询
+        // TODO: 注入 AuditLogRepository 查詢
         return ResponseEntity.ok(Map.of("items", List.of(), "total", 0));
     }
 }
 ```
 
-- [ ] **Step 5: 运行测试验证通过**
+- [ ] **Step 5: 執行測試驗證透過**
 
-运行：`cd server && ./mvnw test -pl skillhub-app -Dtest="UserManagementControllerTest,AuditLogControllerTest"`
-预期：5 个测试全部 PASS
+執行：`cd server && ./mvnw test -pl skillhub-app -Dtest="UserManagementControllerTest,AuditLogControllerTest"`
+預期：5 個測試全部 PASS
 
 - [ ] **Step 6: Commit**
 
@@ -7344,7 +7344,7 @@ git add server/skillhub-app/src/test/java/com/iflytek/skillhub/app/controller/ad
 git commit -m "feat(admin): add UserManagement and AuditLog controllers"
 ```
 
-### Task 5: 管理后台前端页面
+### Task 5: 管理後臺前端頁面
 
 **Files:**
 - Create: `web/src/pages/admin/users.tsx`
@@ -7357,7 +7357,7 @@ git commit -m "feat(admin): add UserManagement and AuditLog controllers"
 - Create: `web/src/features/admin/use-audit-logs.ts`
 - Create: `web/src/features/admin/use-update-user-roles.ts`
 
-- [ ] **Step 1: 创建 admin hooks**
+- [ ] **Step 1: 建立 admin hooks**
 
 ```typescript
 // web/src/features/admin/use-users.ts
@@ -7399,7 +7399,7 @@ export function useUpdateUserRoles() {
 }
 ```
 
-- [ ] **Step 2: 创建用户管理页面**
+- [ ] **Step 2: 建立使用者管理頁面**
 
 ```tsx
 // web/src/pages/admin/users.tsx
@@ -7422,14 +7422,14 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">用户管理</h1>
+      <h1 className="text-2xl font-semibold">使用者管理</h1>
       <div className="flex gap-4">
-        <Input placeholder="搜索用户名/邮箱" value={search}
+        <Input placeholder="搜尋使用者名稱/郵箱" value={search}
           onChange={e => setSearch(e.target.value)} className="max-w-xs" />
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="状态" /></SelectTrigger>
+          <SelectTrigger className="w-40"><SelectValue placeholder="狀態" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="ACTIVE">活跃</SelectItem>
+            <SelectItem value="ACTIVE">活躍</SelectItem>
             <SelectItem value="DISABLED">已封禁</SelectItem>
           </SelectContent>
         </Select>
@@ -7437,9 +7437,9 @@ export default function AdminUsersPage() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>用户名</TableHead>
-            <TableHead>邮箱</TableHead>
-            <TableHead>状态</TableHead>
+            <TableHead>使用者名稱</TableHead>
+            <TableHead>郵箱</TableHead>
+            <TableHead>狀態</TableHead>
             <TableHead>角色</TableHead>
             <TableHead>操作</TableHead>
           </TableRow>
@@ -7457,7 +7457,7 @@ export default function AdminUsersPage() {
               <TableCell>{user.roles?.join(', ')}</TableCell>
               <TableCell>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link to={`/admin/users/${user.id}`}>详情</Link>
+                  <Link to={`/admin/users/${user.id}`}>詳情</Link>
                 </Button>
               </TableCell>
             </TableRow>
@@ -7469,7 +7469,7 @@ export default function AdminUsersPage() {
 }
 ```
 
-- [ ] **Step 3: 创建审计日志页面**
+- [ ] **Step 3: 建立審計日誌頁面**
 
 ```tsx
 // web/src/pages/admin/audit-logs.tsx
@@ -7488,25 +7488,25 @@ export default function AuditLogsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">审计日志</h1>
+      <h1 className="text-2xl font-semibold">審計日誌</h1>
       <div className="flex gap-4">
         <Select value={action} onValueChange={setAction}>
-          <SelectTrigger className="w-40"><SelectValue placeholder="操作类型" /></SelectTrigger>
+          <SelectTrigger className="w-40"><SelectValue placeholder="操作型別" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="PUBLISH">发布</SelectItem>
-            <SelectItem value="APPROVE">审核通过</SelectItem>
-            <SelectItem value="REJECT">审核拒绝</SelectItem>
-            <SelectItem value="DELETE">删除</SelectItem>
+            <SelectItem value="PUBLISH">發布</SelectItem>
+            <SelectItem value="APPROVE">稽核透過</SelectItem>
+            <SelectItem value="REJECT">稽核拒絕</SelectItem>
+            <SelectItem value="DELETE">刪除</SelectItem>
           </SelectContent>
         </Select>
       </div>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>时间</TableHead>
+            <TableHead>時間</TableHead>
             <TableHead>操作人</TableHead>
             <TableHead>操作</TableHead>
-            <TableHead>目标</TableHead>
+            <TableHead>目標</TableHead>
             <TableHead>IP</TableHead>
           </TableRow>
         </TableHeader>
@@ -7527,12 +7527,12 @@ export default function AuditLogsPage() {
 }
 ```
 
-- [ ] **Step 4: 添加管理后台路由守卫**
+- [ ] **Step 4: 新增管理後臺路由守衛**
 
-在 `web/src/router.tsx` 中添加 `/admin` 路由组，配置角色守卫：
+在 `web/src/router.tsx` 中新增 `/admin` 路由組，配置角色守衛：
 
 ```typescript
-// 管理后台路由守卫 - 检查用户是否有管理员角色
+// 管理後臺路由守衛 - 檢查使用者是否有管理員角色
 function AdminGuard({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const adminRoles = ['SUPER_ADMIN', 'USER_ADMIN', 'AUDITOR'];
@@ -7550,40 +7550,40 @@ git add web/src/features/admin/
 git commit -m "feat(admin): add admin dashboard pages (users, audit-logs)"
 ```
 
-### Task 6: Chunk 5 验收
+### Task 6: Chunk 5 驗收
 
-- [ ] **Step 1: 运行后端测试**
+- [ ] **Step 1: 執行後端測試**
 
-运行：`cd server && ./mvnw test`
-预期：所有测试通过
+執行：`cd server && ./mvnw test`
+預期：所有測試透過
 
-- [ ] **Step 2: 运行前端测试**
+- [ ] **Step 2: 執行前端測試**
 
-运行：`cd web && npm test`
-预期：所有测试通过
+執行：`cd web && npm test`
+預期：所有測試透過
 
-- [ ] **Step 3: 验证 8 个验收标准**
+- [ ] **Step 3: 驗證 8 個驗收標準**
 
-逐一验证 Chunk 5 的验收标准。
+逐一驗證 Chunk 5 的驗收標準。
 
-- [ ] **Step 4: 最终代码审查**
+- [ ] **Step 4: 最終程式碼審查**
 
-运行：`cd server && ./mvnw compile && cd ../web && npm run build`
-预期：编译和构建全部成功
+執行：`cd server && ./mvnw compile && cd ../web && npm run build`
+預期：編譯和構建全部成功
 
 ---
 
-## 实施说明
+## 實施說明
 
-**当前文档状态：**
-- ✅ Chunk 1：审核流程核心（后端）— Task 1-10 详细 TDD 步骤
-- ✅ Chunk 2：评分收藏 + 前端审核中心 — Task 1-9 详细 TDD 步骤
-- ✅ Chunk 3：CLI API + Web 授权 — Task 1-6 详细 TDD 步骤
-- ✅ Chunk 4：ClawHub 兼容层 — Task 1-4 详细 TDD 步骤
-- ✅ Chunk 5：幂等去重 + 管理后台 — Task 1-6 详细 TDD 步骤
+**當前檔案狀態：**
+- ✅ Chunk 1：稽核流程核心（後端）— Task 1-10 詳細 TDD 步驟
+- ✅ Chunk 2：評分收藏 + 前端稽核中心 — Task 1-9 詳細 TDD 步驟
+- ✅ Chunk 3：CLI API + Web 授權 — Task 1-6 詳細 TDD 步驟
+- ✅ Chunk 4：ClawHub 相容層 — Task 1-4 詳細 TDD 步驟
+- ✅ Chunk 5：冪等去重 + 管理後臺 — Task 1-6 詳細 TDD 步驟
 
-**建议的实施方式：**
+**建議的實施方式：**
 
-1. **使用 superpowers:subagent-driven-development** — 为每个 Chunk 派发独立的子代理
-2. **渐进式实施** — 先完成 Chunk 1，验收通过后再进行 Chunk 2
-3. **参考设计文档** — 每个任务的详细实现逻辑参考 `docs/superpowers/specs/2026-03-12-phase3-review-cli-social-design.md`
+1. **使用 superpowers:subagent-driven-development** — 為每個 Chunk 派發獨立的子代理
+2. **漸進式實施** — 先完成 Chunk 1，驗收透過後再進行 Chunk 2
+3. **參考設計檔案** — 每個任務的詳細實現邏輯參考 `docs/superpowers/specs/2026-03-12-phase3-review-cli-social-design.md`

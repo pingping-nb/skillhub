@@ -1,152 +1,152 @@
-# OSS-02 Core 语义规则收口
+# OSS-02 Core 語義規則收口
 
-## 1. 文档目标
+## 1. 檔案目標
 
-本文档固化 SkillHub Core 的运行时语义规则，确保开源版与 SaaS 版对删除、YANKED、同名冲突、package_name 等规则口径一致，避免 AstronClaw 接入后出现状态漂移。本文定义的是可由 SaaS 统一封装并对 AstronClaw 提供的 `Core` 规则基线，不表示 AstronClaw 直接对接这些开源接口。
+本檔案固化 SkillHub Core 的執行時語義規則，確保開源版與 SaaS 版對刪除、YANKED、同名衝突、package_name 等規則口徑一致，避免 AstronClaw 接入後出現狀態漂移。本文定義的是可由 SaaS 統一封裝並對 AstronClaw 提供的 `Core` 規則基線，不表示 AstronClaw 直接對接這些開源介面。
 
 ---
 
-## 2. 变更概要
+## 2. 變更概要
 
 ### 2.1 新增功能
 
-| 功能 | 说明 |
+| 功能 | 說明 |
 |------|------|
-| UPLOADED 状态 | 新增版本状态，表示"已上传，未提交审核" |
-| PRIVATE skill 自动发布 | PRIVATE skill 发布后进入 UPLOADED 状态，不自动进入审核 |
-| 提交审核接口 | 新增 `POST /{namespace}/{slug}/submit-review`，允许 UPLOADED 状态的版本提交审核 |
-| 撤回审核后进入 UPLOADED | 撤回审核后版本状态变为 UPLOADED，而不是 DRAFT |
+| UPLOADED 狀態 | 新增版本狀態，表示"已上傳，未提交稽核" |
+| PRIVATE skill 自動發布 | PRIVATE skill 發布後進入 UPLOADED 狀態，不自動進入稽核 |
+| 提交稽核介面 | 新增 `POST /{namespace}/{slug}/submit-review`，允許 UPLOADED 狀態的版本提交稽核 |
+| 撤回稽核後進入 UPLOADED | 撤回稽核後版本狀態變為 UPLOADED，而不是 DRAFT |
 
-### 2.2 状态机变更
+### 2.2 狀態機變更
 
-**变更前**：
+**變更前**：
 ```
 DRAFT → SCANNING → PENDING_REVIEW → PUBLISHED
                          ↓            ↓
                     REJECTED      YANKED
 ```
 
-**变更后**：
+**變更後**：
 ```
 DRAFT → SCANNING → UPLOADED → PENDING_REVIEW → PUBLISHED
          ↓              ↓           ↓            ↓
-    SCAN_FAILED    (可删除)     REJECTED      YANKED
+    SCAN_FAILED    (可刪除)     REJECTED      YANKED
          ↓                       ↓
-      (可删除)                (可删除)
+      (可刪除)                (可刪除)
 ```
 
-### 2.3 权限模型变更
+### 2.3 許可權模型變更
 
-**核心原则**：权限只和 status 相关，visibility 只影响状态流转。
+**核心原則**：許可權只和 status 相關，visibility 隻影響狀態流轉。
 
 ---
 
-## 3. 版本状态定义
+## 3. 版本狀態定義
 
-### 3.1 状态枚举
+### 3.1 狀態列舉
 
 ```java
 public enum SkillVersionStatus {
-    DRAFT,           // 草稿，编辑中
-    SCANNING,        // 安全扫描中
-    SCAN_FAILED,     // 扫描失败
-    UPLOADED,        // 已上传，未提交审核（新增）
-    PENDING_REVIEW,  // 等待审核
-    PUBLISHED,       // 已发布
-    REJECTED,        // 审核拒绝
+    DRAFT,           // 草稿，編輯中
+    SCANNING,        // 安全掃描中
+    SCAN_FAILED,     // 掃描失敗
+    UPLOADED,        // 已上傳，未提交稽核（新增）
+    PENDING_REVIEW,  // 等待稽核
+    PUBLISHED,       // 已發布
+    REJECTED,        // 稽核拒絕
     YANKED           // 已撤回
 }
 ```
 
-### 3.2 状态语义
+### 3.2 狀態語義
 
-| 状态 | 含义 | 文件状态 | 可下载 | 可编辑 | 有检测报告 |
+| 狀態 | 含義 | 檔案狀態 | 可下載 | 可編輯 | 有檢測報告 |
 |------|------|---------|-------|-------|----------|
-| DRAFT | 草稿，编辑中 | 可能不完整 | 否 | 是 | 否 |
-| SCANNING | 安全扫描中 | 完整 | 否 | 否 | 否 |
-| SCAN_FAILED | 扫描失败 | 完整 | 否 | 是 | 是（失败） |
-| UPLOADED | 已上传，扫描通过 | 完整 | owner | 否 | 是 |
-| PENDING_REVIEW | 审核中 | 完整 | owner | 否 | 是 |
-| PUBLISHED | 已发布 | 完整 | 看 visibility | 否 | 是 |
-| REJECTED | 审核拒绝 | 完整 | 否 | 是 | 是 |
+| DRAFT | 草稿，編輯中 | 可能不完整 | 否 | 是 | 否 |
+| SCANNING | 安全掃描中 | 完整 | 否 | 否 | 否 |
+| SCAN_FAILED | 掃描失敗 | 完整 | 否 | 是 | 是（失敗） |
+| UPLOADED | 已上傳，掃描透過 | 完整 | owner | 否 | 是 |
+| PENDING_REVIEW | 稽核中 | 完整 | owner | 否 | 是 |
+| PUBLISHED | 已發布 | 完整 | 看 visibility | 否 | 是 |
+| REJECTED | 稽核拒絕 | 完整 | 否 | 是 | 是 |
 | YANKED | 已撤回 | 完整 | 否 | 否 | 是 |
 
 ---
 
-## 4. 发布流程设计
+## 4. 發布流程設計
 
-### 4.1 发布路径
+### 4.1 發布路徑
 
-| visibility | 发布后初始状态 | 是否创建审核任务 |
+| visibility | 發布後初始狀態 | 是否建立稽核任務 |
 |------------|--------------|----------------|
 | PRIVATE | UPLOADED | 否 |
 | NAMESPACE_ONLY | PENDING_REVIEW | 是 |
 | PUBLIC | PENDING_REVIEW | 是 |
 
-### 4.2 PRIVATE skill 完整生命周期
+### 4.2 PRIVATE skill 完整生命週期
 
 ```
-用户发布 PRIVATE skill
+使用者發布 PRIVATE skill
     ↓
-状态：SCANNING（安全扫描中）
+狀態：SCANNING（安全掃描中）
     ↓
-扫描通过
+掃描透過
     ↓
-状态：UPLOADED
+狀態：UPLOADED
 visibility：PRIVATE
     ↓
-owner 可下载/安装/测试
-市场不可见
-管理员可见（用于审计）
-已有检测报告
+owner 可下載/安裝/測試
+市場不可見
+管理員可見（用於審計）
+已有檢測報告
     ↓
-owner 测试满意，确认发布（confirm-publish）
+owner 測試滿意，確認發布（confirm-publish）
     ↓
-状态：PUBLISHED
+狀態：PUBLISHED
 visibility：PRIVATE（正式私有版本）
     ↓
-owner 可下载/安装
-市场不可见
+owner 可下載/安裝
+市場不可見
     ↓
-用户想公开，提交审核
+使用者想公開，提交稽核
     ↓
-状态：PENDING_REVIEW
+狀態：PENDING_REVIEW
 requestedVisibility：PUBLIC
     ↓
-owner 仍可下载/测试
+owner 仍可下載/測試
     ↓
-审核通过
+稽核透過
     ↓
-状态：PUBLISHED
+狀態：PUBLISHED
 visibility：PUBLIC（不再是 PRIVATE）
     ↓
-市场可见，所有人可下载
+市場可見，所有人可下載
 ```
 
-### 4.3 PUBLIC/NAMESPACE_ONLY skill 生命周期
+### 4.3 PUBLIC/NAMESPACE_ONLY skill 生命週期
 
 ```
-用户发布 PUBLIC/NAMESPACE_ONLY skill
+使用者發布 PUBLIC/NAMESPACE_ONLY skill
     ↓
-状态：PENDING_REVIEW
+狀態：PENDING_REVIEW
     ↓
-owner 可下载/测试
+owner 可下載/測試
     ↓
-审核通过
+稽核透過
     ↓
-状态：PUBLISHED
+狀態：PUBLISHED
 visibility：PUBLIC 或 NAMESPACE_ONLY
     ↓
-市场可见（受 visibility 控制）
+市場可見（受 visibility 控制）
 ```
 
 ---
 
-## 5. 权限矩阵
+## 5. 許可權矩陣
 
-### 5.1 status 决定下载权限
+### 5.1 status 決定下載許可權
 
-| status | 市场可见 | 可下载 |
+| status | 市場可見 | 可下載 |
 |--------|---------|-------|
 | DRAFT | 否 | 否 |
 | SCANNING | 否 | 否 |
@@ -157,80 +157,80 @@ visibility：PUBLIC 或 NAMESPACE_ONLY
 | REJECTED | 否 | 否 |
 | YANKED | 否 | 否 |
 
-### 5.2 PUBLISHED 状态下，visibility 决定可见性
+### 5.2 PUBLISHED 狀態下，visibility 決定可見性
 
-| visibility | 市场可见 | 可下载 |
+| visibility | 市場可見 | 可下載 |
 |------------|---------|-------|
 | PUBLIC | 是 | 所有人 |
-| NAMESPACE_ONLY | 命名空间内 | 命名空间成员 |
+| NAMESPACE_ONLY | 名稱空間內 | 名稱空間成員 |
 | PRIVATE | 否 | owner |
 
-### 5.3 AstronClaw 安装判断规则
+### 5.3 AstronClaw 安裝判斷規則
 
 ```
-可安装 = 
+可安裝 = 
   skill.status == ACTIVE
   AND skill.hidden == false
-  AND 存在至少一个可下载版本
-  AND 该版本 bundleReady == true
+  AND 存在至少一個可下載版本
+  AND 該版本 bundleReady == true
 
-可下载版本判断：
-  - UPLOADED/PENDING_REVIEW：仅 owner
-  - PUBLISHED：按 visibility 规则
+可下載版本判斷：
+  - UPLOADED/PENDING_REVIEW：僅 owner
+  - PUBLISHED：按 visibility 規則
 ```
 
 ---
 
-## 6. 状态流转详细设计
+## 6. 狀態流轉詳細設計
 
-### 6.1 状态转换表
+### 6.1 狀態轉換表
 
-| 当前状态 | 操作 | 目标状态 | 说明 |
+| 當前狀態 | 操作 | 目標狀態 | 說明 |
 |---------|------|---------|------|
-| DRAFT | 上传包 | SCANNING | 开始安全扫描 |
-| SCANNING | 扫描通过 | UPLOADED 或 PENDING_REVIEW | 看 visibility |
-| SCANNING | 扫描失败 | SCAN_FAILED | - |
-| SCAN_FAILED | 重新上传 | SCANNING | - |
-| UPLOADED | 提交审核 | PENDING_REVIEW | 新增操作 |
-| UPLOADED | 确认发布 | PUBLISHED | PRIVATE skill 正式发布，不触发新扫描 |
-| UPLOADED | 重新上传 | SCANNING | 允许重新上传 |
-| UPLOADED | 删除 | (删除) | 允许删除，未正式发布 |
-| PENDING_REVIEW | 审核通过 | PUBLISHED | - |
-| PENDING_REVIEW | 审核拒绝 | REJECTED | - |
-| PENDING_REVIEW | 撤回审核 | UPLOADED | 变更：原为 DRAFT |
+| DRAFT | 上傳包 | SCANNING | 開始安全掃描 |
+| SCANNING | 掃描透過 | UPLOADED 或 PENDING_REVIEW | 看 visibility |
+| SCANNING | 掃描失敗 | SCAN_FAILED | - |
+| SCAN_FAILED | 重新上傳 | SCANNING | - |
+| UPLOADED | 提交稽核 | PENDING_REVIEW | 新增操作 |
+| UPLOADED | 確認發布 | PUBLISHED | PRIVATE skill 正式發布，不觸發新掃描 |
+| UPLOADED | 重新上傳 | SCANNING | 允許重新上傳 |
+| UPLOADED | 刪除 | (刪除) | 允許刪除，未正式發布 |
+| PENDING_REVIEW | 稽核透過 | PUBLISHED | - |
+| PENDING_REVIEW | 稽核拒絕 | REJECTED | - |
+| PENDING_REVIEW | 撤回稽核 | UPLOADED | 變更：原為 DRAFT |
 | PUBLISHED | Yank | YANKED | - |
-| REJECTED | 重新上传 | SCANNING | - |
+| REJECTED | 重新上傳 | SCANNING | - |
 
-### 6.2 状态机图
+### 6.2 狀態機圖
 
 ```
                     ┌─────────────────────────────────────────┐
-                    │              上传包                      │
+                    │              上傳包                      │
                     └─────────────────────────────────────────┘
                                       ↓
                               ┌───────────────┐
                               │   SCANNING    │
                               └───────────────┘
                                /            \
-                     扫描通过  /              \ 扫描失败
+                     掃描透過  /              \ 掃描失敗
                              /                \
                ┌────────────────────────┐  ┌───────────────┐
                │ visibility=PRIVATE     │  │ SCAN_FAILED   │
                │ → UPLOADED             │  └───────────────┘
                │ visibility=PUBLIC/     │         │
-               │   NAMESPACE_ONLY       │         │ 重新上传
+               │   NAMESPACE_ONLY       │         │ 重新上傳
                │ → PENDING_REVIEW       │         ↓
                └────────────────────────┘  ┌───────────────┐
                              │             │   SCANNING    │
                              ↓             └───────────────┘
                ┌────────────────────────┐
                │       UPLOADED         │◄────────────────────────┐
-               │  (PRIVATE skill 专属)   │                         │
-               │  已有检测报告           │                         │
+               │  (PRIVATE skill 專屬)   │                         │
+               │  已有檢測報告           │                         │
                └────────────────────────┘                         │
                     /           \                                 │
-        确认发布   /             \ 提交审核                        │
-   (不触发新扫描) /               \                               │
+        確認發布   /             \ 提交稽核                        │
+   (不觸發新掃描) /               \                               │
                 /                 \                              │
                ↓                   ↓                             │
     ┌───────────────────┐  ┌───────────────────┐                 │
@@ -238,39 +238,39 @@ visibility：PUBLIC 或 NAMESPACE_ONLY
     │ visibility=PRIVATE│  └───────────────────┘                 │
     └───────────────────┘           │                           │
               │                     │                           │
-              │ 提交审核             │ 审核通过                   │
+              │ 提交稽核             │ 稽核透過                   │
               ↓                     ↓                           │
     ┌───────────────────┐  ┌───────────────────┐                 │
     │  PENDING_REVIEW   │  │    PUBLISHED      │                 │
     └───────────────────┘  │ visibility=PUBLIC │                 │
               │            │ 或 NAMESPACE_ONLY │                 │
               │            └───────────────────┘                 │
-              │ 撤回审核              │                          │
+              │ 撤回稽核              │                          │
               └──────────────────────┘                          │
-                      (进入 UPLOADED)                            │
+                      (進入 UPLOADED)                            │
                                                                   │
     ┌───────────────────┐                                        │
     │     REJECTED      │────────────────────────────────────────┘
-    └───────────────────┘              重新上传
+    └───────────────────┘              重新上傳
               │
-              │ 删除
+              │ 刪除
               ↓
-           (删除)
+           (刪除)
 ```
 
 ---
 
-## 7. 新增接口设计
+## 7. 新增介面設計
 
-说明：
+說明：
 
-以下接口属于开源 `Core` 为 SaaS 提供的基础状态机能力。对 `AstronClaw` 而言，后续仍应统一通过 `SkillHub SaaS` 的 `AstronClaw Adapter` 消费这些能力，而不是直接绑定这些开源接口路径。
+以下介面屬於開源 `Core` 為 SaaS 提供的基礎狀態機能力。對 `AstronClaw` 而言，後續仍應統一透過 `SkillHub SaaS` 的 `AstronClaw Adapter` 消費這些能力，而不是直接繫結這些開源介面路徑。
 
-### 7.1 提交审核接口
+### 7.1 提交稽核介面
 
-**接口**：`POST /api/v1/skills/{namespace}/{slug}/submit-review`
+**介面**：`POST /api/v1/skills/{namespace}/{slug}/submit-review`
 
-**请求参数**：
+**請求引數**：
 ```json
 {
   "version": "1.0.0",
@@ -278,16 +278,16 @@ visibility：PUBLIC 或 NAMESPACE_ONLY
 }
 ```
 
-**前置条件**：
-- 版本状态为 UPLOADED
-- 操作者为 skill owner 或 namespace ADMIN/OWNER
+**前置條件**：
+- 版本狀態為 UPLOADED
+- 操作者為 skill owner 或 namespace ADMIN/OWNER
 
-**执行效果**：
-- 版本状态 → PENDING_REVIEW
-- `requestedVisibility` 设为目标可见性
-- 创建审核任务
+**執行效果**：
+- 版本狀態 → PENDING_REVIEW
+- `requestedVisibility` 設為目標可見性
+- 建立稽核任務
 
-**响应**：
+**響應**：
 ```json
 {
   "code": 0,
@@ -299,29 +299,29 @@ visibility：PUBLIC 或 NAMESPACE_ONLY
 }
 ```
 
-### 7.2 确认发布接口（PRIVATE skill）
+### 7.2 確認發布介面（PRIVATE skill）
 
-**接口**：`POST /api/v1/skills/{namespace}/{slug}/confirm-publish`
+**介面**：`POST /api/v1/skills/{namespace}/{slug}/confirm-publish`
 
-**请求参数**：
+**請求引數**：
 ```json
 {
   "version": "1.0.0"
 }
 ```
 
-**前置条件**：
-- 版本状态为 UPLOADED
+**前置條件**：
+- 版本狀態為 UPLOADED
 - skill.visibility = PRIVATE
-- 操作者为 skill owner
+- 操作者為 skill owner
 
-**执行效果**：
-- 版本状态 → PUBLISHED
+**執行效果**：
+- 版本狀態 → PUBLISHED
 - visibility 保持 PRIVATE
-- **不触发新的扫描**，复用 UPLOADED 时的扫描结果
-- 未来可扩展：加入"发布扫描"功能
+- **不觸發新的掃描**，複用 UPLOADED 時的掃描結果
+- 未來可擴充套件：加入"發布掃描"功能
 
-**响应**：
+**響應**：
 ```json
 {
   "code": 0,
@@ -336,118 +336,118 @@ visibility：PUBLIC 或 NAMESPACE_ONLY
 
 ---
 
-## 8. 删除 / 隐藏 / 归档 / YANKED 语义规则
+## 8. 刪除 / 隱藏 / 歸檔 / YANKED 語義規則
 
-### 8.1 操作语义总表
+### 8.1 操作語義總表
 
-| 操作 | 触发方式 | 可逆 | 市场可见 | 可新装 | 已装保留 | 可卸载 | slug 可复用 |
+| 操作 | 觸發方式 | 可逆 | 市場可見 | 可新裝 | 已裝保留 | 可解除安裝 | slug 可複用 |
 |------|---------|------|---------|-------|---------|-------|-----------|
-| **硬删除 skill** | owner 或 SUPER_ADMIN | 否 | 否 | 否 | 是 | 是 | 是 |
-| **归档 skill** | owner / namespace admin | 是 | 否 | 否 | 是 | 是 | 否 |
-| **隐藏 skill** | 管理员 | 是 | 否 | 否 | 是 | 是 | 否 |
+| **硬刪除 skill** | owner 或 SUPER_ADMIN | 否 | 否 | 否 | 是 | 是 | 是 |
+| **歸檔 skill** | owner / namespace admin | 是 | 否 | 否 | 是 | 是 | 否 |
+| **隱藏 skill** | 管理員 | 是 | 否 | 否 | 是 | 是 | 否 |
 | **Yank 版本** | owner / namespace admin | 否 | 否 | 否 | 是 | 是 | N/A |
 
 ### 8.2 Yank 版本
 
-**定义**：YANK 是"撤回已发布版本"的操作，用于将一个已发布的版本从可用状态移除。
+**定義**：YANK 是"撤回已發布版本"的操作，用於將一個已發布的版本從可用狀態移除。
 
-**触发条件**：
-- owner 或 namespace ADMIN/OWNER 对 PUBLISHED 状态的版本执行 yank
+**觸發條件**：
+- owner 或 namespace ADMIN/OWNER 對 PUBLISHED 狀態的版本執行 yank
 
-**执行效果**：
-- `version.status` → `YANKED`（不可逆，无 un-yank 操作）
+**執行效果**：
+- `version.status` → `YANKED`（不可逆，無 un-yank 操作）
 - `version.downloadReady` → `false`
-- 记录 `yankedAt`、`yankedBy`、`yankReason`
-- 如果该版本是 `skill.latestVersionId` 指向的版本：
-  - 自动回退到上一个 PUBLISHED 版本
-  - 如果没有其他 PUBLISHED 版本，`latestVersionId` → `null`
+- 記錄 `yankedAt`、`yankedBy`、`yankReason`
+- 如果該版本是 `skill.latestVersionId` 指向的版本：
+  - 自動回退到上一個 PUBLISHED 版本
+  - 如果沒有其他 PUBLISHED 版本，`latestVersionId` → `null`
 
-**对 AstronClaw 的影响**：
-- 已安装实例不受影响
-- 无法新装该版本
-- 升级场景：目标版本被 yank → 升级失败
+**對 AstronClaw 的影響**：
+- 已安裝例項不受影響
+- 無法新裝該版本
+- 升級場景：目標版本被 yank → 升級失敗
 
-对接原则：
-- 上述语义应由 SaaS Adapter 原样继承并稳定对外提供
-- AstronClaw 通过 Adapter 感知这些状态，不直接绑定开源返回形态
+對接原則：
+- 上述語義應由 SaaS Adapter 原樣繼承並穩定對外提供
+- AstronClaw 透過 Adapter 感知這些狀態，不直接繫結開源返回形態
 
-**补救方式**：
+**補救方式**：
 - 不能 un-yank
-- 只能发布新版本（rerelease 或重新上传）
+- 只能發布新版本（rerelease 或重新上傳）
 
 ---
 
-## 9. 同名冲突规则
+## 9. 同名衝突規則
 
-### 9.1 唯一性约束
+### 9.1 唯一性約束
 
-数据库约束：`UNIQUE(namespace_id, slug, owner_id)`
+資料庫約束：`UNIQUE(namespace_id, slug, owner_id)`
 
-含义：
+含義：
 - 同一 namespace 下，不同 owner 可以有相同 slug
-- 同一 namespace 下，同一 owner 只能有一个相同 slug 的 skill
+- 同一 namespace 下，同一 owner 只能有一個相同 slug 的 skill
 
-### 9.2 冲突规则设计原则
+### 9.2 衝突規則設計原則
 
-**核心原则**：只有 PUBLISHED 状态才会阻塞同名发布，但区分 visibility。
+**核心原則**：只有 PUBLISHED 狀態才會阻塞同名發布，但區分 visibility。
 
-| 对方状态 | 我发布同名 PRIVATE | 我发布同名 PUBLIC | 说明 |
+| 對方狀態 | 我發布同名 PRIVATE | 我發布同名 PUBLIC | 說明 |
 |---------|-------------------|------------------|------|
-| UPLOADED | ✅ 允许 | ✅ 允许 | 多个 UPLOADED 可共存 |
-| PENDING_REVIEW | ✅ 允许 | ✅ 允许 | 还未正式发布 |
-| PRIVATE + PUBLISHED | ❌ 拒绝 | ❌ 拒绝 | 只允许一个正式私有版本 |
-| PUBLIC + PUBLISHED | ❌ 拒绝 | ❌ 拒绝 | 市场已占用 |
+| UPLOADED | ✅ 允許 | ✅ 允許 | 多個 UPLOADED 可共存 |
+| PENDING_REVIEW | ✅ 允許 | ✅ 允許 | 還未正式發布 |
+| PRIVATE + PUBLISHED | ❌ 拒絕 | ❌ 拒絕 | 只允許一個正式私有版本 |
+| PUBLIC + PUBLISHED | ❌ 拒絕 | ❌ 拒絕 | 市場已佔用 |
 
-### 9.3 冲突规则表（详细）
+### 9.3 衝突規則表（詳細）
 
-| 场景 | 是否允许 | 说明 |
+| 場景 | 是否允許 | 說明 |
 |------|---------|------|
-| 同 namespace，同 slug，同 owner | 允许（复用） | 新版本挂到已有 skill 下 |
-| 同 namespace，同 slug，不同 owner，对方只有 UPLOADED | 允许 | 多个 UPLOADED 可共存测试 |
-| 同 namespace，同 slug，不同 owner，对方只有 PENDING_REVIEW | 允许 | 还未正式发布 |
-| 同 namespace，同 slug，不同 owner，对方有 PRIVATE + PUBLISHED | 拒绝 | 只允许一个正式私有版本 |
-| 同 namespace，同 slug，不同 owner，对方有 PUBLIC/NAMESPACE_ONLY + PUBLISHED | 拒绝 | 市场已占用 |
-| 不同 namespace，同 slug | 允许 | namespace 隔离 |
+| 同 namespace，同 slug，同 owner | 允許（複用） | 新版本掛到已有 skill 下 |
+| 同 namespace，同 slug，不同 owner，對方只有 UPLOADED | 允許 | 多個 UPLOADED 可共存測試 |
+| 同 namespace，同 slug，不同 owner，對方只有 PENDING_REVIEW | 允許 | 還未正式發布 |
+| 同 namespace，同 slug，不同 owner，對方有 PRIVATE + PUBLISHED | 拒絕 | 只允許一個正式私有版本 |
+| 同 namespace，同 slug，不同 owner，對方有 PUBLIC/NAMESPACE_ONLY + PUBLISHED | 拒絕 | 市場已佔用 |
+| 不同 namespace，同 slug | 允許 | namespace 隔離 |
 
 ### 9.4 完整流程示例
 
 ```
-用户 A 发布 PRIVATE `ns/my-skill`
+使用者 A 發布 PRIVATE `ns/my-skill`
     ↓
-状态：UPLOADED
+狀態：UPLOADED
     ↓
-用户 B 发布 PRIVATE `ns/my-skill`
+使用者 B 發布 PRIVATE `ns/my-skill`
     ↓
-状态：UPLOADED ✅ 允许（多个 UPLOADED 可共存）
+狀態：UPLOADED ✅ 允許（多個 UPLOADED 可共存）
     ↓
-用户 A 确认发布 → PRIVATE + PUBLISHED ✅ 允许
+使用者 A 確認發布 → PRIVATE + PUBLISHED ✅ 允許
     ↓
-用户 B 确认发布 → ❌ 被拒绝
+使用者 B 確認發布 → ❌ 被拒絕
     ↓
-错误信息：error.skill.publish.nameConflict.private
+錯誤資訊：error.skill.publish.nameConflict.private
     ↓
-用户 B 可以：
-  1. 改名发布
-  2. 等用户 A 删除/归档后再发布
-  3. 提交审核变成 PUBLIC（如果 A 是 PRIVATE）
+使用者 B 可以：
+  1. 改名發布
+  2. 等使用者 A 刪除/歸檔後再發布
+  3. 提交稽核變成 PUBLIC（如果 A 是 PRIVATE）
 ```
 
-### 9.5 代码改动
+### 9.5 程式碼改動
 
-**文件**：`SkillPublishService.java`
+**檔案**：`SkillPublishService.java`
 
 ```java
-// 冲突检查逻辑（第 230-242 行）
+// 衝突檢查邏輯（第 230-242 行）
 for (Skill existing : existingSkills) {
     if (!existing.getOwnerId().equals(publisherId)) {
-        // 检查是否有 PUBLISHED 版本
+        // 檢查是否有 PUBLISHED 版本
         boolean hasPublished = !skillVersionRepository
                 .findBySkillIdAndStatus(existing.getId(), SkillVersionStatus.PUBLISHED)
                 .isEmpty();
         
         if (hasPublished) {
-            // PUBLISHED 版本存在，无论 visibility 如何都拒绝
-            // 因为只允许一个 PRIVATE + PUBLISHED 或 PUBLIC + PUBLISHED
+            // PUBLISHED 版本存在，無論 visibility 如何都拒絕
+            // 因為只允許一個 PRIVATE + PUBLISHED 或 PUBLIC + PUBLISHED
             if (existing.getVisibility() == SkillVisibility.PRIVATE) {
                 throw new DomainBadRequestException("error.skill.publish.nameConflict.private", skillSlug);
             } else {
@@ -458,49 +458,49 @@ for (Skill existing : existingSkills) {
 }
 ```
 
-### 9.6 错误信息
+### 9.6 錯誤資訊
 
-| 错误码 | 说明 |
+| 錯誤碼 | 說明 |
 |-------|------|
-| `error.skill.publish.nameConflict` | 已有同名 PUBLIC/NAMESPACE_ONLY skill 发布 |
-| `error.skill.publish.nameConflict.private` | 已有同名 PRIVATE skill 正式发布 |
+| `error.skill.publish.nameConflict` | 已有同名 PUBLIC/NAMESPACE_ONLY skill 發布 |
+| `error.skill.publish.nameConflict.private` | 已有同名 PRIVATE skill 正式發布 |
 
 ---
 
-## 10. package_name / runtime 规则
+## 10. package_name / runtime 規則
 
-### 10.1 当前实现
+### 10.1 當前實現
 
-- `package_name` 不是 Core 的结构化字段
-- 存储在 `skill_version.parsedMetadataJson` JSONB 字段中
-- 由 skill 作者在 SKILL.md frontmatter 中定义
+- `package_name` 不是 Core 的結構化欄位
+- 儲存在 `skill_version.parsedMetadataJson` JSONB 欄位中
+- 由 skill 作者在 SKILL.md frontmatter 中定義
 
-### 10.2 SaaS Adapter 职责
+### 10.2 SaaS Adapter 職責
 
-- 从 `parsedMetadataJson` 中提取 `package_name`
-- 作为顶层字段返回给 AstronClaw
-- 可选：检查跨 skill 的 package_name 唯一性
-- 统一封装 `submit-review`、`confirm-publish`、删除、查询等 Core 能力，对 AstronClaw 暴露稳定接口
+- 從 `parsedMetadataJson` 中提取 `package_name`
+- 作為頂層欄位返回給 AstronClaw
+- 可選：檢查跨 skill 的 package_name 唯一性
+- 統一封裝 `submit-review`、`confirm-publish`、刪除、查詢等 Core 能力，對 AstronClaw 暴露穩定介面
 
-### 10.3 规则建议
+### 10.3 規則建議
 
-| 规则 | 建议 |
+| 規則 | 建議 |
 |------|------|
-| 格式 | 建议使用 `namespace__slug` 格式，避免冲突 |
-| 跨版本稳定性 | 同一 skill 跨版本应保持 package_name 一致 |
-| 唯一性 | SaaS Adapter 可检查并警告冲突，但不强制阻止 |
+| 格式 | 建議使用 `namespace__slug` 格式，避免衝突 |
+| 跨版本穩定性 | 同一 skill 跨版本應保持 package_name 一致 |
+| 唯一性 | SaaS Adapter 可檢查並警告衝突，但不強制阻止 |
 
 ---
 
-## 11. 代码改动清单
+## 11. 程式碼改動清單
 
-说明：
+說明：
 
-以下改动属于开源 `Core` 的规则实现，用于给 SaaS 封装层提供稳定能力基线；不等同于直接向 AstronClaw 暴露这些开源接口。
+以下改動屬於開源 `Core` 的規則實現，用於給 SaaS 封裝層提供穩定能力基線；不等同於直接向 AstronClaw 暴露這些開源介面。
 
-### 11.1 枚举新增
+### 11.1 列舉新增
 
-**文件**：`SkillVersionStatus.java`
+**檔案**：`SkillVersionStatus.java`
 
 ```java
 public enum SkillVersionStatus {
@@ -515,121 +515,121 @@ public enum SkillVersionStatus {
 }
 ```
 
-### 11.2 发布逻辑改动
+### 11.2 發布邏輯改動
 
-**文件**：`SkillPublishService.java`
+**檔案**：`SkillPublishService.java`
 
 ```java
-// 第 279-285 行，改为
+// 第 279-285 行，改為
 if (visibility == SkillVisibility.PRIVATE) {
     version.setStatus(SkillVersionStatus.UPLOADED);
     version.setPublishedAt(currentTime());
-    // 不创建审核任务
+    // 不建立稽核任務
 } else if (autoPublish) {
     version.setStatus(SkillVersionStatus.PUBLISHED);
     version.setPublishedAt(currentTime());
 } else {
     version.setStatus(SkillVersionStatus.PENDING_REVIEW);
-    // 创建审核任务
+    // 建立稽核任務
 }
 ```
 
-### 11.3 撤回审核改动
+### 11.3 撤回稽核改動
 
-**文件**：`SkillGovernanceService.java`
+**檔案**：`SkillGovernanceService.java`
 
 ```java
-// withdrawPendingVersion 方法，改为
-skillVersion.setStatus(SkillVersionStatus.UPLOADED);  // 原为 DRAFT
+// withdrawPendingVersion 方法，改為
+skillVersion.setStatus(SkillVersionStatus.UPLOADED);  // 原為 DRAFT
 ```
 
-### 11.4 下载权限改动
+### 11.4 下載許可權改動
 
-**文件**：`SkillDownloadService.java`、`SkillQueryService.java`
+**檔案**：`SkillDownloadService.java`、`SkillQueryService.java`
 
 ```java
-// UPLOADED 和 PENDING_REVIEW 状态允许 owner 下载
+// UPLOADED 和 PENDING_REVIEW 狀態允許 owner 下載
 private boolean canDownload(SkillVersion version, Skill skill, String currentUserId) {
     return switch (version.getStatus()) {
         case UPLOADED, PENDING_REVIEW -> skill.getOwnerId().equals(currentUserId);
-        case PUBLISHED -> true;  // 按 visibility 判断
+        case PUBLISHED -> true;  // 按 visibility 判斷
         default -> false;
     };
 }
 ```
 
-### 11.5 新增服务
+### 11.5 新增服務
 
-**文件**：`SkillReviewSubmitService.java`（新增）
+**檔案**：`SkillReviewSubmitService.java`（新增）
 
-- 实现 UPLOADED 版本提交审核逻辑
+- 實現 UPLOADED 版本提交稽核邏輯
 
 ### 11.6 新增控制器
 
-**文件**：`SkillReviewSubmitController.java`（新增）
+**檔案**：`SkillReviewSubmitController.java`（新增）
 
-- 暴露 `POST /{namespace}/{slug}/submit-review` 接口
-- 暴露 `POST /{namespace}/{slug}/confirm-publish` 接口
+- 暴露 `POST /{namespace}/{slug}/submit-review` 介面
+- 暴露 `POST /{namespace}/{slug}/confirm-publish` 介面
 
-### 11.7 管理员可见性
+### 11.7 管理員可見性
 
-**文件**：`VisibilityChecker.java`
+**檔案**：`VisibilityChecker.java`
 
-- SUPER_ADMIN 可以看到所有 skill，包括 UPLOADED 状态
+- SUPER_ADMIN 可以看到所有 skill，包括 UPLOADED 狀態
 
-### 11.8 数据库迁移
+### 11.8 資料庫遷移
 
-**文件**：新增迁移脚本
+**檔案**：新增遷移指令碼
 
-- 更新 `skill_version_status` 枚举类型，添加 UPLOADED 值
+- 更新 `skill_version_status` 列舉型別，新增 UPLOADED 值
 
 ---
 
-## 12. 阻塞上线条件
+## 12. 阻塞上線條件
 
-| 问题 | 严重程度 | 状态 |
+| 問題 | 嚴重程度 | 狀態 |
 |------|---------|------|
-| 新增 UPLOADED 状态 | 高 | 已完成 |
-| PRIVATE skill 发布逻辑改动 | 高 | 已完成 |
-| 提交审核接口 | 高 | 已完成 |
-| 撤回审核后进入 UPLOADED | 中 | 已完成 |
-| 同名冲突检查补全 | 中 | 已完成 |
-| 管理员可见 UPLOADED skill | 低 | 已完成 |
-| package_name 唯一性检查 | 低 | 可选（SaaS Adapter 职责） |
+| 新增 UPLOADED 狀態 | 高 | 已完成 |
+| PRIVATE skill 發布邏輯改動 | 高 | 已完成 |
+| 提交稽核介面 | 高 | 已完成 |
+| 撤回稽核後進入 UPLOADED | 中 | 已完成 |
+| 同名衝突檢查補全 | 中 | 已完成 |
+| 管理員可見 UPLOADED skill | 低 | 已完成 |
+| package_name 唯一性檢查 | 低 | 可選（SaaS Adapter 職責） |
 
 ---
 
-## 13. 对老版本的影响
+## 13. 對老版本的影響
 
-### 13.1 数据兼容性
+### 13.1 資料相容性
 
-| 影响点 | 分析 | 需要处理 |
+| 影響點 | 分析 | 需要處理 |
 |--------|------|---------|
-| 老版本数据 | 不受影响，状态不变 | 否 |
-| 数据库枚举 | 需添加 UPLOADED 值 | 是 |
-| API 兼容性 | 新接口是新增，不影响老接口 | 否 |
+| 老版本資料 | 不受影響，狀態不變 | 否 |
+| 資料庫列舉 | 需新增 UPLOADED 值 | 是 |
+| API 相容性 | 新介面是新增，不影響老介面 | 否 |
 
-### 13.2 状态流转影响
+### 13.2 狀態流轉影響
 
-| 场景 | 老逻辑 | 新逻辑 | 影响 |
+| 場景 | 老邏輯 | 新邏輯 | 影響 |
 |------|--------|--------|------|
-| 老版本撤回审核 | PENDING_REVIEW → DRAFT | PENDING_REVIEW → UPLOADED | 前端需适配新状态 |
-| 老版本删除 | DRAFT/REJECTED/SCAN_FAILED 可删 | UPLOADED 也可删 | 需更新代码判断 |
+| 老版本撤回稽核 | PENDING_REVIEW → DRAFT | PENDING_REVIEW → UPLOADED | 前端需適配新狀態 |
+| 老版本刪除 | DRAFT/REJECTED/SCAN_FAILED 可刪 | UPLOADED 也可刪 | 需更新程式碼判斷 |
 
-### 13.3 代码改动点
+### 13.3 程式碼改動點
 
-**文件**：`SkillGovernanceService.java`
+**檔案**：`SkillGovernanceService.java`
 
-**1. 删除版本逻辑**（第163-166行）：
+**1. 刪除版本邏輯**（第163-166行）：
 ```java
-// 原代码
+// 原始碼
 if (version.getStatus() != SkillVersionStatus.DRAFT
         && version.getStatus() != SkillVersionStatus.REJECTED
         && version.getStatus() != SkillVersionStatus.SCAN_FAILED) {
     throw new DomainBadRequestException("error.skill.version.delete.unsupported", version.getVersion());
 }
 
-// 改为：允许删除 UPLOADED 状态
+// 改為：允許刪除 UPLOADED 狀態
 if (version.getStatus() != SkillVersionStatus.DRAFT
         && version.getStatus() != SkillVersionStatus.REJECTED
         && version.getStatus() != SkillVersionStatus.SCAN_FAILED
@@ -638,26 +638,26 @@ if (version.getStatus() != SkillVersionStatus.DRAFT
 }
 ```
 
-**2. 撤回审核逻辑**（第245行）：
+**2. 撤回稽核邏輯**（第245行）：
 ```java
-// 原代码
+// 原始碼
 version.setStatus(SkillVersionStatus.DRAFT);
 
-// 改为
+// 改為
 version.setStatus(SkillVersionStatus.UPLOADED);
 ```
 
-### 13.4 前端适配
+### 13.4 前端適配
 
-| 状态 | 前端展示建议 |
+| 狀態 | 前端展示建議 |
 |------|-------------|
-| UPLOADED | "已上传" 或 "待确认" |
-| 可删除状态 | DRAFT、SCAN_FAILED、REJECTED、UPLOADED |
-| 可编辑状态 | DRAFT、SCAN_FAILED、REJECTED |
+| UPLOADED | "已上傳" 或 "待確認" |
+| 可刪除狀態 | DRAFT、SCAN_FAILED、REJECTED、UPLOADED |
+| 可編輯狀態 | DRAFT、SCAN_FAILED、REJECTED |
 
-### 13.5 迁移策略
+### 13.5 遷移策略
 
-1. **数据库迁移**：添加 UPLOADED 枚举值
-2. **代码部署**：先部署后端，再部署前端
-3. **老数据处理**：无需处理，老版本状态保持不变
-4. **回滚方案**：如需回滚，UPLOADED 状态的版本按 DRAFT 处理
+1. **資料庫遷移**：新增 UPLOADED 列舉值
+2. **程式碼部署**：先部署後端，再部署前端
+3. **老資料處理**：無需處理，老版本狀態保持不變
+4. **回滾方案**：如需回滾，UPLOADED 狀態的版本按 DRAFT 處理

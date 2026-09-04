@@ -1,24 +1,24 @@
-# Scanner 系统改进建议
+# Scanner 系統改進建議
 
 ## 概述
 
-本文档记录 Scanner 系统的改进建议，用于提升系统的可靠性、可观测性和容错能力。
+本檔案記錄 Scanner 系統的改進建議，用於提升系統的可靠性、可觀測性和容錯能力。
 
-**注意**：这些建议目前暂不实施，仅作为未来优化的参考。
+**注意**：這些建議目前暫不實施，僅作為未來最佳化的參考。
 
-## 改进优先级
+## 改進優先順序
 
-### 🔴 P0 - 高优先级（防止数据不一致）
+### 🔴 P0 - 高優先順序（防止資料不一致）
 
-#### 1. 添加超时监控，防止版本卡死
+#### 1. 新增超時監控，防止版本卡死
 
-**问题**：版本可能永久停留在 `SCANNING` 状态
+**問題**：版本可能永久停留在 `SCANNING` 狀態
 
-**解决方案**：
+**解決方案**：
 
 ```java
-// 添加定时任务，自动处理卡死的扫描任务
-@Scheduled(fixedRate = 300000) // 每 5 分钟执行一次
+// 新增定時任務，自動處理卡死的掃描任務
+@Scheduled(fixedRate = 300000) // 每 5 分鐘執行一次
 public void checkStuckScans() {
     List<SkillVersion> stuckVersions = skillVersionRepository
         .findByStatusAndUpdatedAtBefore(
@@ -31,7 +31,7 @@ public void checkStuckScans() {
         version.setStatus(SkillVersionStatus.SCAN_FAILED);
         skillVersionRepository.save(version);
 
-        // 创建人工审核任务
+        // 建立人工稽核任務
         skillRepository.findById(version.getSkillId())
             .ifPresent(skill -> reviewTaskRepository.save(
                 new ReviewTask(version.getId(), skill.getNamespaceId(), version.getCreatedBy())
@@ -40,31 +40,31 @@ public void checkStuckScans() {
 }
 ```
 
-**配置项**：
+**配置項**：
 
 ```yaml
 skillhub:
   security:
     scanner:
-      stuck-scan-timeout-minutes: 10  # 超过 10 分钟自动标记失败
+      stuck-scan-timeout-minutes: 10  # 超過 10 分鐘自動標記失敗
 ```
 
-**预期效果**：
+**預期效果**：
 - 防止版本永久卡死
-- 自动降级到人工审核
-- 提升用户体验
+- 自動降級到人工稽核
+- 提升使用者體驗
 
 ---
 
-### 🟡 P1 - 中优先级（防止服务雪崩）
+### 🟡 P1 - 中優先順序（防止服務雪崩）
 
-#### 2. 添加熔断器，防止雪崩
+#### 2. 新增熔斷器，防止雪崩
 
-**问题**：Scanner 持续故障时，大量重试请求可能导致雪崩
+**問題**：Scanner 持續故障時，大量重試請求可能導致雪崩
 
-**解决方案**：
+**解決方案**：
 
-使用 Resilience4j 实现熔断器：
+使用 Resilience4j 實現熔斷器：
 
 ```xml
 <!-- pom.xml -->
@@ -79,7 +79,7 @@ skillhub:
 // SkillScannerService.java
 @CircuitBreaker(name = "scanner", fallbackMethod = "scanFallback")
 public SecurityScanResponse scan(SecurityScanRequest request) {
-    // 原有的扫描逻辑
+    // 原有的掃描邏輯
     return httpClient.post(scanUrl, request);
 }
 
@@ -89,32 +89,32 @@ private SecurityScanResponse scanFallback(SecurityScanRequest request, Exception
 }
 ```
 
-**配置项**：
+**配置項**：
 
 ```yaml
 resilience4j:
   circuitbreaker:
     instances:
       scanner:
-        failure-rate-threshold: 50  # 失败率超过 50% 触发熔断
-        wait-duration-in-open-state: 60s  # 熔断后等待 1 分钟
-        sliding-window-size: 10  # 滑动窗口大小
-        minimum-number-of-calls: 5  # 最小调用次数
-        permitted-number-of-calls-in-half-open-state: 3  # 半开状态允许的调用次数
+        failure-rate-threshold: 50  # 失敗率超過 50% 觸發熔斷
+        wait-duration-in-open-state: 60s  # 熔斷後等待 1 分鐘
+        sliding-window-size: 10  # 滑動視窗大小
+        minimum-number-of-calls: 5  # 最小呼叫次數
+        permitted-number-of-calls-in-half-open-state: 3  # 半開狀態允許的呼叫次數
 ```
 
-**预期效果**：
-- 快速失败，避免长时间等待
-- 保护 Scanner 服务不被打垮
-- 自动恢复机制
+**預期效果**：
+- 快速失敗，避免長時間等待
+- 保護 Scanner 服務不被打垮
+- 自動恢復機制
 
 ---
 
-#### 3. 添加重试策略优化
+#### 3. 新增重試策略最佳化
 
-**问题**：当前重试机制可能导致请求风暴
+**問題**：當前重試機制可能導致請求風暴
 
-**解决方案**：
+**解決方案**：
 
 ```java
 @Retry(name = "scanner", fallbackMethod = "scanFallback")
@@ -124,35 +124,35 @@ public SecurityScanResponse scan(SecurityScanRequest request) {
 }
 ```
 
-**配置项**：
+**配置項**：
 
 ```yaml
 resilience4j:
   retry:
     instances:
       scanner:
-        max-attempts: 3  # 最多重试 3 次
-        wait-duration: 5s  # 重试间隔 5 秒
-        exponential-backoff-multiplier: 2  # 指数退避倍数
+        max-attempts: 3  # 最多重試 3 次
+        wait-duration: 5s  # 重試間隔 5 秒
+        exponential-backoff-multiplier: 2  # 指數退避倍數
         retry-exceptions:
           - java.net.ConnectException
           - java.net.SocketTimeoutException
 ```
 
-**预期效果**：
-- 指数退避，避免请求风暴
-- 只对特定异常重试
-- 更智能的重试策略
+**預期效果**：
+- 指數退避，避免請求風暴
+- 只對特定異常重試
+- 更智慧的重試策略
 
 ---
 
-### 🟢 P2 - 低优先级（提升可观测性）
+### 🟢 P2 - 低優先順序（提升可觀測性）
 
-#### 4. 添加健康检查端点
+#### 4. 新增健康檢查端點
 
-**问题**：无法快速判断 Scanner 服务是否可用
+**問題**：無法快速判斷 Scanner 服務是否可用
 
-**解决方案**：
+**解決方案**：
 
 ```java
 @RestController
@@ -196,21 +196,21 @@ public boolean isHealthy() {
 }
 ```
 
-**预期效果**：
-- 快速判断 Scanner 服务状态
-- 集成到监控系统
-- 支持自动化健康检查
+**預期效果**：
+- 快速判斷 Scanner 服務狀態
+- 整合到監控系統
+- 支援自動化健康檢查
 
 ---
 
-#### 5. 添加详细的指标和日志
+#### 5. 新增詳細的指標和日誌
 
-**问题**：缺少详细的监控指标
+**問題**：缺少詳細的監控指標
 
-**解决方案**：
+**解決方案**：
 
 ```java
-// 添加 Micrometer 指标
+// 新增 Micrometer 指標
 @Component
 public class ScannerMetrics {
 
@@ -246,21 +246,21 @@ public class ScannerMetrics {
 }
 ```
 
-**预期效果**：
-- 详细的性能指标
-- 支持 Prometheus 监控
-- 便于问题排查
+**預期效果**：
+- 詳細的效能指標
+- 支援 Prometheus 監控
+- 便於問題排查
 
 ---
 
-#### 6. 添加临时文件清理任务
+#### 6. 新增臨時檔案清理任務
 
-**问题**：临时文件可能泄漏
+**問題**：臨時檔案可能洩漏
 
-**解决方案**：
+**解決方案**：
 
 ```java
-@Scheduled(cron = "0 0 2 * * ?") // 每天凌晨 2 点执行
+@Scheduled(cron = "0 0 2 * * ?") // 每天凌晨 2 點執行
 public void cleanupOrphanedTempFiles() {
     Path tempDir = Paths.get("/tmp/skillhub-scans");
     if (!Files.exists(tempDir)) {
@@ -292,7 +292,7 @@ public void cleanupOrphanedTempFiles() {
 }
 ```
 
-**配置项**：
+**配置項**：
 
 ```yaml
 skillhub:
@@ -300,94 +300,94 @@ skillhub:
     scanner:
       temp-file-cleanup:
         enabled: true
-        cron: "0 0 2 * * ?"  # 每天凌晨 2 点
-        retention-hours: 1  # 保留 1 小时内的文件
+        cron: "0 0 2 * * ?"  # 每天凌晨 2 點
+        retention-hours: 1  # 保留 1 小時內的檔案
 ```
 
-**预期效果**：
-- 自动清理孤儿文件
-- 防止磁盘空间耗尽
-- 定期维护
+**預期效果**：
+- 自動清理孤兒檔案
+- 防止磁碟空間耗盡
+- 定期維護
 
 ---
 
-## 实施建议
+## 實施建議
 
-### 阶段 1：紧急修复（1-2 天）
+### 階段 1：緊急修復（1-2 天）
 
-1. 实施超时监控（P0）
-2. 添加基本的健康检查端点（P2）
+1. 實施超時監控（P0）
+2. 新增基本的健康檢查端點（P2）
 
-### 阶段 2：稳定性提升（1 周）
+### 階段 2：穩定性提升（1 周）
 
-1. 实施熔断器（P1）
-2. 优化重试策略（P1）
-3. 添加详细的指标和日志（P2）
+1. 實施熔斷器（P1）
+2. 最佳化重試策略（P1）
+3. 新增詳細的指標和日誌（P2）
 
-### 阶段 3：运维优化（2 周）
+### 階段 3：運維最佳化（2 周）
 
-1. 添加临时文件清理任务（P2）
-2. 完善监控告警规则
-3. 编写运维手册
+1. 新增臨時檔案清理任務（P2）
+2. 完善監控告警規則
+3. 編寫運維手冊
 
 ---
 
-## 技术依赖
+## 技術依賴
 
-### 新增依赖
+### 新增依賴
 
 ```xml
-<!-- Resilience4j 熔断器和重试 -->
+<!-- Resilience4j 熔斷器和重試 -->
 <dependency>
     <groupId>io.github.resilience4j</groupId>
     <artifactId>resilience4j-spring-boot3</artifactId>
     <version>2.1.0</version>
 </dependency>
 
-<!-- Micrometer 指标（Spring Boot 已包含） -->
+<!-- Micrometer 指標（Spring Boot 已包含） -->
 <dependency>
     <groupId>io.micrometer</groupId>
     <artifactId>micrometer-registry-prometheus</artifactId>
 </dependency>
 ```
 
-### 配置变更
+### 配置變更
 
-需要在 `application.yml` 中添加：
-- Resilience4j 熔断器配置
-- Resilience4j 重试配置
-- Scanner 超时监控配置
-- 临时文件清理配置
-
----
-
-## 测试计划
-
-### 单元测试
-
-- [ ] 超时监控逻辑测试
-- [ ] 熔断器触发和恢复测试
-- [ ] 重试策略测试
-- [ ] 健康检查端点测试
-- [ ] 临时文件清理测试
-
-### 集成测试
-
-- [ ] Scanner 服务宕机场景测试
-- [ ] Scanner 服务响应慢场景测试
-- [ ] Scanner 服务返回错误场景测试
-- [ ] 熔断器在高负载下的表现测试
-
-### 性能测试
-
-- [ ] 熔断器对性能的影响
-- [ ] 重试策略对性能的影响
-- [ ] 监控指标对性能的影响
+需要在 `application.yml` 中新增：
+- Resilience4j 熔斷器配置
+- Resilience4j 重試配置
+- Scanner 超時監控配置
+- 臨時檔案清理配置
 
 ---
 
-## 相关文档
+## 測試計劃
 
-- [故障影响分析](./failure-impact-analysis.md)
-- [运维监控指南](./monitoring-guide.md)
-- [配置说明](./configuration.md)
+### 單元測試
+
+- [ ] 超時監控邏輯測試
+- [ ] 熔斷器觸發和恢復測試
+- [ ] 重試策略測試
+- [ ] 健康檢查端點測試
+- [ ] 臨時檔案清理測試
+
+### 整合測試
+
+- [ ] Scanner 服務宕機場景測試
+- [ ] Scanner 服務響應慢場景測試
+- [ ] Scanner 服務返回錯誤場景測試
+- [ ] 熔斷器在高負載下的表現測試
+
+### 效能測試
+
+- [ ] 熔斷器對效能的影響
+- [ ] 重試策略對效能的影響
+- [ ] 監控指標對效能的影響
+
+---
+
+## 相關檔案
+
+- [故障影響分析](./failure-impact-analysis.md)
+- [運維監控指南](./monitoring-guide.md)
+- [配置說明](./configuration.md)

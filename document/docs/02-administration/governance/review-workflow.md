@@ -1,44 +1,44 @@
 ---
-title: 审核流程
+title: 稽核流程
 sidebar_position: 2
-description: 技能发布审核流程配置
+description: 技能發布稽核流程配置
 ---
 
-# 审核流程
+# 稽核流程
 
-SkillHub 采用双层审核机制，保障技能质量。
+SkillHub 採用雙層稽核機制，保障技能質量。
 
-## 审核流程
+## 稽核流程
 
-### 团队空间技能
+### 團隊空間技能
 
-1. 团队成员提交发布
-2. 创建审核任务（PENDING）
-3. 团队 ADMIN 或 OWNER 审核
-   - 通过 → 技能发布（PUBLISHED）
-   - 拒绝 → 返回修改（REJECTED）
+1. 團隊成員提交發布
+2. 建立稽核任務（PENDING）
+3. 團隊 ADMIN 或 OWNER 稽核
+   - 透過 → 技能發布（PUBLISHED）
+   - 拒絕 → 返回修改（REJECTED）
 
-### 全局空间技能
+### 全域性空間技能
 
-1. 提交发布
-2. 平台 SKILL_ADMIN 或 SUPER_ADMIN 审核
-3. 审核通过后发布
+1. 提交發布
+2. 平臺 SKILL_ADMIN 或 SUPER_ADMIN 稽核
+3. 稽核透過後發布
 
-## 团队技能提升到全局
+## 團隊技能提升到全域性
 
-1. 团队技能已发布
-2. 团队 ADMIN 或 OWNER 申请"提升到全局"
-3. 平台管理员审核
-4. 审核通过后在全局空间创建新技能
+1. 團隊技能已發布
+2. 團隊 ADMIN 或 OWNER 申請"提升到全域性"
+3. 平臺管理員稽核
+4. 稽核透過後在全域性空間建立新技能
 
-## 审核权限
+## 稽核許可權
 
-| 审核类型 | 所需角色 |
+| 稽核型別 | 所需角色 |
 |---------|---------|
-| 团队空间技能审核 | 命名空间 ADMIN/OWNER |
-| 全局空间技能审核 | SKILL_ADMIN/SUPER_ADMIN |
-| 提升申请审核 | SKILL_ADMIN/SUPER_ADMIN |
+| 團隊空間技能稽核 | 名稱空間 ADMIN/OWNER |
+| 全域性空間技能稽核 | SKILL_ADMIN/SUPER_ADMIN |
+| 提升申請稽核 | SKILL_ADMIN/SUPER_ADMIN |
 
 ## 下一步
 
-- [用户管理](./user-management) - 管理平台用户
+- [使用者管理](./user-management) - 管理平臺使用者

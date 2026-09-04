@@ -1,46 +1,46 @@
-# 常见问题
+# 常見問題
 
-## Q: SkillHub 和 ClawHub 有什么区别？
+## Q: SkillHub 和 ClawHub 有什麼區別？
 
-A: SkillHub 是企业级的自托管方案，提供了更强的权限控制、审核机制和治理能力。ClawHub 是公共注册中心，类似 npm。
+A: SkillHub 是企業級的自託管方案，提供了更強的許可權控制、稽核機制和治理能力。ClawHub 是公共註冊中心，類似 npm。
 
-**主要区别**：
+**主要區別**：
 
 | 特性 | SkillHub | ClawHub |
 |------|----------|---------|
-| **部署方式** | 自托管 | 公共云 |
-| **权限控制** | 命名空间 RBAC | 基础权限 |
-| **审核机制** | 多级审核 | 无 |
-| **安全扫描** | 内置 Skill Scanner | 无 |
-| **数据主权** | 完全自主 | 托管在云端 |
-| **适用场景** | 企业内部 | 公开分享 |
+| **部署方式** | 自託管 | 公共雲 |
+| **許可權控制** | 名稱空間 RBAC | 基礎許可權 |
+| **稽核機制** | 多級稽核 | 無 |
+| **安全掃描** | 內建 Skill Scanner | 無 |
+| **資料主權** | 完全自主 | 託管在雲端 |
+| **適用場景** | 企業內部 | 公開分享 |
 
-## Q: 如何备份数据？
+## Q: 如何備份資料？
 
-A: SkillHub 的数据存储在 PostgreSQL 和对象存储中。定期备份这两部分即可。
+A: SkillHub 的資料儲存在 PostgreSQL 和物件儲存中。定期備份這兩部分即可。
 
-**备份 PostgreSQL**：
+**備份 PostgreSQL**：
 ```bash
 pg_dump -h localhost -U postgres skillhub > backup.sql
 ```
 
-**备份对象存储**：
-- 如果使用 MinIO，备份 MinIO 数据目录
-- 如果使用 S3，使用 AWS CLI 或 S3 备份工具
+**備份物件儲存**：
+- 如果使用 MinIO，備份 MinIO 資料目錄
+- 如果使用 S3，使用 AWS CLI 或 S3 備份工具
 
-## Q: 支持哪些认证方式？
+## Q: 支援哪些認證方式？
 
-A: SkillHub 支持多种认证方式：
+A: SkillHub 支援多種認證方式：
 
 - **OAuth2**：GitHub、Google、GitLab 等
-- **本地账号**：用户名密码登录（内置管理员：admin / ChangeMe!2026）
-- **企业 SSO**：可以集成 LDAP、SAML 等
+- **本地賬號**：使用者名稱密碼登入（內建管理員：admin / ChangeMe!2026）
+- **企業 SSO**：可以整合 LDAP、SAML 等
 
-配置方式参考项目 README 中的认证配置章节。
+配置方式參考專案 README 中的認證配置章節。
 
-## Q: 技能包大小有限制吗？
+## Q: 技能包大小有限制嗎？
 
-A: 默认限制为 **100MB**。可以通过配置调整：
+A: 預設限制為 **100MB**。可以透過配置調整：
 
 ```yaml
 # application.yml
@@ -53,19 +53,19 @@ spring:
 
 ## Q: 如何使用 CLI 工具管理技能包？
 
-A: SkillHub 兼容 OpenClaw CLI，使用 `npx clawhub` 命令即可操作：
+A: SkillHub 相容 OpenClaw CLI，使用 `npx clawhub` 命令即可操作：
 
 ```bash
-# 配置注册中心地址
+# 配置註冊中心地址
 export CLAWHUB_REGISTRY=http://your-skillhub-host:8080
 
-# 搜索技能包
+# 搜尋技能包
 npx clawhub search email
 
-# 安装技能包
+# 安裝技能包
 npx clawhub install my-skill
 
-# 发布技能包（ClawHub CLI 的发布协议不兼容 SkillHub）
+# 發布技能包（ClawHub CLI 的發布協議不相容 SkillHub）
 export SKILLHUB_REGISTRY=http://your-skillhub-host:8080
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
 npx @astron-team/skillhub@latest publish ./my-skill
@@ -73,7 +73,7 @@ npx @astron-team/skillhub@latest publish ./my-skill
 
 ## Q: 如何配置 HTTPS？
 
-A: 生产环境建议使用 Nginx 或 Traefik 作为反向代理，配置 SSL 证书。
+A: 生產環境建議使用 Nginx 或 Traefik 作為反向代理，配置 SSL 證書。
 
 **Nginx 配置示例**：
 ```nginx
@@ -94,74 +94,74 @@ server {
 }
 ```
 
-## Q: 如何监控 SkillHub？
+## Q: 如何監控 SkillHub？
 
-A: SkillHub 提供了多种监控方式：
+A: SkillHub 提供了多種監控方式：
 
-- **健康检查**：`GET /actuator/health`
-- **Scanner 健康检查**：`GET http://localhost:8000/health`
-- **指标监控**：`GET /actuator/metrics`（Prometheus 格式）
-- **审计日志**：所有关键操作都会记录到审计日志
-- **应用日志**：使用 ELK 或 Loki 收集日志
+- **健康檢查**：`GET /actuator/health`
+- **Scanner 健康檢查**：`GET http://localhost:8000/health`
+- **指標監控**：`GET /actuator/metrics`（Prometheus 格式）
+- **審計日誌**：所有關鍵操作都會記錄到審計日誌
+- **應用日誌**：使用 ELK 或 Loki 收集日誌
 
-## Q: 支持多租户吗？
+## Q: 支援多租戶嗎？
 
-A: SkillHub 通过命名空间实现了逻辑上的多租户隔离。每个命名空间相当于一个租户，拥有独立的成员、权限和技能包。
+A: SkillHub 透過名稱空間實現了邏輯上的多租戶隔離。每個名稱空間相當於一個租戶，擁有獨立的成員、許可權和技能包。
 
-如果需要物理隔离，可以为每个租户部署独立的 SkillHub 实例。
+如果需要物理隔離，可以為每個租戶部署獨立的 SkillHub 例項。
 
-## Q: 如何升级 SkillHub？
+## Q: 如何升級 SkillHub？
 
-A: 使用 curl 命令升级：
+A: 使用 curl 命令升級：
 
 ```bash
-# 拉取最新镜像并重启
+# 拉取最新映象並重啟
 curl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- pull
 curl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- down
 curl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- up
 
-# 或直接指定版本升级
+# 或直接指定版本升級
 curl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- up --version v0.2.0
 ```
 
-> **注意**：升级前建议先备份数据库和对象存储。数据库迁移由 Flyway 自动执行。升级不会清空数据库，已录入的技能包不会丢失。
+> **注意**：升級前建議先備份資料庫和物件儲存。資料庫遷移由 Flyway 自動執行。升級不會清空資料庫，已錄入的技能包不會丟失。
 
-## Q: 为什么管理员（admin）和普通用户都无法创建命名空间？
+## Q: 為什麼管理員（admin）和普通使用者都無法建立名稱空間？
 
-A: 较旧版本的 SkillHub 不支持创建命名空间。该功能是在后续版本迭代中添加的。请将您的 SkillHub 升级到最新版本（latest）。
-升级命令示例：
+A: 較舊版本的 SkillHub 不支援建立名稱空間。該功能是在後續版本迭代中新增的。請將您的 SkillHub 升級到最新版本（latest）。
+升級命令示例：
 ```bash
 curl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- up --version latest
 ```
 
-## Q: 如何搜索或操作指定命名空间中的技能包（Skill）？
+## Q: 如何搜尋或操作指定名稱空間中的技能包（Skill）？
 
-A: 使用 OpenClaw CLI 命令行工具时，可以通过 `<namespace>--<skill-name>` 的格式来指定命名空间进行操作（例如搜索、安装）。如果在网页端搜索遇到问题，也可以尝试通过先导出技能、再导入到目标命名空间的方式来完成跨空间操作。
+A: 使用 OpenClaw CLI 命令列工具時，可以透過 `<namespace>--<skill-name>` 的格式來指定名稱空間進行操作（例如搜尋、安裝）。如果在網頁端搜尋遇到問題，也可以嘗試透過先匯出技能、再匯入到目標名稱空間的方式來完成跨空間操作。
 
-## Q: 推荐的部署方式是什么？可以自己拉镜像手动部署吗？
+## Q: 推薦的部署方式是什麼？可以自己拉映象手動部署嗎？
 
-A: 推荐使用官方一键部署脚本，不建议自己拉取镜像手动部署（手动部署容易出现登录后跳回登录页等初始化问题）：
+A: 推薦使用官方一鍵部署指令碼，不建議自己拉取映象手動部署（手動部署容易出現登入後跳回登入頁等初始化問題）：
 
 ```bash
 curl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- up --aliyun --public-url https://skillhub.your-company.com --version latest
 ```
 
-脚本会执行一系列初始化操作，生成的运行时配置默认位于 `/tmp/skillhub-runtime/`（包含 `.env.release` 和 docker-compose 文件）。
+指令碼會執行一系列初始化操作，生成的執行時配置預設位於 `/tmp/skillhub-runtime/`（包含 `.env.release` 和 docker-compose 檔案）。
 
-## Q: 部署后输入正确的账号密码，却又跳回登录页？
+## Q: 部署後輸入正確的賬號密碼，卻又跳回登入頁？
 
-A: 该现象多见于「手动部署」场景（接口异常或初始化未完成导致）。建议：
+A: 該現象多見於「手動部署」場景（介面異常或初始化未完成導致）。建議：
 
-1. 改用上面的一键脚本部署。
-2. 必要时清空 PostgreSQL 数据卷后重建再登录。
-3. 若前置了反向代理，检查代理配置是否正确转发。
+1. 改用上面的一鍵指令碼部署。
+2. 必要時清空 PostgreSQL 資料卷後重建再登入。
+3. 若前置了反向代理，檢查代理配置是否正確轉發。
 
-## Q: 如何修改 admin 密码？修改配置后不生效？
+## Q: 如何修改 admin 密碼？修改配置後不生效？
 
-A: 环境变量在容器创建时注入，修改后必须重新创建容器才会生效；仅执行 `restart` 不会重新注入环境变量。
+A: 環境變數在容器建立時注入，修改後必須重新建立容器才會生效；僅執行 `restart` 不會重新注入環境變數。
 
-1. 修改运行时目录下的 `/tmp/skillhub-runtime/.env.release`（参考仓库 [.env.release.example](https://github.com/iflytek/skillhub/blob/main/.env.release.example)）。
-2. 重新创建相关容器：
+1. 修改執行時目錄下的 `/tmp/skillhub-runtime/.env.release`（參考倉庫 [.env.release.example](https://github.com/iflytek/skillhub/blob/main/.env.release.example)）。
+2. 重新建立相關容器：
 
    ```bash
    docker compose \
@@ -170,187 +170,187 @@ A: 环境变量在容器创建时注入，修改后必须重新创建容器才�
      up -d --force-recreate
    ```
 
-3. 若此前密码已写入数据库导致仍不生效，可能需要清理对应数据后重新初始化。
+3. 若此前密碼已寫入資料庫導致仍不生效，可能需要清理對應資料後重新初始化。
 
-## Q: 修改 / 找回密码必须使用邮箱验证码吗？
+## Q: 修改 / 找回密碼必須使用郵箱驗證碼嗎？
 
-A: 是的，默认通过邮箱验证码修改或找回密码，因此需要先配置 SMTP。配置方法参考 [docs/19-smtp-password-reset-email-setup.md](https://github.com/iflytek/skillhub/blob/main/docs/19-smtp-password-reset-email-setup.md)。管理员也可在 `.env.release` 中进行重置。
+A: 是的，預設透過郵箱驗證碼修改或找回密碼，因此需要先配置 SMTP。配置方法參考 [docs/19-smtp-password-reset-email-setup.md](https://github.com/iflytek/skillhub/blob/main/docs/19-smtp-password-reset-email-setup.md)。管理員也可在 `.env.release` 中進行重置。
 
-## Q: skill 可以起中文名吗？
+## Q: skill 可以起中文名嗎？
 
-A: skill name 一般使用英文，目前不支持中文名（在 OpenClaw 中使用中文 skill 名会报错）。
+A: skill name 一般使用英文，目前不支援中文名（在 OpenClaw 中使用中文 skill 名會報錯）。
 
-## Q: 未审核的 skill 可以下载吗？
+## Q: 未稽核的 skill 可以下載嗎？
 
-A: 只要拥有可查看的权限，一般都可以下载。
+A: 只要擁有可檢視的許可權，一般都可以下載。
 
-## Q: 如何隐藏或删除登录页的 GitHub / GitLab SSO 登录方式？
+## Q: 如何隱藏或刪除登入頁的 GitHub / GitLab SSO 登入方式？
 
-A: 修改 `application.yml`，注释或删除 `spring.security.oauth2.client.registration` 下的 `github` 和 `gitlab` 两块，并删除对应的 `provider` 段。Spring Boot 启动时便不会创建这两个注册，登录页也不会再显示对应入口。
+A: 修改 `application.yml`，註釋或刪除 `spring.security.oauth2.client.registration` 下的 `github` 和 `gitlab` 兩塊，並刪除對應的 `provider` 段。Spring Boot 啟動時便不會建立這兩個註冊，登入頁也不會再顯示對應入口。
 
-## Q: SkillHub 的安全扫描（Skill Scanner）是讯飞自研的吗？使用什么协议？
+## Q: SkillHub 的安全掃描（Skill Scanner）是訊飛自研的嗎？使用什麼協議？
 
-A: SkillHub 内置安全扫描能力。其中扫描接入、任务编排、审计落库和部署集成由讯飞团队实现；底层扫描服务使用 Cisco 的 [cisco-ai-skill-scanner](https://github.com/cisco-ai-defense/skill-scanner)（Apache License 2.0，版权归 Cisco）。
+A: SkillHub 內建安全掃描能力。其中掃描接入、任務編排、審計落庫和部署整合由訊飛團隊實現；底層掃描服務使用 Cisco 的 [cisco-ai-skill-scanner](https://github.com/cisco-ai-defense/skill-scanner)（Apache License 2.0，版權歸 Cisco）。
 
-## Q: SkillHub 使用的 cisco-ai-skill-scanner 是哪个版本？
+## Q: SkillHub 使用的 cisco-ai-skill-scanner 是哪個版本？
 
-A: `scanner/Dockerfile` 中直接执行 `pip install cisco-ai-skill-scanner`，未锁定版本，因此构建镜像时会拉取 PyPI 上的最新版本。如需固定版本，可在二次开发时自行锁定。
+A: `scanner/Dockerfile` 中直接執行 `pip install cisco-ai-skill-scanner`，未鎖定版本，因此構建映象時會拉取 PyPI 上的最新版本。如需固定版本，可在二次開發時自行鎖定。
 
-## Q: 使用 CLI `skillhub publish` 报错 `registry returned 400` 怎么排查？
+## Q: 使用 CLI `skillhub publish` 報錯 `registry returned 400` 怎麼排查？
 
-A: 400 通常是后端校验未通过。常见原因：
+A: 400 通常是後端校驗未透過。常見原因：
 
-- `SKILL.md` 不在技能包根目录；
-- `SKILL.md` 的 frontmatter 缺少 `name` / `description` 或格式错误；
-- 名称或版本冲突（如 `error.skill.publish.nameConflict`，表示该 namespace 下已存在同名的已发布技能）——可改 `SKILL.md` 里的 `name`、换一个 namespace，或让管理员处理已有同名技能；
-- namespace 不存在，或你不是该 namespace 的成员；
-- 包内含疑似 token/secret，CLI 无法确认跳过；
-- 文件类型 / 大小 / 路径不合规。
+- `SKILL.md` 不在技能包根目錄；
+- `SKILL.md` 的 frontmatter 缺少 `name` / `description` 或格式錯誤；
+- 名稱或版本衝突（如 `error.skill.publish.nameConflict`，表示該 namespace 下已存在同名的已發布技能）——可改 `SKILL.md` 裡的 `name`、換一個 namespace，或讓管理員處理已有同名技能；
+- namespace 不存在，或你不是該 namespace 的成員；
+- 包內含疑似 token/secret，CLI 無法確認跳過；
+- 檔案型別 / 大小 / 路徑不合規。
 
-可用以下命令查看服务端日志定位：
+可用以下命令檢視服務端日誌定位：
 
 ```bash
 docker logs --tail=300 <skillhub-server 容器名> 2>&1 | grep -Ei 'publish|SKILL.md|namespace|400|BadRequest'
 ```
 
-## Q: 技能包的目录结构有什么要求？
+## Q: 技能包的目錄結構有什麼要求？
 
-A: 技能包根目录必须包含一个 `SKILL.md` 文件，且其 frontmatter 需包含 `name`、`description` 等字段。
+A: 技能包根目錄必須包含一個 `SKILL.md` 檔案，且其 frontmatter 需包含 `name`、`description` 等欄位。
 
-## Q: 发布时报“技能包校验失败 / malformed input”怎么办？
+## Q: 發布時報“技能包校驗失敗 / malformed input”怎麼辦？
 
-A: 该错误发生在 zip 解包读取文件名阶段，通常是压缩包不是 UTF-8 编码（例如用 Windows 自带压缩工具生成）或包内含中文路径导致。请使用 UTF-8 编码重新打包，并避免中文 / 特殊字符路径。
+A: 該錯誤發生在 zip 解包讀取檔名階段，通常是壓縮包不是 UTF-8 編碼（例如用 Windows 自帶壓縮工具生成）或包內含中文路徑導致。請使用 UTF-8 編碼重新打包，並避免中文 / 特殊字元路徑。
 
-## Q: 技能包能包含多少个文件？提示文件数超限怎么办？
+## Q: 技能包能包含多少個檔案？提示檔案數超限怎麼辦？
 
-A: 默认上限为 **100 个文件**（这与 100MB 的大小限制是两回事）。如需放宽，修改配置项 `skillhub.publish.max-file-count`，或在部署时用环境变量覆盖：
+A: 預設上限為 **100 個檔案**（這與 100MB 的大小限制是兩回事）。如需放寬，修改配置項 `skillhub.publish.max-file-count`，或在部署時用環境變數覆蓋：
 
 ```bash
 SKILLHUB_PUBLISH_MAX_FILE_COUNT=500
 ```
 
-修改后需重新创建容器才会生效；仅执行 `restart` 不会重新注入环境变量。注意 `compose.release.yml` 中也需引用该变量；较旧版本（如 v0.2.6）可能将该值写死，建议升级到最新版本。
+修改後需重新建立容器才會生效；僅執行 `restart` 不會重新注入環境變數。注意 `compose.release.yml` 中也需引用該變數；較舊版本（如 v0.2.6）可能將該值寫死，建議升級到最新版本。
 
-## Q: 使用 CLI（发布 / 下载等）对服务端版本有要求吗？
+## Q: 使用 CLI（發布 / 下載等）對服務端版本有要求嗎？
 
-A: 需要 SkillHub 服务端镜像 **v0.2.7 及以上** 才支持 CLI 功能。
+A: 需要 SkillHub 服務端映象 **v0.2.7 及以上** 才支援 CLI 功能。
 
-## Q: SkillHub 支持 MySQL 数据库吗？
+## Q: SkillHub 支援 MySQL 資料庫嗎？
 
-A: 目前仅支持 PostgreSQL，暂不支持 MySQL。
+A: 目前僅支援 PostgreSQL，暫不支援 MySQL。
 
-## Q: SkillHub 可以用来分发 Plugin 吗？
+## Q: SkillHub 可以用來分發 Plugin 嗎？
 
-A: 暂不支持。
+A: 暫不支援。
 
-## Q: 如何查看 SkillHub 的版本？想做定制（如修改 logo）怎么办？
+## Q: 如何檢視 SkillHub 的版本？想做定製（如修改 logo）怎麼辦？
 
 A:
 
-- 查看服务端镜像版本：
+- 檢視服務端映象版本：
 
 ```bash
 docker image inspect ghcr.io/iflytek/skillhub-server:latest --format '{{index .Config.Labels "org.opencontainers.image.version"}}'
 ```
 
-- 查看 CLI 版本：`skillhub version`。
-- 如需定制（如修改 logo 等），建议基于最新代码进行二次开发并自行构建 docker 镜像。
+- 檢視 CLI 版本：`skillhub version`。
+- 如需定製（如修改 logo 等），建議基於最新程式碼進行二次開發並自行構建 docker 映象。
 
-## Q: 页面能打开，但登录 / 注册接口返回 502？
+## Q: 頁面能開啟，但登入 / 註冊介面返回 502？
 
-A: 页面由 `web` 容器提供，登录、注册等接口由 `web` 转发给 `server`（默认 `SKILLHUB_API_UPSTREAM=http://server:8080`）。出现「页面正常但 API 502」时，通常先检查 `server` 是否正常启动；upstream 配置、DNS 或容器网络异常也可能返回 502。
+A: 頁面由 `web` 容器提供，登入、註冊等介面由 `web` 轉發給 `server`（預設 `SKILLHUB_API_UPSTREAM=http://server:8080`）。出現「頁面正常但 API 502」時，通常先檢查 `server` 是否正常啟動；upstream 配置、DNS 或容器網路異常也可能返回 502。
 
-排查顺序：
+排查順序：
 
 ```bash
-# 1. 看 server 是否处于运行状态
+# 1. 看 server 是否處於執行狀態
 docker compose --env-file .env.release -f compose.release.yml ps
 
-# 2. 看 server 启动日志中的第一条错误
+# 2. 看 server 啟動日誌中的第一條錯誤
 docker compose --env-file .env.release -f compose.release.yml logs server | head -50
 ```
 
-一条常见的启动失败日志是：
+一條常見的啟動失敗日誌是：
 
 ```
 SKILLHUB_DOWNLOAD_ANON_COOKIE_SECRET must not use the default placeholder
 ```
 
-说明 `server` 读到的仍是模板里的占位值。在 `.env.release` 中改成自己的随机字符串（**至少 32 个字符**）后重建容器即可：
+說明 `server` 讀到的仍是模板裡的佔位值。在 `.env.release` 中改成自己的隨機字串（**至少 32 個字元**）後重建容器即可：
 
 ```bash
-SKILLHUB_DOWNLOAD_ANON_COOKIE_SECRET=<替换成你自己的随机字符串，至少 32 个字符>
+SKILLHUB_DOWNLOAD_ANON_COOKIE_SECRET=<替換成你自己的隨機字串，至少 32 個字元>
 ```
 
-启动前可以先执行 `make validate-release-config`，它会校验 `.env.release`，提前暴露这类占位值和缺失项。
+啟動前可以先執行 `make validate-release-config`，它會校驗 `.env.release`，提前暴露這類佔位值和缺失項。
 
-## Q: 改了配置为什么不生效？
+## Q: 改了配置為什麼不生效？
 
-A: 两个高频原因：
+A: 兩個高頻原因：
 
-1. **改错了文件**：`.env.release.example` 只是模板，Compose 实际读取的是 `--env-file` 指定的 `.env.release`。请先 `cp .env.release.example .env.release`，然后修改 `.env.release`。
-2. **只重启没重建**：环境变量在容器创建时注入，`restart` 不会重新注入。改完配置需要重建容器：
+1. **改錯了檔案**：`.env.release.example` 只是模板，Compose 實際讀取的是 `--env-file` 指定的 `.env.release`。請先 `cp .env.release.example .env.release`，然後修改 `.env.release`。
+2. **只重啟沒重建**：環境變數在容器建立時注入，`restart` 不會重新注入。改完配置需要重建容器：
 
 ```bash
 docker compose --env-file .env.release -f compose.release.yml up -d --force-recreate
 ```
 
-## Q: SkillHub 运行时需要哪些外部依赖？
+## Q: SkillHub 執行時需要哪些外部依賴？
 
-A: 必需 PostgreSQL 和 Redis；对象存储支持 `local` 与 S3 两种模式，由 `SKILLHUB_STORAGE_PROVIDER` 控制。`.env.release.example` 显式配置为 `local`，但如果使用 `compose.release.yml` 时完全没有设置该变量，Compose 的回退值是 `s3`。建议始终显式设置；生产环境推荐使用 S3（通过 `SKILLHUB_STORAGE_S3_*` 配置）。数据库仅支持 PostgreSQL，暂不支持 MySQL。
+A: 必需 PostgreSQL 和 Redis；物件儲存支援 `local` 與 S3 兩種模式，由 `SKILLHUB_STORAGE_PROVIDER` 控制。`.env.release.example` 顯式配置為 `local`，但如果使用 `compose.release.yml` 時完全沒有設定該變數，Compose 的回退值是 `s3`。建議始終顯式設定；生產環境推薦使用 S3（透過 `SKILLHUB_STORAGE_S3_*` 配置）。資料庫僅支援 PostgreSQL，暫不支援 MySQL。
 
-发布版 Compose 已内置 PostgreSQL 与 Redis，默认只绑定在 `127.0.0.1`。
+發布版 Compose 已內建 PostgreSQL 與 Redis，預設只繫結在 `127.0.0.1`。
 
-## Q: 通过 OAuth（GitHub / GitLab 等）登录的账号，如何取得管理员权限？
+## Q: 透過 OAuth（GitHub / GitLab 等）登入的賬號，如何取得管理員許可權？
 
-A: OAuth 首次登录创建的是普通用户。需要由已有的 `SUPER_ADMIN`（例如初始化时的 bootstrap admin）在后台将其提升为管理员。
+A: OAuth 首次登入建立的是普通使用者。需要由已有的 `SUPER_ADMIN`（例如初始化時的 bootstrap admin）在後臺將其提升為管理員。
 
-`USER_ADMIN` 可以管理用户状态，并分配除 `SUPER_ADMIN` 之外的平台角色；但不能向任何账号授予 `SUPER_ADMIN`，也不能修改已有 `SUPER_ADMIN` 账号的角色。这两类操作只有 `SUPER_ADMIN` 可以执行。
+`USER_ADMIN` 可以管理使用者狀態，並分配除 `SUPER_ADMIN` 之外的平臺角色；但不能向任何賬號授予 `SUPER_ADMIN`，也不能修改已有 `SUPER_ADMIN` 賬號的角色。這兩類操作只有 `SUPER_ADMIN` 可以執行。
 
-## Q: 如何批量安装多个技能包？
+## Q: 如何批次安裝多個技能包？
 
-A: CLI 的 `install` 一次处理一个技能包。下面两个示例都通过 `--dir` 将技能批量安装到同一个目标根目录；每个技能实际位于 `$target_dir/<skill-slug>/`：
+A: CLI 的 `install` 一次處理一個技能包。下面兩個示例都透過 `--dir` 將技能批次安裝到同一個目標根目錄；每個技能實際位於 `$target_dir/<skill-slug>/`：
 
 ```bash
 target_dir=/opt/skillhub-skills
 
-# 逐个安装
+# 逐個安裝
 for skill in skill-a skill-b skill-c; do
   skillhub install "$skill" --dir "$target_dir"
 done
 
-# 或从清单文件读取（每行一个技能名）
+# 或從清單檔案讀取（每行一個技能名）
 xargs -a skills.txt -I {} skillhub install "{}" --dir "$target_dir"
 ```
 
-自 **SkillHub Server v0.2.12** 起，公开技能支持匿名搜索与安装；如果配置了无效的 Bearer Token，命令会直接失败而不再回退匿名访问，遇到这种情况请更新凭据或先移除无效 Token。
+自 **SkillHub Server v0.2.12** 起，公開技能支援匿名搜尋與安裝；如果配置了無效的 Bearer Token，命令會直接失敗而不再回退匿名訪問，遇到這種情況請更新憑據或先移除無效 Token。
 
-## Q: 遇到问题怎么办？
+## Q: 遇到問題怎麼辦？
 
-A: 可以通过以下方式获取帮助：
+A: 可以透過以下方式獲取幫助：
 
 - **GitHub Issues**: https://github.com/iflytek/skillhub/issues
-- **在线文档**: https://iflytek.github.io/skillhub/
-- **文档**: 参考项目 README.md
-- **社区讨论**: https://github.com/iflytek/skillhub/discussions
+- **線上檔案**: https://iflytek.github.io/skillhub/
+- **檔案**: 參考專案 README.md
+- **社群討論**: https://github.com/iflytek/skillhub/discussions
 
-## Q: 本地开发启动失败怎么办？
+## Q: 本地開發啟動失敗怎麼辦？
 
-A: `make dev-all` 后端启动失败时，会显示详细的错误提示。常见问题：
+A: `make dev-all` 後端啟動失敗時，會顯示詳細的錯誤提示。常見問題：
 
-### 1. Maven 依赖下载失败（网络超时）
+### 1. Maven 依賴下載失敗（網路超時）
 
-**症状**：后端日志显示 `Could not transfer artifact` 或连接超时
+**症狀**：後端日誌顯示 `Could not transfer artifact` 或連線超時
 
-**解决方案**：配置阿里云镜像
+**解決方案**：配置阿里雲映象
 
 ```bash
-# 复制项目内置的镜像配置到用户目录
+# 複製專案內建的映象配置到使用者目錄
 mkdir -p ~/.m2
 cp server/.mvn/settings.xml ~/.m2/settings.xml
 ```
 
-或手动创建 `~/.m2/settings.xml`：
+或手動建立 `~/.m2/settings.xml`：
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -365,42 +365,42 @@ cp server/.mvn/settings.xml ~/.m2/settings.xml
 </settings>
 ```
 
-参考：[阿里云 Maven 镜像配置指南](https://maven.aliyun.com/mvn/guide)
+參考：[阿里雲 Maven 映象配置指南](https://maven.aliyun.com/mvn/guide)
 
 ### 2. Java 版本不匹配
 
-**症状**：`Unsupported class file major version` 或 `java.lang.NoSuchMethodError`
+**症狀**：`Unsupported class file major version` 或 `java.lang.NoSuchMethodError`
 
-**解决方案**：安装 Java 21+
+**解決方案**：安裝 Java 21+
 
 ```bash
 # macOS
 brew install openjdk@21
 
-# 验证版本
+# 驗證版本
 java -version
 ```
 
-### 3. 端口被占用
+### 3. 埠被佔用
 
-**症状**：`Port 8080 already in use`
+**症狀**：`Port 8080 already in use`
 
-**解决方案**：
+**解決方案**：
 
 ```bash
-# 查看占用端口的进程
+# 檢視佔用埠的程式
 lsof -i :8080
 
-# 终止进程
+# 終止程式
 kill -9 <PID>
 ```
 
-### 4. 查看详细日志
+### 4. 檢視詳細日誌
 
-如果以上方案无法解决，查看后端日志：
+如果以上方案無法解決，檢視後端日誌：
 
 ```bash
 make dev-logs SERVICE=backend
-# 或直接查看
+# 或直接檢視
 cat .dev/server.log
 ```

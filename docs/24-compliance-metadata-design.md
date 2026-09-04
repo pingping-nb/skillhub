@@ -1,67 +1,67 @@
-# Compliance Metadata 设计方案
+# Compliance Metadata 設計方案
 
-状态：第一阶段已落地发布校验和版本级 snapshot 固化；详情展示、审核 diff、搜索 facet 和 Runtime trace 集成仍按本文后续阶段推进。
+狀態：第一階段已落地發布校驗和版本級 snapshot 固化；詳情展示、稽核 diff、搜尋 facet 和 Runtime trace 整合仍按本文後續階段推進。
 
 ## 1. 背景
 
-Issue #556 提出的方向是让 SkillHub 支持“可标准映射、可审计引用”的技能元数据。它参考了两个不同类型的开源仓库：
+Issue #556 提出的方向是讓 SkillHub 支援“可標準對映、可審計引用”的技能後設資料。它參考了兩個不同型別的開源倉庫：
 
-- `mukul975/Anthropic-Cybersecurity-Skills`：大量 `SKILL.md` 在 frontmatter 中声明 MITRE ATT&CK、NIST CSF 等标准映射，并通过 `references/standards.md` 等文件补充证据。
-- `calesthio/OpenMontage`：通过 pipeline manifest、artifact schema、checkpoint 和 review gate 证明垂直工作流的可恢复、可审核和可追踪。
+- `mukul975/Anthropic-Cybersecurity-Skills`：大量 `SKILL.md` 在 frontmatter 中宣告 MITRE ATT&CK、NIST CSF 等標準對映，並透過 `references/standards.md` 等檔案補充證據。
+- `calesthio/OpenMontage`：透過 pipeline manifest、artifact schema、checkpoint 和 review gate 證明垂直工作流的可恢復、可稽核和可追蹤。
 
-这两个仓库给 SkillHub 的启发不同：
+這兩個倉庫給 SkillHub 的啟發不同：
 
-- 标准映射应该进入 skill 协议和版本事实，而不是只作为 UI 标签。
-- 运行时 trace 应由执行方记录，SkillHub 不应承担 Agent Runtime 的执行事实。
+- 標準對映應該進入 skill 協議和版本事實，而不是隻作為 UI 標籤。
+- 執行時 trace 應由執行方記錄，SkillHub 不應承擔 Agent Runtime 的執行事實。
 
-需要注意：`compliance` 不是当前已经被广泛应用的 `SKILL.md` 标准字段。SkillHub 现有协议文档已经约定 `x-astron-*` 作为平台私有扩展命名空间。因此第一阶段应使用 `x-astron-compliance`，先解决 SkillHub 自己的治理和审计需求；未来如果 OpenSkills / Agent Skills 生态形成公开字段，再通过兼容读取 `compliance` 或迁移工具对齐。
+需要注意：`compliance` 不是當前已經被廣泛應用的 `SKILL.md` 標準欄位。SkillHub 現有協議檔案已經約定 `x-astron-*` 作為平臺私有擴充套件名稱空間。因此第一階段應使用 `x-astron-compliance`，先解決 SkillHub 自己的治理和審計需求；未來如果 OpenSkills / Agent Skills 生態形成公開欄位，再透過相容讀取 `compliance` 或遷移工具對齊。
 
-因此本方案采用职责分离：
+因此本方案採用職責分離：
 
-> SkillHub 负责“这个技能版本声明了什么合规能力”；Agent Runtime 负责“这次执行实际用了哪个技能版本”。两者通过 `skillVersionId + complianceSnapshotDigest` 关联。
+> SkillHub 負責“這個技能版本宣告瞭什麼合規能力”；Agent Runtime 負責“這次執行實際用了哪個技能版本”。兩者透過 `skillVersionId + complianceSnapshotDigest` 關聯。
 
-这里的 compliance 是作者随技能包提交的声明型元数据。SkillHub 第一阶段只验证字段结构、取值格式、
-包内证据文件是否存在、外部证据 URL 是否是合法 HTTP(S) URL，并生成不可变快照摘要；它不验证外部标准内容是否真实适用，
-也不代表第三方审计、认证通过或平台背书。
+這裡的 compliance 是作者隨技能包提交的宣告型後設資料。SkillHub 第一階段只驗證欄位結構、取值格式、
+包內證據檔案是否存在、外部證據 URL 是否是合法 HTTP(S) URL，並生成不可變快照摘要；它不驗證外部標準內容是否真實適用，
+也不代表第三方審計、認證透過或平臺背書。
 
-## 2. 职责边界
+## 2. 職責邊界
 
-### 2.1 SkillHub 职责
+### 2.1 SkillHub 職責
 
-SkillHub 是技能注册中心和元数据权威源，负责：
+SkillHub 是技能註冊中心和後設資料權威源，負責：
 
-- 解析 `SKILL.md` frontmatter 中的 `x-astron-compliance` 字段。
-- 发布时校验 compliance 元数据和证据引用。
-- 将规范化结果固化为技能版本级 snapshot。
-- 在已有技能详情、版本详情、审核和搜索能力中投影 compliance 信息。
-- 记录 SkillHub 内部发生的发布、审核、compliance 变更审计。
-- 为未来 Agent Runtime 引用提供稳定的 `skillVersionId` 和 `complianceSnapshotDigest`。
+- 解析 `SKILL.md` frontmatter 中的 `x-astron-compliance` 欄位。
+- 發布時校驗 compliance 後設資料和證據引用。
+- 將規範化結果固化為技能版本級 snapshot。
+- 在已有技能詳情、版本詳情、稽核和搜尋能力中投影 compliance 資訊。
+- 記錄 SkillHub 內部發生的發布、稽核、compliance 變更審計。
+- 為未來 Agent Runtime 引用提供穩定的 `skillVersionId` 和 `complianceSnapshotDigest`。
 
-### 2.2 Agent Runtime 职责
+### 2.2 Agent Runtime 職責
 
-Agent Runtime，例如 Astron、Claude Code、Codex、OpenClaw 或其他执行方，负责：
+Agent Runtime，例如 Astron、Claude Code、Codex、OpenClaw 或其他執行方，負責：
 
-- 实际加载和执行技能。
+- 實際載入和執行技能。
 - 生成 execution trace。
-- 记录本次执行使用的 skill coordinate、skill version、`skillVersionId` 和 `complianceSnapshotDigest`。
-- 记录运行时输入输出摘要、审批 gate、执行结果、错误和运行时策略。
+- 記錄本次執行使用的 skill coordinate、skill version、`skillVersionId` 和 `complianceSnapshotDigest`。
+- 記錄執行時輸入輸出摘要、審批 gate、執行結果、錯誤和執行時策略。
 
-SkillHub 不记录 Agent 每次执行，也不实现 Agent execution trace。
+SkillHub 不記錄 Agent 每次執行，也不實現 Agent execution trace。
 
-## 3. 非目标
+## 3. 非目標
 
-第一阶段不做以下内容：
+第一階段不做以下內容：
 
-- 不新增独立 compliance 查询 API。
-- 不实现 Astron execution trace。
-- 不新增复杂 facet / 聚合搜索。
-- 不引入外部审计系统集成。
-- 不把 `compliance` 当作已经存在的上游通用标准字段。
-- 不为了 compliance 过早新建复杂表结构，除非后续性能或查询需求明确。
+- 不新增獨立 compliance 查詢 API。
+- 不實現 Astron execution trace。
+- 不新增複雜 facet / 聚合搜尋。
+- 不引入外部審計系統整合。
+- 不把 `compliance` 當作已經存在的上游通用標準欄位。
+- 不為了 compliance 過早新建複雜表結構，除非後續效能或查詢需求明確。
 
-## 4. 协议草案
+## 4. 協議草案
 
-建议在 `SKILL.md` frontmatter 中先支持 SkillHub/Astron 私有扩展字段 `x-astron-compliance`：
+建議在 `SKILL.md` frontmatter 中先支援 SkillHub/Astron 私有擴充套件欄位 `x-astron-compliance`：
 
 ```yaml
 ---
@@ -81,36 +81,36 @@ x-astron-compliance:
 ---
 ```
 
-字段含义：
+欄位含義：
 
-| 字段 | 含义 |
+| 欄位 | 含義 |
 |---|---|
-| `standard` | 标准名称，例如 `mitre-attack`、`nist-csf`、`soc2`、`hipaa` |
-| `version` | 标准版本，例如 `v19.1`、`2.0` |
-| `controlId` | 标准控制项、技术编号或条款 ID |
-| `title` | 人类可读名称 |
-| `evidence` | 证据列表 |
+| `standard` | 標準名稱，例如 `mitre-attack`、`nist-csf`、`soc2`、`hipaa` |
+| `version` | 標準版本，例如 `v19.1`、`2.0` |
+| `controlId` | 標準控制項、技術編號或條款 ID |
+| `title` | 人類可讀名稱 |
+| `evidence` | 證據列表 |
 | `evidence.type` | `packaged-file` 或 `external-url` |
-| `evidence.path` | 技能包内证据文件路径，仅 `packaged-file` 使用 |
-| `evidence.url` | 外部证据链接，仅 `external-url` 使用 |
+| `evidence.path` | 技能包內證據檔案路徑，僅 `packaged-file` 使用 |
+| `evidence.url` | 外部證據連結，僅 `external-url` 使用 |
 
-未来兼容策略：
+未來相容策略：
 
-- 写入规范：第一阶段只推荐作者写 `x-astron-compliance`。
-- 读取兼容：如果后续生态出现公开 `compliance` 字段，解析器可以同时读取 `compliance` 和 `x-astron-compliance`，但需要定义冲突优先级。
-- 对外展示：UI 和审计报告仍统一展示为“Compliance Metadata”，不暴露内部字段名前缀给普通用户。
+- 寫入規範：第一階段只推薦作者寫 `x-astron-compliance`。
+- 讀取相容：如果後續生態出現公開 `compliance` 欄位，解析器可以同時讀取 `compliance` 和 `x-astron-compliance`，但需要定義衝突優先順序。
+- 對外展示：UI 和審計報告仍統一展示為“Compliance Metadata”，不暴露內部欄位名字首給普通使用者。
 
-## 5. 版本级 Snapshot
+## 5. 版本級 Snapshot
 
-发布时，SkillHub 将 compliance 规范化为版本级 snapshot，并写入版本元数据。
+發布時，SkillHub 將 compliance 規範化為版本級 snapshot，並寫入版本後設資料。
 
-第一阶段优先复用：
+第一階段優先複用：
 
 ```text
 skill_version.parsed_metadata_json
 ```
 
-建议结构：
+建議結構：
 
 ```json
 {
@@ -146,22 +146,22 @@ skill_version.parsed_metadata_json
 }
 ```
 
-`digest` 用于未来运行时 trace 或外部审计引用。第一阶段只生成并写入
-`parsed_metadata_json`，不新增独立 endpoint；后续再通过既有详情或版本详情投影给前端。
+`digest` 用於未來執行時 trace 或外部審計引用。第一階段只生成並寫入
+`parsed_metadata_json`，不新增獨立 endpoint；後續再透過既有詳情或版本詳情投影給前端。
 
-## 6. 分步执行计划
+## 6. 分步執行計劃
 
-### Phase 1：协议和领域模型
+### Phase 1：協議和領域模型
 
-目标：先把 `x-astron-compliance` 字段定义清楚，并放在领域层。
+目標：先把 `x-astron-compliance` 欄位定義清楚，並放在領域層。
 
-建议新增位置：
+建議新增位置：
 
 ```text
 server/skillhub-domain/src/main/java/com/iflytek/skillhub/domain/skill/metadata/
 ```
 
-候选对象：
+候選物件：
 
 ```text
 ComplianceMapping
@@ -171,18 +171,18 @@ ComplianceMetadataService
 ComplianceSnapshot
 ```
 
-设计要求：
+設計要求：
 
-- `SkillMetadataParser` 继续只负责解析 frontmatter，不承担 compliance 业务校验。
-- `ComplianceMetadataService` 负责提取、规范化、校验 compliance。
-- 不在 controller 中做 compliance 校验。
-- 使用已有 `x-astron-*` 私有扩展命名空间，不新增未验证的公开字段。
+- `SkillMetadataParser` 繼續只負責解析 frontmatter，不承擔 compliance 業務校驗。
+- `ComplianceMetadataService` 負責提取、規範化、校驗 compliance。
+- 不在 controller 中做 compliance 校驗。
+- 使用已有 `x-astron-*` 私有擴充套件名稱空間，不新增未驗證的公開欄位。
 
-### Phase 2：发布时解析和校验
+### Phase 2：發布時解析和校驗
 
-目标：技能发布时能识别并校验 compliance。
+目標：技能發布時能識別並校驗 compliance。
 
-接入点：
+接入點：
 
 ```text
 SkillPackageValidator
@@ -190,54 +190,54 @@ SkillPublishService
 SkillVersion.parsedMetadataJson
 ```
 
-基础校验规则：
+基礎校驗規則：
 
-- `x-astron-compliance` 缺失时兼容旧技能。
-- `x-astron-compliance` 存在时必须是数组。
-- 每个 mapping 必须是对象。
+- `x-astron-compliance` 缺失時相容舊技能。
+- `x-astron-compliance` 存在時必須是陣列。
+- 每個 mapping 必須是物件。
 - `standard`、`version`、`controlId` 必填。
-- `title` 可选，但应有长度限制。
-- `evidence` 可选；提供时必须是数组。
-- 同一版本内不允许重复 `standard + version + controlId`。
-- mapping 数量、evidence 数量和字符串长度要有上限。
+- `title` 可選，但應有長度限制。
+- `evidence` 可選；提供時必須是陣列。
+- 同一版本內不允許重複 `standard + version + controlId`。
+- mapping 數量、evidence 數量和字串長度要有上限。
 
-证据校验规则：
+證據校驗規則：
 
-- `packaged-file.path` 必须存在于技能包。
-- `packaged-file.path` 不允许 `../` 路径逃逸。
-- `external-url.url` 只允许 `http` / `https`。
-- 包内证据文件应计算 `sha256` 并写入 snapshot。
+- `packaged-file.path` 必須存在於技能包。
+- `packaged-file.path` 不允許 `../` 路徑逃逸。
+- `external-url.url` 只允許 `http` / `https`。
+- 包內證據檔案應計算 `sha256` 並寫入 snapshot。
 
-错误信息要求：
+錯誤資訊要求：
 
-- 使用现有 i18n 机制。
-- 不在领域服务中散落不可翻译的长英文错误字符串。
+- 使用現有 i18n 機制。
+- 不在領域服務中散落不可翻譯的長英文錯誤字串。
 
-### Phase 3：固化版本级 Snapshot
+### Phase 3：固化版本級 Snapshot
 
-目标：每个技能版本都有不可变 compliance snapshot。
+目標：每個技能版本都有不可變 compliance snapshot。
 
-实现要求：
+實現要求：
 
-- 发布成功后生成规范化 `complianceSnapshot`。
-- snapshot 内容和 digest 与该 `SkillVersion` 绑定。
-- 后续详情、审核、搜索均读取 snapshot，不重新解释最新源码。
-- snapshot 为空时也要有确定行为，避免旧技能受影响。
+- 發布成功後生成規範化 `complianceSnapshot`。
+- snapshot 內容和 digest 與該 `SkillVersion` 繫結。
+- 後續詳情、稽核、搜尋均讀取 snapshot，不重新解釋最新原始碼。
+- snapshot 為空時也要有確定行為，避免舊技能受影響。
 
-第一阶段不强制新建表。后续出现结构化过滤、统计或性能瓶颈时，再考虑：
+第一階段不強制新建表。後續出現結構化過濾、統計或效能瓶頸時，再考慮：
 
 - `jsonb` GIN index；
 - `skill_version_compliance_mapping` 表；
-- 搜索 projection 表扩展。
+- 搜尋 projection 表擴充套件。
 
-### Phase 4：已有接口投影，不新增独立 API
+### Phase 4：已有介面投影，不新增獨立 API
 
-目标：让前端和审核能看到 compliance，但不发布猜测性 public API。
+目標：讓前端和稽核能看到 compliance，但不發布猜測性 public API。
 
-建议：
+建議：
 
-- 在已有技能详情或版本详情 response 中增加 compliance projection。
-- 审核详情中带出当前版本 compliance snapshot。
+- 在已有技能詳情或版本詳情 response 中增加 compliance projection。
+- 稽核詳情中帶出當前版本 compliance snapshot。
 - 不新增以下 endpoint：
 
 ```text
@@ -245,164 +245,164 @@ GET /api/skills/{namespace}/{slug}/versions/{version}/compliance
 GET /api/skills/{namespace}/{slug}/versions/{version}/metadata
 ```
 
-后续只有出现明确使用方时再新增独立 API，例如：
+後續只有出現明確使用方時再新增獨立 API，例如：
 
-- Agent Runtime 只需要拉 compliance snapshot，不需要完整技能详情。
-- 企业审计系统按 `skillVersionId` 拉取合规声明。
-- 前端需要单独比较两个版本的 compliance diff。
-- 完整 detail payload 性能不可接受。
+- Agent Runtime 只需要拉 compliance snapshot，不需要完整技能詳情。
+- 企業審計系統按 `skillVersionId` 拉取合規宣告。
+- 前端需要單獨比較兩個版本的 compliance diff。
+- 完整 detail payload 效能不可接受。
 
-如果后续需要独立 API，优先考虑按不可变版本 ID 设计：
+如果後續需要獨立 API，優先考慮按不可變版本 ID 設計：
 
 ```text
 GET /api/skill-versions/{skillVersionId}/compliance
 ```
 
-### Phase 5：轻量搜索
+### Phase 5：輕量搜尋
 
-目标：先提升可发现性，不直接做复杂 facet。
+目標：先提升可發現性，不直接做複雜 facet。
 
-后续阶段：
+後續階段：
 
-- 在搜索文档重建时，将 snapshot 中的 `standard`、`controlId`、`title` 加入搜索文本。
-- 用户搜索 `T1059`、`mitre-attack`、`nist-csf` 时能命中对应技能。
+- 在搜尋檔案重建時，將 snapshot 中的 `standard`、`controlId`、`title` 加入搜尋文字。
+- 使用者搜尋 `T1059`、`mitre-attack`、`nist-csf` 時能命中對應技能。
 
-更后续再考虑：
+更後續再考慮：
 
 - 按 standard filter。
 - 按 controlId filter。
 - compliance coverage 聚合。
-- 独立索引或结构化 projection。
+- 獨立索引或結構化 projection。
 
-### Phase 6：审核和审计
+### Phase 6：稽核和審計
 
-目标：只记录 SkillHub 自己发生的事实。
+目標：只記錄 SkillHub 自己發生的事實。
 
-审核展示：
+稽核展示：
 
-- 当前版本 compliance snapshot。
-- 与上一发布版本的 diff：
+- 當前版本 compliance snapshot。
+- 與上一發布版本的 diff：
   - 新增 mapping；
-  - 删除 mapping；
+  - 刪除 mapping；
   - 修改 mapping；
-  - evidence 变化；
-  - digest 变化。
+  - evidence 變化；
+  - digest 變化。
 
-审计记录：
+審計記錄：
 
-- 发布时记录 compliance digest。
-- 审核通过 / 拒绝时记录 compliance diff 摘要。
-- evidence 变化作为风险信息进入 audit detail。
+- 發布時記錄 compliance digest。
+- 稽核透過 / 拒絕時記錄 compliance diff 摘要。
+- evidence 變化作為風險資訊進入 audit detail。
 
-不记录：
+不記錄：
 
-- Agent 执行输入输出。
+- Agent 執行輸入輸出。
 - Astron trace。
-- runtime 调用结果。
+- runtime 呼叫結果。
 
-### Phase 7：文档
+### Phase 7：檔案
 
-目标：让技能作者、平台维护者和 Agent Runtime 接入方都理解边界。
+目標：讓技能作者、平臺維護者和 Agent Runtime 接入方都理解邊界。
 
-需要更新的文档：
+需要更新的檔案：
 
-- `docs/07-skill-protocol.md`：实现稳定后补充正式 `x-astron-compliance` 协议。
-- 用户文档：说明如何在 `SKILL.md` 中声明 `x-astron-compliance`。
-- 管理员文档：说明发布校验、审核 diff、审计记录。
-- 集成文档：说明 Runtime 如何引用 `skillVersionId + complianceSnapshotDigest`。
+- `docs/07-skill-protocol.md`：實現穩定後補充正式 `x-astron-compliance` 協議。
+- 使用者檔案：說明如何在 `SKILL.md` 中宣告 `x-astron-compliance`。
+- 管理員檔案：說明發布校驗、稽核 diff、審計記錄。
+- 整合檔案：說明 Runtime 如何引用 `skillVersionId + complianceSnapshotDigest`。
 
-文档必须明确：
+檔案必須明確：
 
-> SkillHub 只提供版本级 compliance snapshot。运行时 trace 由 Agent Runtime 记录，并可引用 SkillHub 的 `skillVersionId` 和 `complianceSnapshotDigest`。
+> SkillHub 只提供版本級 compliance snapshot。執行時 trace 由 Agent Runtime 記錄，並可引用 SkillHub 的 `skillVersionId` 和 `complianceSnapshotDigest`。
 
-### Phase 8：测试
+### Phase 8：測試
 
-单元测试：
+單元測試：
 
-- 无 `x-astron-compliance` 的旧技能正常发布。
+- 無 `x-astron-compliance` 的舊技能正常發布。
 - 合法 `x-astron-compliance` 正常解析。
-- `standard` 缺失失败。
-- `version` 缺失失败。
-- `controlId` 缺失失败。
-- 重复 `standard + version + controlId` 失败。
-- `packaged-file.path` 不存在失败。
-- `packaged-file.path` 路径逃逸失败。
-- `external-url.url` scheme 非法失败。
-- digest 稳定生成。
+- `standard` 缺失失敗。
+- `version` 缺失失敗。
+- `controlId` 缺失失敗。
+- 重複 `standard + version + controlId` 失敗。
+- `packaged-file.path` 不存在失敗。
+- `packaged-file.path` 路徑逃逸失敗。
+- `external-url.url` scheme 非法失敗。
+- digest 穩定生成。
 
-发布链路测试：
+發布鏈路測試：
 
-- 上传含 `x-astron-compliance` 的技能包成功。
-- 上传非法 `x-astron-compliance` 的技能包失败。
-- 发布后 `parsedMetadataJson` 包含 `complianceSnapshot`。
-- snapshot digest 与内容一致。
+- 上傳含 `x-astron-compliance` 的技能包成功。
+- 上傳非法 `x-astron-compliance` 的技能包失敗。
+- 發布後 `parsedMetadataJson` 包含 `complianceSnapshot`。
+- snapshot digest 與內容一致。
 
-搜索测试：
+搜尋測試：
 
-- 搜标准名能命中。
+- 搜標準名能命中。
 - 搜 controlId 能命中。
-- 无 compliance 的旧技能不受影响。
+- 無 compliance 的舊技能不受影響。
 
-审核测试：
+稽核測試：
 
 - 新版本新增 compliance。
-- 新版本删除 compliance。
+- 新版本刪除 compliance。
 - 新版本修改 evidence。
-- 审核详情能看到 diff。
+- 稽核詳情能看到 diff。
 
-## 7. 推荐 PR 拆分
+## 7. 推薦 PR 拆分
 
-### PR 1：协议、解析、校验、快照
+### PR 1：協議、解析、校驗、快照
 
-范围：
+範圍：
 
 - domain metadata service；
 - package validator；
 - publish snapshot；
-- `parsedMetadataJson` 结构；
-- 单元测试和发布链路测试。
+- `parsedMetadataJson` 結構；
+- 單元測試和發布鏈路測試。
 
 不包含：
 
 - UI；
-- 搜索 facet；
-- 独立 API；
+- 搜尋 facet；
+- 獨立 API；
 - Agent trace。
 
-### PR 2：详情页和审核展示
+### PR 2：詳情頁和稽核展示
 
-范围：
+範圍：
 
 - 既有 response 增加 compliance projection；
-- 技能详情展示；
-- 审核 diff 展示；
-- 前端测试。
+- 技能詳情展示；
+- 稽核 diff 展示；
+- 前端測試。
 
-### PR 3：轻量搜索
+### PR 3：輕量搜尋
 
-范围：
+範圍：
 
-- 搜索文档增加 compliance keywords；
-- 搜索测试。
+- 搜尋檔案增加 compliance keywords；
+- 搜尋測試。
 
-不做复杂 facet。
+不做複雜 facet。
 
-### PR 4：文档和 Runtime 集成契约
+### PR 4：檔案和 Runtime 整合契約
 
-范围：
+範圍：
 
-- 用户文档；
-- 管理员文档；
+- 使用者檔案；
+- 管理員檔案；
 - Runtime 引用方式；
-- `skillVersionId + complianceSnapshotDigest` 契约说明。
+- `skillVersionId + complianceSnapshotDigest` 契約說明。
 
-不实现 Astron trace。
+不實現 Astron trace。
 
-## 8. 最终架构原则
+## 8. 最終架構原則
 
-1. SkillHub 不执行技能，因此不记录执行 trace。
-2. SkillHub 是 skill metadata 和 version snapshot 的权威源。
-3. Agent Runtime 是 execution trace 的权威源。
-4. 合规审计通过 `skillVersionId + complianceSnapshotDigest` 把两边事实关联起来。
-5. 第一阶段不发布猜测性 API；先通过已有详情和版本投影满足内部使用。
-6. 先做稳定协议和可验证快照，再做 UI、搜索和外部集成。
+1. SkillHub 不執行技能，因此不記錄執行 trace。
+2. SkillHub 是 skill metadata 和 version snapshot 的權威源。
+3. Agent Runtime 是 execution trace 的權威源。
+4. 合規審計透過 `skillVersionId + complianceSnapshotDigest` 把兩邊事實關聯起來。
+5. 第一階段不發布猜測性 API；先透過已有詳情和版本投影滿足內部使用。
+6. 先做穩定協議和可驗證快照，再做 UI、搜尋和外部整合。

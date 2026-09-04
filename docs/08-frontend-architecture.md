@@ -1,146 +1,146 @@
-# skillhub 前端架构设计
+# skillhub 前端架構設計
 
-## 1 技术栈
+## 1 技術棧
 
-| 类别 | 选型 | 说明 |
+| 類別 | 選型 | 說明 |
 |------|------|------|
 | 框架 | React 19 + TypeScript | |
-| 构建 | Vite | |
+| 構建 | Vite | |
 | 路由 | TanStack Router | |
-| 数据获取 | TanStack Query | 管理所有服务端数据（API 响应缓存、加载/错误状态） |
-| UI 组件 | shadcn/ui + Radix UI | |
-| 样式 | Tailwind CSS | |
-| 本地状态 | Zustand | 仅管理纯客户端状态 |
-| API 客户端 | openapi-fetch + openapi-typescript | |
-| 图标 | Lucide React | |
+| 資料獲取 | TanStack Query | 管理所有服務端資料（API 響應快取、載入/錯誤狀態） |
+| UI 元件 | shadcn/ui + Radix UI | |
+| 樣式 | Tailwind CSS | |
+| 本地狀態 | Zustand | 僅管理純客戶端狀態 |
+| API 客戶端 | openapi-fetch + openapi-typescript | |
+| 圖示 | Lucide React | |
 
-### 1.1 Zustand 与 TanStack Query 职责边界
+### 1.1 Zustand 與 TanStack Query 職責邊界
 
-- **TanStack Query**：管理所有服务端数据（API 响应缓存、加载/错误状态）
-- **Zustand**：仅管理纯客户端状态（UI 偏好、侧边栏展开、主题、当前选中的命名空间过滤等）
-- 禁止在 Zustand 中缓存服务端数据
+- **TanStack Query**：管理所有服務端資料（API 響應快取、載入/錯誤狀態）
+- **Zustand**：僅管理純客戶端狀態（UI 偏好、側邊欄展開、主題、當前選中的名稱空間過濾等）
+- 禁止在 Zustand 中快取服務端資料
 
-## 2 页面结构
+## 2 頁面結構
 
-### 2.1 门户区（公开，匿名可访问）
+### 2.1 門戶區（公開，匿名可訪問）
 
-| 页面 | 路径 | 说明 |
+| 頁面 | 路徑 | 說明 |
 |------|------|------|
-| 首页 | `/` | 精选/热门/最新、搜索入口 |
-| 搜索页 | `/search` | 关键词搜索 + 过滤 + 排序 |
-| 命名空间主页 | `/@{namespace}` | 空间介绍 + 技能列表 |
-| 技能详情页 | `/@{namespace}/{slug}` | README 渲染、版本、评分、收藏、下载 |
-| 版本历史 | `/@{namespace}/{slug}/versions` | 版本列表 + changelog |
+| 首頁 | `/` | 精選/熱門/最新、搜尋入口 |
+| 搜尋頁 | `/search` | 關鍵詞搜尋 + 過濾 + 排序 |
+| 名稱空間主頁 | `/@{namespace}` | 空間介紹 + 技能列表 |
+| 技能詳情頁 | `/@{namespace}/{slug}` | README 渲染、版本、評分、收藏、下載 |
+| 版本歷史 | `/@{namespace}/{slug}/versions` | 版本列表 + changelog |
 
-门户区所有 PUBLIC 技能匿名可浏览和下载，无需登录。
+門戶區所有 PUBLIC 技能匿名可瀏覽和下載，無需登入。
 
-### 2.2 个人中心（需登录）
+### 2.2 個人中心（需登入）
 
-| 页面 | 路径 | 说明 |
+| 頁面 | 路徑 | 說明 |
 |------|------|------|
-| 我的技能 | `/dashboard/skills` | 我发布的技能 + 统一生命周期状态 |
-| 发布技能 | `/dashboard/publish` | zip 上传 + 预览 + 提交审核 |
+| 我的技能 | `/dashboard/skills` | 我發布的技能 + 統一生命週期狀態 |
+| 發布技能 | `/dashboard/publish` | zip 上傳 + 預覽 + 提交稽核 |
 | 我的收藏 | `/dashboard/stars` | 收藏列表 |
-| Token 管理 | `/dashboard/tokens` | 创建/查看/吊销 |
-| 我的命名空间 | `/dashboard/namespaces` | 参与的命名空间 |
+| Token 管理 | `/dashboard/tokens` | 建立/檢視/吊銷 |
+| 我的名稱空間 | `/dashboard/namespaces` | 參與的名稱空間 |
 
-### 2.3 命名空间管理（需空间 ADMIN）
+### 2.3 名稱空間管理（需空間 ADMIN）
 
-| 页面 | 路径 | 说明 |
+| 頁面 | 路徑 | 說明 |
 |------|------|------|
-| 成员管理 | `/dashboard/namespaces/{slug}/members` | 成员管理 |
-| 空间审核 | `/dashboard/namespaces/{slug}/reviews` | 待审核列表 |
+| 成員管理 | `/dashboard/namespaces/{slug}/members` | 成員管理 |
+| 空間稽核 | `/dashboard/namespaces/{slug}/reviews` | 待稽核列表 |
 
-### 2.4 平台管理（需对应平台角色）
+### 2.4 平臺管理（需對應平臺角色）
 
-| 页面 | 路径 | 所需角色 | 说明 |
+| 頁面 | 路徑 | 所需角色 | 說明 |
 |------|------|---------|------|
-| 审核中心 | `/admin/reviews` | SKILL_ADMIN | 全局待审核列表 |
-| 提升审核 | `/admin/promotions` | SKILL_ADMIN | 提升到全局的申请列表 |
-| 技能管理 | `/admin/skills` | SKILL_ADMIN | 隐藏/恢复技能、撤回已发布版本 |
-| 用户管理 | `/admin/users` | USER_ADMIN | 用户列表、角色分配、准入审批、封禁/解封 |
-| 审计日志 | `/admin/audit-logs` | AUDITOR | 操作日志查询 |
-| 命名空间管理 | `/admin/namespaces` | SUPER_ADMIN | 创建/归档/冻结 |
+| 稽核中心 | `/admin/reviews` | SKILL_ADMIN | 全域性待稽核列表 |
+| 提升稽核 | `/admin/promotions` | SKILL_ADMIN | 提升到全域性的申請列表 |
+| 技能管理 | `/admin/skills` | SKILL_ADMIN | 隱藏/恢復技能、撤回已發布版本 |
+| 使用者管理 | `/admin/users` | USER_ADMIN | 使用者列表、角色分配、准入審批、封禁/解封 |
+| 審計日誌 | `/admin/audit-logs` | AUDITOR | 操作日誌查詢 |
+| 名稱空間管理 | `/admin/namespaces` | SUPER_ADMIN | 建立/歸檔/凍結 |
 
-SUPER_ADMIN 可访问所有管理页面。路由守卫检查用户是否持有对应角色。
+SUPER_ADMIN 可訪問所有管理頁面。路由守衛檢查使用者是否持有對應角色。
 
-## 3 布局结构
+## 3 佈局結構
 
-- 门户区：顶部导航 + 内容区，无侧边栏，突出浏览体验
-- Dashboard / Admin：顶部导航 + 左侧边栏，管理效率优先
-- 响应式：移动端侧边栏收起为抽屉
+- 門戶區：頂部導航 + 內容區，無側邊欄，突出瀏覽體驗
+- Dashboard / Admin：頂部導航 + 左側邊欄，管理效率優先
+- 響應式：移動端側邊欄收起為抽屜
 
-## 3.1 生命周期展示模型
+## 3.1 生命週期展示模型
 
-前端不再从 `status + hidden + latestVersionStatus + viewingVersionStatus` 拼装 skill 生命周期，而统一消费后端返回的 projection：
+前端不再從 `status + hidden + latestVersionStatus + viewingVersionStatus` 拼裝 skill 生命週期，而統一消費後端返回的 projection：
 
-- `headlineVersion`：当前页面主展示版本
-- `publishedVersion`：当前最新已发布版本
-- `ownerPreviewVersion`：owner / namespace 管理者可见的待审核版本
+- `headlineVersion`：當前頁面主展示版本
+- `publishedVersion`：當前最新已發布版本
+- `ownerPreviewVersion`：owner / namespace 管理者可見的待稽核版本
 - `resolutionMode`：`PUBLISHED` / `OWNER_PREVIEW` / `NONE`
 
-约束：
+約束：
 
-- 详情页和“我的技能”列表统一以 `headlineVersion` 作为主展示版本
-- 安装、下载、promotion 等公开分发相关操作只允许绑定 `publishedVersion`
-- `hidden` 是独立治理覆盖层，不属于版本生命周期状态机
+- 詳情頁和“我的技能”列表統一以 `headlineVersion` 作為主展示版本
+- 安裝、下載、promotion 等公開分發相關操作只允許繫結 `publishedVersion`
+- `hidden` 是獨立治理覆蓋層，不屬於版本生命週期狀態機
 
-## 4 登录与鉴权
+## 4 登入與鑑權
 
-### 4.1 OAuth2 登录流程（前端视角）
+### 4.1 OAuth2 登入流程（前端視角）
 
 ```
-用户点击"登录"按钮
+使用者點選"登入"按鈕
     │
     ▼
-前端调用 GET /api/v1/auth/providers
+前端呼叫 GET /api/v1/auth/providers
     │
     ▼
-渲染可用的 OAuth Provider 按钮（一期只有 GitHub）
+渲染可用的 OAuth Provider 按鈕（一期只有 GitHub）
     │
     ▼
-用户点击 "Sign in with GitHub"
+使用者點選 "Sign in with GitHub"
     │
     ▼
 window.location.href = "/oauth2/authorization/github"
     │
     ▼
-（浏览器跳转到 GitHub → 授权 → 回调后端 → 后端创建 Session）
+（瀏覽器跳轉到 GitHub → 授權 → 回撥後端 → 後端建立 Session）
     │
     ▼
-后端重定向回前端页面（如 / 或用户之前访问的页面）
+後端重定向回前端頁面（如 / 或使用者之前訪問的頁面）
     │
     ▼
-前端检测到 Session Cookie，调用 GET /api/v1/auth/me
+前端檢測到 Session Cookie，呼叫 GET /api/v1/auth/me
     │
     ▼
-获取用户信息，渲染登录态 UI
+獲取使用者資訊，渲染登入態 UI
 ```
 
-前端不需要任何 OAuth 库，登录完全由后端 Spring Security 处理。前端只负责：
-1. 调用 `/api/v1/auth/providers` 获取可用 Provider 列表
-2. 跳转到对应的 `authorizationUrl`
-3. 回调后通过 `/api/v1/auth/me` 检测登录态
+前端不需要任何 OAuth 庫，登入完全由後端 Spring Security 處理。前端只負責：
+1. 呼叫 `/api/v1/auth/providers` 獲取可用 Provider 列表
+2. 跳轉到對應的 `authorizationUrl`
+3. 回撥後透過 `/api/v1/auth/me` 檢測登入態
 
-### 4.2 预留的被动会话引导
+### 4.2 預留的被動會話引導
 
-为未来私有部署下的企业 SSO 兼容，前端可在登录页或应用初始化阶段显式调用：
+為未來私有部署下的企業 SSO 相容，前端可在登入頁或應用初始化階段顯式呼叫：
 
 - `POST /api/v1/auth/session/bootstrap`
 
-该接口在开源版默认关闭；私有版启用后，前端可在检测到用户未登录时主动调用一次，以尝试将外部 SSO Cookie 换成 skillhub Session。该流程必须保持显式触发，不默认依赖全局透明拦截器。
+該介面在開源版預設關閉；私有版啟用後，前端可在檢測到使用者未登入時主動呼叫一次，以嘗試將外部 SSO Cookie 換成 skillhub Session。該流程必須保持顯式觸發，不預設依賴全域性透明攔截器。
 
-前端兼容接入层约束如下：
+前端相容接入層約束如下：
 
-- 默认不启用，运行时配置不打开时，登录页和全局行为与开源版完全一致
-- 账号密码登录兼容层与被动会话兼容层相互独立，可单独启用
-- 启用后，登录页会出现一个“企业 SSO”兼容入口
-- 启用密码兼容层后，登录页账号密码表单会改为调用通用直连认证接口
-- 前端应优先消费 `/api/v1/auth/methods` 作为统一登录方式目录；`/api/v1/auth/providers` 仅保留兼容
-- 可选自动尝试，但仍限定在登录页内执行，不在全站每次匿名访问时自动探测
-- bootstrap 失败时应静默回退到现有本地登录和 OAuth 登录，不打断正常流程
+- 預設不啟用，執行時配置不開啟時，登入頁和全域性行為與開源版完全一致
+- 賬號密碼登入相容層與被動會話相容層相互獨立，可單獨啟用
+- 啟用後，登入頁會出現一個“企業 SSO”相容入口
+- 啟用密碼相容層後，登入頁賬號密碼錶單會改為呼叫通用直連認證介面
+- 前端應優先消費 `/api/v1/auth/methods` 作為統一登入方式目錄；`/api/v1/auth/providers` 僅保留相容
+- 可選自動嘗試，但仍限定在登入頁內執行，不在全站每次匿名訪問時自動探測
+- bootstrap 失敗時應靜默回退到現有本地登入和 OAuth 登入，不打斷正常流程
 
-前端运行时配置项：
+前端執行時配置項：
 
 - `SKILLHUB_WEB_AUTH_DIRECT_ENABLED`
 - `SKILLHUB_WEB_AUTH_DIRECT_PROVIDER`
@@ -148,46 +148,46 @@ window.location.href = "/oauth2/authorization/github"
 - `SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_PROVIDER`
 - `SKILLHUB_WEB_AUTH_SESSION_BOOTSTRAP_AUTO`
 
-推荐策略：
+推薦策略：
 
-- 私有版密码直连：`auth_direct_enabled=true`，`auth_direct_provider=private-sso`
+- 私有版密碼直連：`auth_direct_enabled=true`，`auth_direct_provider=private-sso`
 - 私有版初期：`enabled=true`，`provider=private-sso`，`auto=false`
-- 验证稳定后：再评估是否切到 `auto=true`
+- 驗證穩定後：再評估是否切到 `auto=true`
 
-### 4.3 登录态检测
+### 4.3 登入態檢測
 
 ```
-页面加载 → GET /api/v1/auth/me
+頁面載入 → GET /api/v1/auth/me
               │
     ┌─────────┴──────────┐
-    │ 200: 已登录          │ 401: 未登录
-    │ 存入全局状态          │ 门户页正常展示（匿名浏览）
-    │ 渲染登录态 UI         │ Dashboard/Admin 重定向到登录
+    │ 200: 已登入          │ 401: 未登入
+    │ 存入全域性狀態          │ 門戶頁正常展示（匿名瀏覽）
+    │ 渲染登入態 UI         │ Dashboard/Admin 重定向到登入
     └────────────────────┘
 ```
 
-- TanStack Router `beforeLoad` 做路由守卫
-- Admin 路由额外检查角色
-- 前端权限控制粒度详见 [03-authentication-design.md](./03-authentication-design.md) 前端权限控制粒度章节
+- TanStack Router `beforeLoad` 做路由守衛
+- Admin 路由額外檢查角色
+- 前端許可權控制粒度詳見 [03-authentication-design.md](./03-authentication-design.md) 前端許可權控制粒度章節
 
-## 5 API 集成工作流
+## 5 API 整合工作流
 
 ```
-后端 Springdoc → openapi.json
-    → openapi-typescript 生成类型
-    → openapi-fetch 创建客户端
-    → TanStack Query 封装为 hooks
+後端 Springdoc → openapi.json
+    → openapi-typescript 生成型別
+    → openapi-fetch 建立客戶端
+    → TanStack Query 封裝為 hooks
 ```
 
-## 6 文件上传
+## 6 檔案上傳
 
-一期 Web 端：zip 上传 → 后端解压校验 → 返回预览 → 用户确认 → 提交审核。
-支持 drag-and-drop + 进度条。
+一期 Web 端：zip 上傳 → 後端解壓校驗 → 返回預覽 → 使用者確認 → 提交稽核。
+支援 drag-and-drop + 進度條。
 
-## 7 关键交互
+## 7 關鍵互動
 
-**技能详情页**：SKILL.md Markdown 渲染、右侧信息栏（版本/下载量/评分/收藏/标签/空间）、版本切换、安装命令一键复制（同时展示 skillhub CLI 格式 `install @namespace/slug` 和 ClawHub CLI 格式 `install canonical-slug`）。匿名用户可浏览和下载，收藏/评分按钮提示登录。
+**技能詳情頁**：SKILL.md Markdown 渲染、右側資訊欄（版本/下載量/評分/收藏/標籤/空間）、版本切換、安裝命令一鍵複製（同時展示 skillhub CLI 格式 `install @namespace/slug` 和 ClawHub CLI 格式 `install canonical-slug`）。匿名使用者可瀏覽和下載，收藏/評分按鈕提示登入。
 
-**搜索页**：实时搜索（debounce 300ms）、技能卡片、排序（相关度/下载量/评分/最新）、命名空间过滤。匿名用户可搜索 PUBLIC 技能。注意：一期搜索仅基于 latest 版本内容，不支持按 tag/version 搜索（详见 `04-search-architecture.md` 5.1 节）。
+**搜尋頁**：實時搜尋（debounce 300ms）、技能卡片、排序（相關度/下載量/評分/最新）、名稱空間過濾。匿名使用者可搜尋 PUBLIC 技能。注意：一期搜尋僅基於 latest 版本內容，不支援按 tag/version 搜尋（詳見 `04-search-architecture.md` 5.1 節）。
 
-**审核页面**：左侧列表 + 右侧内容预览（Markdown + 文件树）、通过/拒绝 + 意见输入。
+**稽核頁面**：左側列表 + 右側內容預覽（Markdown + 檔案樹）、透過/拒絕 + 意見輸入。

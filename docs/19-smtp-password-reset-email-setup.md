@@ -1,47 +1,47 @@
-# SkillHub SMTP 邮箱配置指南（验证码邮件）
+# SkillHub SMTP 郵箱配置指南（驗證碼郵件）
 
-本文说明如何为 SkillHub 配置 SMTP，用于发送“密码重置验证码”邮件。
+本文說明如何為 SkillHub 配置 SMTP，用於傳送“密碼重置驗證碼”郵件。
 
-适用场景：
-- 生产/预发布环境（`compose.release.yml` + `.env.release`）
-- 本地联调环境（直接注入后端环境变量）
+適用場景：
+- 生產/預發布環境（`compose.release.yml` + `.env.release`）
+- 本地聯調環境（直接注入後端環境變數）
 
-补充说明：
-- SMTP 本质是邮件传输协议，不是单一厂商产品。
-- 你可以使用企业邮箱、云邮箱或本地测试 SMTP 服务（例如 MailHog）作为 SMTP 服务端。
+補充說明：
+- SMTP 本質是郵件傳輸協議，不是單一廠商產品。
+- 你可以使用企業郵箱、雲郵箱或本地測試 SMTP 服務（例如 MailHog）作為 SMTP 服務端。
 
-当前密码重置页面入口说明：
-- 当前前端统一使用 `/reset-password` 页面。
-- 该页面同时包含“发送验证码”和“提交新密码”两步，不再单独使用 `/forgot-password`。
+當前密碼重置頁面入口說明：
+- 當前前端統一使用 `/reset-password` 頁面。
+- 該頁面同時包含“傳送驗證碼”和“提交新密碼”兩步，不再單獨使用 `/forgot-password`。
 
-## 1. 需要配置的环境变量
+## 1. 需要配置的環境變數
 
-以下变量已被后端读取：
+以下變數已被後端讀取：
 
-| 变量名 | 说明 | 示例 |
+| 變數名 | 說明 | 示例 |
 |---|---|---|
-| `SPRING_MAIL_HOST` | SMTP 服务器地址 | `smtp.example.com` |
-| `SPRING_MAIL_PORT` | SMTP 端口 | `465` |
-| `SPRING_MAIL_USERNAME` | SMTP 用户名 | `noreply@example.com` |
-| `SPRING_MAIL_PASSWORD` | SMTP 密码/授权码 | `xxxxxx` |
-| `SPRING_MAIL_SMTP_AUTH` | 是否启用 SMTP AUTH | `true` |
-| `SPRING_MAIL_SMTP_STARTTLS_ENABLE` | 是否启用 STARTTLS | `false` |
-| `SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE` | 是否启用 SMTP SSL 直连 | `true` |
-| `SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST` | SSL 信任主机（用于规避部分环境下证书链校验失败） | `smtp.mail.example` |
-| `SKILLHUB_AUTH_PASSWORD_RESET_CODE_EXPIRY` | 验证码有效期（ISO-8601 Duration） | `PT10M` |
-| `SKILLHUB_AUTH_PASSWORD_RESET_FROM_ADDRESS` | 发件人邮箱 | `noreply@example.com` |
-| `SKILLHUB_AUTH_PASSWORD_RESET_FROM_NAME` | 发件人名称 | `SkillHub` |
+| `SPRING_MAIL_HOST` | SMTP 伺服器地址 | `smtp.example.com` |
+| `SPRING_MAIL_PORT` | SMTP 埠 | `465` |
+| `SPRING_MAIL_USERNAME` | SMTP 使用者名稱 | `noreply@example.com` |
+| `SPRING_MAIL_PASSWORD` | SMTP 密碼/授權碼 | `xxxxxx` |
+| `SPRING_MAIL_SMTP_AUTH` | 是否啟用 SMTP AUTH | `true` |
+| `SPRING_MAIL_SMTP_STARTTLS_ENABLE` | 是否啟用 STARTTLS | `false` |
+| `SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_ENABLE` | 是否啟用 SMTP SSL 直連 | `true` |
+| `SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST` | SSL 信任主機（用於規避部分環境下證書鏈校驗失敗） | `smtp.mail.example` |
+| `SKILLHUB_AUTH_PASSWORD_RESET_CODE_EXPIRY` | 驗證碼有效期（ISO-8601 Duration） | `PT10M` |
+| `SKILLHUB_AUTH_PASSWORD_RESET_FROM_ADDRESS` | 發件人郵箱 | `noreply@example.com` |
+| `SKILLHUB_AUTH_PASSWORD_RESET_FROM_NAME` | 發件人名稱 | `SkillHub` |
 
-说明：
-- 当前文档统一按 `465 + SSL` 配置，不再展开 `587 + STARTTLS` 方案。
-- 使用 `465` 时配置：`STARTTLS=false`、`SSL_ENABLE=true`。
-- 若出现 `PKIX path building failed` / `SSLHandshakeException`，可尝试增加 `SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST=<SMTP_HOST>`（本地联调常用）。
-- 生产环境默认不建议配置 `SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST`，仅在证书链异常时临时启用。
-- `SKILLHUB_AUTH_PASSWORD_RESET_CODE_EXPIRY` 支持如 `PT5M`、`PT10M`、`PT30M`。
+說明：
+- 當前檔案統一按 `465 + SSL` 配置，不再展開 `587 + STARTTLS` 方案。
+- 使用 `465` 時配置：`STARTTLS=false`、`SSL_ENABLE=true`。
+- 若出現 `PKIX path building failed` / `SSLHandshakeException`，可嘗試增加 `SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST=<SMTP_HOST>`（本地聯調常用）。
+- 生產環境預設不建議配置 `SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST`，僅在證書鏈異常時臨時啟用。
+- `SKILLHUB_AUTH_PASSWORD_RESET_CODE_EXPIRY` 支援如 `PT5M`、`PT10M`、`PT30M`。
 
-## 1.1 配置方案速查（推荐）
+## 1.1 配置方案速查（推薦）
 
-### A. 通用 SMTP 邮箱（本地直连真实邮箱）
+### A. 通用 SMTP 郵箱（本地直連真實郵箱）
 
 ```dotenv
 SPRING_MAIL_HOST=smtp.mail.example
@@ -57,7 +57,7 @@ SKILLHUB_AUTH_PASSWORD_RESET_FROM_ADDRESS=mailer@example.com
 SKILLHUB_AUTH_PASSWORD_RESET_FROM_NAME=your-from-name
 ```
 
-本地 `export` 示例写法：
+本地 `export` 示例寫法：
 
 ```bash
 export SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST=smtp.mail.example
@@ -73,7 +73,7 @@ export SKILLHUB_AUTH_PASSWORD_RESET_FROM_ADDRESS=mailer@example.com
 export SKILLHUB_AUTH_PASSWORD_RESET_FROM_NAME=your-from-name
 ```
 
-### B. MailHog（本地联调推荐）
+### B. MailHog（本地聯調推薦）
 
 ```dotenv
 SPRING_MAIL_HOST=127.0.0.1
@@ -87,7 +87,7 @@ SKILLHUB_AUTH_PASSWORD_RESET_FROM_ADDRESS=noreply@skillhub.local
 SKILLHUB_AUTH_PASSWORD_RESET_FROM_NAME=SkillHub
 ```
 
-### C. 线上部署（465 端口示例）
+### C. 線上部署（465 埠示例）
 
 ```dotenv
 SPRING_MAIL_HOST=smtp.mail.example
@@ -103,15 +103,15 @@ SKILLHUB_AUTH_PASSWORD_RESET_FROM_ADDRESS=mailer@example.com
 SKILLHUB_AUTH_PASSWORD_RESET_FROM_NAME=your-from-name
 ```
 
-## 2. 单机交付（Compose）配置步骤
+## 2. 單機交付（Compose）配置步驟
 
-1. 复制环境模板（若尚未创建）：
+1. 複製環境模板（若尚未建立）：
 
 ```bash
 cp .env.release.example .env.release
 ```
 
-2. 编辑 `.env.release`，填写 SMTP 变量：
+2. 編輯 `.env.release`，填寫 SMTP 變數：
 
 ```dotenv
 SPRING_MAIL_HOST=smtp.mail.example
@@ -128,23 +128,23 @@ SKILLHUB_AUTH_PASSWORD_RESET_FROM_ADDRESS=mailer@example.com
 SKILLHUB_AUTH_PASSWORD_RESET_FROM_NAME=your-from-name
 ```
 
-3. 重启后端容器使配置生效：
+3. 重啟後端容器使配置生效：
 
 ```bash
 docker compose --env-file .env.release -f compose.release.yml up -d server
 ```
 
-4. 查看后端日志确认启动正常：
+4. 檢視後端日誌確認啟動正常：
 
 ```bash
 docker compose --env-file .env.release -f compose.release.yml logs -f server
 ```
 
-## 3. 本地开发配置与验证
+## 3. 本地開發配置與驗證
 
-### 3.1 一次性临时生效（推荐）
+### 3.1 一次性臨時生效（推薦）
 
-适合当前终端临时测试，重开终端后失效。
+適合當前終端臨時測試，重開終端後失效。
 
 ```bash
 SPRING_MAIL_HOST=smtp.mail.example \
@@ -161,23 +161,23 @@ SKILLHUB_AUTH_PASSWORD_RESET_FROM_NAME=your-from-name \
 make dev-server
 ```
 
-### 3.2 长期生效（shell 配置）
+### 3.2 長期生效（shell 配置）
 
-如果你写到了 `~/.zshrc`，请注意：
-- 必须 `source ~/.zshrc` 或重开终端后变量才会生效
-- 需要在“同一个终端”启动 `make dev-server`
+如果你寫到了 `~/.zshrc`，請注意：
+- 必須 `source ~/.zshrc` 或重開終端後變數才會生效
+- 需要在“同一個終端”啟動 `make dev-server`
 
-可先确认变量是否在当前 shell 中：
+可先確認變數是否在當前 shell 中：
 
 ```bash
 env | rg '^(SPRING_MAIL_|SKILLHUB_AUTH_PASSWORD_RESET_)'
 ```
 
-### 3.3 推荐联调方式（MailHog）
+### 3.3 推薦聯調方式（MailHog）
 
-如果你只是本地验证验证码链路，建议用 MailHog 作为本地 SMTP 服务：
+如果你只是本地驗證驗證碼鏈路，建議用 MailHog 作為本地 SMTP 服務：
 
-1. 启动 MailHog：
+1. 啟動 MailHog：
 
 ```bash
 docker run -d --name skillhub-mailhog \
@@ -186,13 +186,13 @@ docker run -d --name skillhub-mailhog \
   mailhog/mailhog
 ```
 
-2. 启动依赖服务（Postgres/Redis）：
+2. 啟動依賴服務（Postgres/Redis）：
 
 ```bash
 make dev
 ```
 
-3. 启动后端时注入 SMTP 环境变量（示例）：
+3. 啟動後端時注入 SMTP 環境變數（示例）：
 
 ```bash
 SPRING_MAIL_HOST=127.0.0.1 \
@@ -207,19 +207,19 @@ SKILLHUB_AUTH_PASSWORD_RESET_FROM_NAME=SkillHub \
 make dev-server
 ```
 
-4. 打开 MailHog Web UI 查看邮件：
+4. 開啟 MailHog Web UI 檢視郵件：
 
 ```text
 http://localhost:8025
 ```
 
-5. 在 SkillHub 页面验证流程：
-- 打开 `/reset-password`
-- 输入邮箱并点击“发送验证码”
-- 在 MailHog 中查看验证码邮件
-- 输入邮箱 + 验证码 + 新密码完成重置
+5. 在 SkillHub 頁面驗證流程：
+- 開啟 `/reset-password`
+- 輸入郵箱並點選“傳送驗證碼”
+- 在 MailHog 中檢視驗證碼郵件
+- 輸入郵箱 + 驗證碼 + 新密碼完成重置
 
-6. 也可使用接口做快速验证（示例）：
+6. 也可使用介面做快速驗證（示例）：
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/local/password-reset/request \
@@ -227,91 +227,91 @@ curl -X POST http://localhost:8080/api/v1/auth/local/password-reset/request \
   -d '{"email":"your-email@example.com"}'
 ```
 
-## 4. 功能验证（验证码邮件）
+## 4. 功能驗證（驗證碼郵件）
 
-### 4.1 用户自助找回
+### 4.1 使用者自助找回
 
-在 `/reset-password` 页面点击“发送验证码”后，系统会尝试发送验证码邮件。
+在 `/reset-password` 頁面點選“傳送驗證碼”後，系統會嘗試傳送驗證碼郵件。
 
-说明：
-- 为防止账号枚举，自助接口总是返回通用成功提示。
-- 即使邮件发送失败，接口也可能返回成功；请结合后端日志确认实际发送结果。
+說明：
+- 為防止賬號列舉，自助介面總是返回通用成功提示。
+- 即使郵件傳送失敗，介面也可能返回成功；請結合後端日誌確認實際傳送結果。
 
-### 4.2 管理员触发重置
+### 4.2 管理員觸發重置
 
-管理员在用户管理页触发“重置密码”时，系统会强制发送验证码；
-若 SMTP 发送失败，会返回错误（便于运维排障）。
+管理員在使用者管理頁觸發“重置密碼”時，系統會強制傳送驗證碼；
+若 SMTP 傳送失敗，會返回錯誤（便於運維排障）。
 
-## 5. 常见问题排查
+## 5. 常見問題排查
 
-### 5.1 认证失败（`535 Authentication failed`）
-
-排查方向：
-- 用户名/密码是否正确
-- 邮箱服务是否要求“客户端授权码”而非登录密码
-- 发件账号是否已开启 SMTP 服务
-
-### 5.2 连接超时或拒绝连接
+### 5.1 認證失敗（`535 Authentication failed`）
 
 排查方向：
-- 主机到 SMTP 服务端口 `465` 是否可达
-- 安全组/防火墙是否放行出站连接
-- SMTP 服务地址是否填写正确
+- 使用者名稱/密碼是否正確
+- 郵箱服務是否要求“客戶端授權碼”而非登入密碼
+- 發件賬號是否已開啟 SMTP 服務
 
-### 5.3 本地明明配置了变量但不生效
+### 5.2 連線超時或拒絕連線
 
 排查方向：
-- 是否只是编辑了 `~/.zshrc` 但没有 `source ~/.zshrc`
-- 启动后端的终端是否与配置变量的终端是同一个
-- `8080` 是否被旧进程占用，导致新进程没启动成功
+- 主機到 SMTP 服務埠 `465` 是否可達
+- 安全組/防火牆是否放行出站連線
+- SMTP 服務地址是否填寫正確
 
-可执行以下命令快速检查：
+### 5.3 本地明明配置了變數但不生效
+
+排查方向：
+- 是否只是編輯了 `~/.zshrc` 但沒有 `source ~/.zshrc`
+- 啟動後端的終端是否與配置變數的終端是同一個
+- `8080` 是否被舊程式佔用，導致新程式沒啟動成功
+
+可執行以下命令快速檢查：
 
 ```bash
-# 查看 8080 是否被旧进程占用
+# 檢視 8080 是否被舊程式佔用
 lsof -nP -iTCP:8080 -sTCP:LISTEN
 
-# 查看当前 shell 是否有 SMTP 环境变量
+# 檢視當前 shell 是否有 SMTP 環境變數
 env | rg '^(SPRING_MAIL_|SKILLHUB_AUTH_PASSWORD_RESET_)'
 ```
 
-### 5.4 发件人被拒绝
+### 5.4 發件人被拒絕
 
 排查方向：
-- `SKILLHUB_AUTH_PASSWORD_RESET_FROM_ADDRESS` 是否与 SMTP 账号一致或已验证
-- 邮箱服务是否限制别名发件
+- `SKILLHUB_AUTH_PASSWORD_RESET_FROM_ADDRESS` 是否與 SMTP 賬號一致或已驗證
+- 郵箱服務是否限制別名發件
 
-### 5.5 健康检查是否校验 SMTP
+### 5.5 健康檢查是否校驗 SMTP
 
-默认配置下，邮件健康检查关闭，不会因为 SMTP 不可达导致 `health` 失败。
+預設配置下，郵件健康檢查關閉，不會因為 SMTP 不可達導致 `health` 失敗。
 
-若需要将 SMTP 连通性纳入健康检查，可设置：
+若需要將 SMTP 連通性納入健康檢查，可設定：
 
 ```dotenv
 MANAGEMENT_HEALTH_MAIL_ENABLED=true
 ```
 
-### 5.6 SMTP 报 `PKIX path building failed`（证书链校验失败）
+### 5.6 SMTP 報 `PKIX path building failed`（證書鏈校驗失敗）
 
-典型日志：
+典型日誌：
 - `SSLHandshakeException`
 - `unable to find valid certification path to requested target`
 
-处理建议（本地联调）：
+處理建議（本地聯調）：
 - 增加：
 
 ```dotenv
 SPRING_MAIL_PROPERTIES_MAIL_SMTP_SSL_TRUST=smtp.mail.example
 ```
 
-- 然后重启后端，再触发一次“发送验证码”。
+- 然後重啟後端，再觸發一次“傳送驗證碼”。
 
-补充：
-- 该配置用于指定信任主机，适合本地排障与联调。
-- 生产环境默认不建议长期启用该配置，更推荐使用规范 CA 证书链或将企业 CA 导入 Java truststore。
+補充：
+- 該配置用於指定信任主機，適合本地排障與聯調。
+- 生產環境預設不建議長期啟用該配置，更推薦使用規範 CA 證書鏈或將企業 CA 匯入 Java truststore。
 
-## 6. 安全建议
+## 6. 安全建議
 
-- 不要把 SMTP 密码提交到仓库；仅写入受控的 `.env.release` 或密钥管理系统。
-- 使用专用发信账号，避免使用个人邮箱主密码。
-- 生产环境建议定期轮换 SMTP 授权码。
+- 不要把 SMTP 密碼提交到倉庫；僅寫入受控的 `.env.release` 或金鑰管理系統。
+- 使用專用發信賬號，避免使用個人郵箱主密碼。
+- 生產環境建議定期輪換 SMTP 授權碼。

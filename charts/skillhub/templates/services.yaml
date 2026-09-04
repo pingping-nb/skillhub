@@ -1,7 +1,7 @@
 {{- /*
-SkillHub Service 资源
-- server/web: 使用组件自己的 service.type 配置（共享同一模板）
-- scanner: 固定 ClusterIP（仅供内部调用）
+SkillHub Service 資源
+- server/web: 使用元件自己的 service.type 配置（共享同一模板）
+- scanner: 固定 ClusterIP（僅供內部呼叫）
 */}}
 
 {{- range $name := list "server" "web" }}

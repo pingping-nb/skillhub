@@ -1,7 +1,7 @@
 -- V3__phase3_review_social_tables.sql
--- Phase 3: 审核工作流、提升、评分/收藏、幂等性
+-- Phase 3: 稽核工作流、提升、評分/收藏、冪等性
 
--- 审核任务表
+-- 稽核任務表
 CREATE TABLE review_task (
     id BIGSERIAL PRIMARY KEY,
     skill_version_id BIGINT NOT NULL REFERENCES skill_version(id),
@@ -19,7 +19,7 @@ CREATE INDEX idx_review_task_namespace_status ON review_task(namespace_id, statu
 CREATE INDEX idx_review_task_submitted_by_status ON review_task(submitted_by, status);
 CREATE UNIQUE INDEX idx_review_task_version_pending ON review_task(skill_version_id) WHERE status = 'PENDING';
 
--- 提升申请表
+-- 提升申請表
 CREATE TABLE promotion_request (
     id BIGSERIAL PRIMARY KEY,
     source_skill_id BIGINT NOT NULL REFERENCES skill(id),
@@ -51,7 +51,7 @@ CREATE TABLE skill_star (
 CREATE INDEX idx_skill_star_user_id ON skill_star(user_id);
 CREATE INDEX idx_skill_star_skill_id ON skill_star(skill_id);
 
--- 技能评分表
+-- 技能評分表
 CREATE TABLE skill_rating (
     id BIGSERIAL PRIMARY KEY,
     skill_id BIGINT NOT NULL REFERENCES skill(id),
@@ -64,7 +64,7 @@ CREATE TABLE skill_rating (
 
 CREATE INDEX idx_skill_rating_skill_id ON skill_rating(skill_id);
 
--- 幂等性记录表
+-- 冪等性記錄表
 CREATE TABLE idempotency_record (
     request_id VARCHAR(64) PRIMARY KEY,
     resource_type VARCHAR(64) NOT NULL,

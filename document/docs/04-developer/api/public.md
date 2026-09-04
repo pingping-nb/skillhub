@@ -1,24 +1,24 @@
 ---
-title: 公开 API
+title: 公開 API
 sidebar_position: 2
-description: 无需认证的公开 API
+description: 無需認證的公開 API
 ---
 
-# 公开 API
+# 公開 API
 
-## 技能搜索
+## 技能搜尋
 
 ```http
 GET /api/v1/skills?keyword=...&namespace=...&page=1&size=20
 ```
 
 **Query Parameters:**
-- `keyword`: 搜索关键词
-- `namespace`: 命名空间筛选
-- `page`: 页码
-- `size`: 每页数量
+- `keyword`: 搜尋關鍵詞
+- `namespace`: 名稱空間篩選
+- `page`: 頁碼
+- `size`: 每頁數量
 
-## 技能详情
+## 技能詳情
 
 ```http
 GET /api/v1/skills/{namespace}/{slug}
@@ -30,19 +30,19 @@ GET /api/v1/skills/{namespace}/{slug}
 GET /api/v1/skills/{namespace}/{slug}/versions
 ```
 
-## 版本详情
+## 版本詳情
 
 ```http
 GET /api/v1/skills/{namespace}/{slug}/versions/{version}
 ```
 
-## 文件清单
+## 檔案清單
 
 ```http
 GET /api/v1/skills/{namespace}/{slug}/versions/{version}/files
 ```
 
-## 下载技能
+## 下載技能
 
 ```http
 GET /api/v1/skills/{namespace}/{slug}/download
@@ -55,13 +55,13 @@ GET /api/v1/skills/{namespace}/{slug}/versions/{version}/download
 GET /api/v1/skills/{namespace}/{slug}/resolve?version=...&tag=...
 ```
 
-## 命名空间列表
+## 名稱空間列表
 
 ```http
 GET /api/v1/namespaces
 ```
 
-## 命名空间详情
+## 名稱空間詳情
 
 ```http
 GET /api/v1/namespaces/{slug}
@@ -69,4 +69,4 @@ GET /api/v1/namespaces/{slug}
 
 ## 下一步
 
-- [认证 API](./authenticated) - 查看认证接口
+- [認證 API](./authenticated) - 檢視認證介面

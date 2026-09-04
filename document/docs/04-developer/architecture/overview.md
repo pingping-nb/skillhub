@@ -1,49 +1,49 @@
 ---
-title: 系统架构
+title: 系統架構
 sidebar_position: 1
-description: SkillHub 系统架构概览
+description: SkillHub 系統架構概覽
 ---
 
-# 系统架构
+# 系統架構
 
-## 架构原则
+## 架構原則
 
-- **单体优先**：一期采用模块化单体，不拆微服务
-- **依赖倒置**：领域层不依赖基础设施
-- **可替换边界**：搜索、存储都有 SPI 抽象
+- **單體優先**：一期採用模組化單體，不拆微服務
+- **依賴倒置**：領域層不依賴基礎設施
+- **可替換邊界**：搜尋、儲存都有 SPI 抽象
 
-## 模块结构
+## 模組結構
 
 ```
 server/
-├── skillhub-app/          # 启动、配置装配、Controller
-├── skillhub-domain/       # 领域模型 + 领域服务 + 应用服务
-├── skillhub-auth/         # OAuth2 认证 + RBAC + 授权判定
-├── skillhub-search/       # 搜索 SPI + PostgreSQL 全文实现
-├── skillhub-storage/      # 对象存储抽象 + LocalFile/S3
-└── skillhub-infra/        # JPA、通用工具、配置基础
+├── skillhub-app/          # 啟動、配置裝配、Controller
+├── skillhub-domain/       # 領域模型 + 領域服務 + 應用服務
+├── skillhub-auth/         # OAuth2 認證 + RBAC + 授權判定
+├── skillhub-search/       # 搜尋 SPI + PostgreSQL 全文實現
+├── skillhub-storage/      # 物件儲存抽象 + LocalFile/S3
+└── skillhub-infra/        # JPA、通用工具、配置基礎
 ```
 
-## 模块依赖
+## 模組依賴
 
 ```
 app → domain, auth, search, storage, infra
 infra → domain
 auth → domain
 search → domain
-storage → (独立)
+storage → (獨立)
 ```
 
-## 技术栈
+## 技術棧
 
-| 层级 | 技术 | 版本 |
+| 層級 | 技術 | 版本 |
 |------|------|------|
-| 运行时 | Java | 21 |
+| 執行時 | Java | 21 |
 | 框架 | Spring Boot | 3.2.3 |
-| 数据库 | PostgreSQL | 16.x |
-| 缓存/会话 | Redis | 7.x |
+| 資料庫 | PostgreSQL | 16.x |
+| 快取/會話 | Redis | 7.x |
 
-## 部署架构
+## 部署架構
 
 ```
 ┌──────────────┐
@@ -66,4 +66,4 @@ PostgreSQL  Redis
 
 ## 下一步
 
-- [领域模型](./domain-model) - 核心实体
+- [領域模型](./domain-model) - 核心實體

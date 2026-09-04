@@ -10,15 +10,15 @@ export function formatRelativeTime(dateStr: string, lang: string): string {
   const isChinese = lang.startsWith('zh')
 
   if (minutes < 1) {
-    if (isChinese) return '刚刚'
+    if (isChinese) return '剛剛'
     return 'just now'
   }
   if (minutes < 60) {
-    if (isChinese) return `${minutes}分钟`
+    if (isChinese) return `${minutes}分鐘`
     return `${minutes}m`
   }
   if (hours < 24) {
-    if (isChinese) return `${hours}小时`
+    if (isChinese) return `${hours}小時`
     return `${hours}h`
   }
   if (days < 30) {

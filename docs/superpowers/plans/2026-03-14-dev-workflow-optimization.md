@@ -86,7 +86,7 @@ In `Makefile` line 1, add `dev-logs dev-status` to the `.PHONY` list after the e
 After the `dev-all-reset` target (around line 106), add the following. Note: these targets reference variables (`DEV_PROCESS`, `DEV_SERVER_PID`, `DEV_WEB_PID`, `DEV_SERVER_LOG`, `DEV_WEB_LOG`) that are already defined at the top of the Makefile (lines 3-10).
 
 ```makefile
-dev-status: ## 查看本地开发服务状态
+dev-status: ## 檢視本地開發服務狀態
 	@echo "=== Dependency Services ==="
 	@docker compose ps
 	@echo ""
@@ -103,7 +103,7 @@ dev-status: ## 查看本地开发服务状态
 		echo "  Not running"; \
 	fi
 
-dev-logs: ## 实时查看开发服务日志（backend/frontend，默认 backend）
+dev-logs: ## 實時檢視開發服務日誌（backend/frontend，預設 backend）
 	@SERVICE=$${SERVICE:-backend}; \
 	if [ "$$SERVICE" = "backend" ]; then \
 		tail -f $(DEV_SERVER_LOG); \
@@ -304,7 +304,7 @@ Add `staging staging-down staging-logs` to the `.PHONY` list on line 1 (appendin
 After `dev-all-reset` target, add:
 
 ```makefile
-staging: ## 构建并启动 staging 环境，运行 smoke test（混合模式：后端镜像 + 前端静态文件）
+staging: ## 構建並啟動 staging 環境，執行 smoke test（混合模式：後端映象 + 前端靜態檔案）
 	@echo "=== [1/5] Building backend Docker image ==="
 	docker build -t $(STAGING_SERVER_IMAGE) -f server/Dockerfile server
 	@echo "=== [2/5] Building frontend static files ==="
@@ -330,10 +330,10 @@ staging: ## 构建并启动 staging 环境，运行 smoke test（混合模式：
 		exit 1; \
 	fi
 
-staging-down: ## 停止 staging 环境
+staging-down: ## 停止 staging 環境
 	docker compose -f docker-compose.yml -f docker-compose.staging.yml down --remove-orphans
 
-staging-logs: ## 查看 staging 服务日志（SERVICE=server|web，默认 server）
+staging-logs: ## 檢視 staging 服務日誌（SERVICE=server|web，預設 server）
 	@SERVICE=$${SERVICE:-server}; \
 	docker compose -f docker-compose.yml -f docker-compose.staging.yml logs -f $$SERVICE
 ```
@@ -377,7 +377,7 @@ Add `pr` to the `.PHONY` list on line 1 (appending to the changes from Chunks 2 
 - [ ] **Step 2: Add pr target after staging-logs**
 
 ```makefile
-pr: ## 推送当前分支并创建 Pull Request（需要 gh CLI）
+pr: ## 推送當前分支並建立 Pull Request（需要 gh CLI）
 	@if ! command -v gh >/dev/null 2>&1; then \
 		echo "Error: gh CLI not found. Install from https://cli.github.com/"; \
 		exit 1; \

@@ -13,7 +13,7 @@ describe('resolveNotificationDisplay', () => {
       id: 1,
     }, 'zh-CN')
 
-    expect(display.title).toBe('技能审核提交')
+    expect(display.title).toBe('技能稽核提交')
     expect(display.description).toContain('Calendar')
     expect(display.description).toContain('1.0.0')
   })

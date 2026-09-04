@@ -1,9 +1,9 @@
 /**
- * SkillHub 自定义样式 - 讯飞蓝色系
+ * SkillHub 自定義樣式 - 訊飛藍色系
  */
 
 :root {
-  /* 主色：讯飞蓝 */
+  /* 主色：訊飛藍 */
   --ifm-color-primary: #0052D9;
   --ifm-color-primary-dark: #003DA6;
   --ifm-color-primary-darker: #002E7A;
@@ -12,7 +12,7 @@
   --ifm-color-primary-lighter: #6699FF;
   --ifm-color-primary-lightest: #99BBFF;
 
-  /* 辅助色 */
+  /* 輔助色 */
   --ifm-color-secondary: #00B42A;
   --ifm-color-warning: #FF7D00;
   --ifm-color-danger: #F53F3F;
@@ -33,16 +33,16 @@
   --ifm-background-color: #FFFFFF;
   --ifm-background-surface-color: #F7F8FA;
 
-  /* 文本色 */
+  /* 文字色 */
   --ifm-font-color-base: #1D2129;
   --ifm-font-color-secondary: #4E5969;
   --ifm-font-color-muted: #86909C;
 
-  /* 导航栏 */
+  /* 導航欄 */
   --ifm-navbar-background-color: #FFFFFF;
   --ifm-navbar-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-  /* 侧边栏 */
+  /* 側邊欄 */
   --ifm-sidebar-background-color: #F7F8FA;
   --ifm-sidebar-border-color: #E5E6EB;
 }
@@ -69,7 +69,7 @@
   --ifm-sidebar-border-color: #3E475A;
 }
 
-/* 企业价值卡片样式 */
+/* 企業價值卡片樣式 */
 .enterprise-value-card {
   border: 1px solid var(--ifm-color-gray-200);
   border-radius: 12px;
@@ -102,7 +102,7 @@
   line-height: 1.6;
 }
 
-/* Hero 区域样式 */
+/* Hero 區域樣式 */
 .hero-section {
   padding: 80px 0;
   text-align: center;
@@ -171,7 +171,7 @@
   text-decoration: none;
 }
 
-/* 功能特性标签样式 */
+/* 功能特性標籤樣式 */
 .feature-tags {
   display: flex;
   flex-wrap: wrap;
@@ -189,7 +189,7 @@
   color: var(--ifm-font-color-secondary);
 }
 
-/* 快速开始代码块样式 */
+/* 快速開始程式碼塊樣式 */
 .quick-start-code {
   background: var(--ifm-color-gray-800);
   color: var(--ifm-color-gray-0);
@@ -203,7 +203,7 @@
   margin: 24px auto;
 }
 
-/* 响应式调整 */
+/* 響應式調整 */
 @media (max-width: 768px) {
   .hero-section__title {
     font-size: 32px;

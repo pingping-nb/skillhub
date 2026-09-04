@@ -1,7 +1,7 @@
 # ============================================================================
-# SKILL-VETTER RED FLAGS — 追加规则
-# 来源: clawhub.ai/spclaudehome/skill-vetter
-# 用法: 将本文件内容追加到官方 signatures.yaml 末尾
+# SKILL-VETTER RED FLAGS — 追加規則
+# 來源: clawhub.ai/spclaudehome/skill-vetter
+# 用法: 將本檔案內容追加到官方 signatures.yaml 末尾
 # ============================================================================
 
 # RED FLAG #1: curl/wget to unknown URLs

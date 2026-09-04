@@ -1,6 +1,6 @@
--- Phase 1 核心表：认证与授权
+-- Phase 1 核心表：認證與授權
 
--- 用户账号表
+-- 使用者賬號表
 CREATE TABLE user_account (
     id VARCHAR(128) PRIMARY KEY,
     display_name VARCHAR(128) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE user_account (
 CREATE INDEX idx_user_account_email ON user_account(email);
 CREATE INDEX idx_user_account_status ON user_account(status);
 
--- OAuth 身份绑定表
+-- OAuth 身份繫結表
 CREATE TABLE identity_binding (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(128) NOT NULL REFERENCES user_account(id),
@@ -59,7 +59,7 @@ CREATE TABLE role (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 权限表
+-- 許可權表
 CREATE TABLE permission (
     id BIGSERIAL PRIMARY KEY,
     code VARCHAR(128) NOT NULL UNIQUE,
@@ -67,14 +67,14 @@ CREATE TABLE permission (
     group_code VARCHAR(64)
 );
 
--- 角色权限关联表
+-- 角色許可權關聯表
 CREATE TABLE role_permission (
     role_id BIGINT NOT NULL REFERENCES role(id),
     permission_id BIGINT NOT NULL REFERENCES permission(id),
     PRIMARY KEY (role_id, permission_id)
 );
 
--- 用户角色绑定表
+-- 使用者角色繫結表
 CREATE TABLE user_role_binding (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(128) NOT NULL REFERENCES user_account(id),
@@ -85,7 +85,7 @@ CREATE TABLE user_role_binding (
 
 CREATE INDEX idx_user_role_binding_user_id ON user_role_binding(user_id);
 
--- 命名空间表
+-- 名稱空間表
 CREATE TABLE namespace (
     id BIGSERIAL PRIMARY KEY,
     slug VARCHAR(64) NOT NULL UNIQUE,
@@ -99,7 +99,7 @@ CREATE TABLE namespace (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 命名空间成员表
+-- 名稱空間成員表
 CREATE TABLE namespace_member (
     id BIGSERIAL PRIMARY KEY,
     namespace_id BIGINT NOT NULL REFERENCES namespace(id),
@@ -113,7 +113,7 @@ CREATE TABLE namespace_member (
 CREATE INDEX idx_namespace_member_user_id ON namespace_member(user_id);
 CREATE INDEX idx_namespace_member_namespace_id ON namespace_member(namespace_id);
 
--- 审计日志表
+-- 審計日誌表
 CREATE TABLE audit_log (
     id BIGSERIAL PRIMARY KEY,
     actor_user_id VARCHAR(128) REFERENCES user_account(id),
@@ -131,25 +131,25 @@ CREATE INDEX idx_audit_log_actor ON audit_log(actor_user_id);
 CREATE INDEX idx_audit_log_created_at ON audit_log(created_at);
 CREATE INDEX idx_audit_log_request_id ON audit_log(request_id);
 
--- 插入系统内置角色
+-- 插入系統內建角色
 INSERT INTO role (code, name, description, is_system) VALUES
-('SUPER_ADMIN', '超级管理员', '拥有所有权限', TRUE),
-('SKILL_ADMIN', '技能管理员', '全局空间审核、提升审核、隐藏/撤回', TRUE),
-('USER_ADMIN', '用户管理员', '准入审批、封禁/解封、角色分配', TRUE),
-('AUDITOR', '审计员', '查看审计日志', TRUE);
+('SUPER_ADMIN', '超級管理員', '擁有所有許可權', TRUE),
+('SKILL_ADMIN', '技能管理員', '全域性空間稽核、提升稽核、隱藏/撤回', TRUE),
+('USER_ADMIN', '使用者管理員', '准入審批、封禁/解封、角色分配', TRUE),
+('AUDITOR', '審計員', '檢視審計日誌', TRUE);
 
--- 插入系统权限
+-- 插入系統許可權
 INSERT INTO permission (code, name, group_code) VALUES
-('skill:publish', '发布技能', 'skill'),
+('skill:publish', '發布技能', 'skill'),
 ('skill:manage', '管理技能', 'skill'),
-('skill:promote', '提升到全局', 'skill'),
-('review:approve', '审核技能', 'review'),
-('promotion:approve', '审核提升申请', 'promotion'),
-('user:manage', '管理用户', 'user'),
-('user:approve', '审批用户准入', 'user'),
-('audit:read', '查看审计日志', 'audit');
+('skill:promote', '提升到全域性', 'skill'),
+('review:approve', '稽核技能', 'review'),
+('promotion:approve', '稽核提升申請', 'promotion'),
+('user:manage', '管理使用者', 'user'),
+('user:approve', '審批使用者准入', 'user'),
+('audit:read', '檢視審計日誌', 'audit');
 
--- 绑定角色权限
+-- 繫結角色許可權
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM role r, permission p WHERE r.code = 'SKILL_ADMIN' AND p.code IN ('review:approve', 'skill:manage', 'promotion:approve');
 
@@ -159,6 +159,6 @@ SELECT r.id, p.id FROM role r, permission p WHERE r.code = 'USER_ADMIN' AND p.co
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM role r, permission p WHERE r.code = 'AUDITOR' AND p.code = 'audit:read';
 
--- 插入系统内置 @global 命名空间
+-- 插入系統內建 @global 名稱空間
 INSERT INTO namespace (slug, display_name, type, description, status)
 VALUES ('global', 'Global', 'GLOBAL', 'Platform-level public namespace', 'ACTIVE');

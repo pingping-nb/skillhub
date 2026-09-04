@@ -528,7 +528,7 @@ export class E2eTestDataBuilder {
       } catch (error) {
         lastError = error
         const message = error instanceof Error ? error.message : ''
-        const isScanInProgress = message.includes('扫描') || message.toLowerCase().includes('scan is still in progress')
+        const isScanInProgress = message.includes('掃描') || message.toLowerCase().includes('scan is still in progress')
         if (!isScanInProgress) {
           throw error
         }

@@ -1,5 +1,5 @@
 {{- /*
-SkillHub 应用 ConfigMap
+SkillHub 應用 ConfigMap
 */}}
 apiVersion: v1
 kind: ConfigMap
@@ -12,10 +12,10 @@ data:
   redis-host: {{ include "skillhub.redis.host" . | quote }}
   redis-port: {{ include "skillhub.redis.port" . | quote }}
 
-  # 存储路径
+  # 儲存路徑
   storage-base-path: "/var/lib/skillhub/storage"
 
-  # 存储提供者: local | s3
+  # 儲存提供者: local | s3
   skillhub-storage-provider: {{ if .Values.s3.enabled }}"s3"{{ else }}"local"{{ end }}
 
   {{- if .Values.s3.enabled }}
@@ -30,12 +30,12 @@ data:
   s3-presign-expiry: {{ .Values.s3.presignExpiry | quote }}
   {{- end }}
 
-  # 技能扫描器
+  # 技能掃描器
   skill-scanner-enabled: {{ .Values.scanner.enabled | quote }}
   skill-scanner-url: {{ printf "http://%s-scanner:%v" (include "skillhub.fullname" .) .Values.scanner.service.port | quote }}
   skill-scanner-mode: "upload"
 
-  # Bootstrap 管理员
+  # Bootstrap 管理員
   bootstrap-admin-enabled: {{ .Values.bootstrapAdmin.enabled | quote }}
   bootstrap-admin-user-id: {{ .Values.bootstrapAdmin.userId | quote }}
   bootstrap-admin-username: {{ .Values.bootstrapAdmin.username | quote }}

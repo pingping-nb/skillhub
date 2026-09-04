@@ -108,7 +108,7 @@
     "footerCommunity": "Community",
     "quickStart": {
       "title": "Quick Start",
-      "subtitle": "快速开始",
+      "subtitle": "快速開始",
       "description": "Choose how you want to work, then copy the setup instruction and continue",
       "tip": "💡 Tip: Visit the skill detail page for one-click install commands with environment variables",
       "tabs": {
@@ -159,7 +159,7 @@
     "viewAll": "View All →",
     "quickStart": {
       "title": "Quick Start",
-      "subtitle": "快速开始",
+      "subtitle": "快速開始",
       "description": "Get started with SkillHub in just a few simple steps",
       "tip": "💡 Tip: Visit the skill detail page for one-click install commands with environment variables",
       "steps": {

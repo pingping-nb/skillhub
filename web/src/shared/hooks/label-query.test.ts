@@ -4,7 +4,7 @@ import { shouldFallbackVisibleLabelsError } from './label-query'
 
 describe('shouldFallbackVisibleLabelsError', () => {
   it('falls back to an empty label list for API failures', () => {
-    expect(shouldFallbackVisibleLabelsError(new ApiError('需要先登录', 401))).toBe(true)
+    expect(shouldFallbackVisibleLabelsError(new ApiError('需要先登入', 401))).toBe(true)
     expect(shouldFallbackVisibleLabelsError(new ApiError('server error', 500))).toBe(true)
   })
 

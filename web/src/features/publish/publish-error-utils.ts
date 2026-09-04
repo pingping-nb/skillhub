@@ -1,12 +1,12 @@
 const PRECHECK_CONFIRM_MARKERS = [
   'Pre-publish warnings require confirmation before publishing',
-  '预发布发现以下风险提醒，确认后仍可继续发布',
+  '預發布發現以下風險提醒，確認後仍可繼續發布',
 ]
 
 const PRECHECK_FAILURE_MARKERS = [
   'error.skill.publish.precheck.failed',
   'Pre-publish validation failed',
-  '预发布校验失败',
+  '預發布校驗失敗',
   'looks like a secret or token',
 ]
 
@@ -18,7 +18,7 @@ const VERSION_EXISTS_MARKERS = [
 
 const FRONTMATTER_FAILURE_MARKERS = [
   'Invalid SKILL.md frontmatter',
-  '技能包校验失败：Invalid SKILL.md frontmatter',
+  '技能包校驗失敗：Invalid SKILL.md frontmatter',
 ]
 
 function includesAnyMarker(message: string | undefined, markers: string[]): boolean {

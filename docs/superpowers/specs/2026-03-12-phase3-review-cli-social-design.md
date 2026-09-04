@@ -1,92 +1,92 @@
-# Phase 3: 审核流程 + CLI API + 评分收藏 + 兼容层 设计文档
+# Phase 3: 稽核流程 + CLI API + 評分收藏 + 相容層 設計檔案
 
-> **Goal:** 在 Phase 2 命名空间和技能核心链路基础上，建立完整的治理体系、CLI 生态和社交功能。实现审核流程、团队技能提升、评分收藏、CLI API、ClawHub 兼容层、幂等去重和管理后台。
+> **Goal:** 在 Phase 2 名稱空間和技能核心鏈路基礎上，建立完整的治理體系、CLI 生態和社交功能。實現稽核流程、團隊技能提升、評分收藏、CLI API、ClawHub 相容層、冪等去重和管理後臺。
 
-> **前置条件:** Phase 1 完成（工程骨架 + 认证授权）+ Phase 2 完成（命名空间 + 技能核心链路）
+> **前置條件:** Phase 1 完成（工程骨架 + 認證授權）+ Phase 2 完成（名稱空間 + 技能核心鏈路）
 
-> **重要修订：身份主键约束**
-> 用户身份主键全链路统一使用 `string`。本文中出现的 `submitted_by`、`reviewed_by`、`user_id`、`owner_id`、`actor_user_id` 等用户关联字段都应按字符串设计，任何整型用户主键描述都不再有效。
+> **重要修訂：身份主鍵約束**
+> 使用者身份主鍵全鏈路統一使用 `string`。本文中出現的 `submitted_by`、`reviewed_by`、`user_id`、`owner_id`、`actor_user_id` 等使用者關聯欄位都應按字串設計，任何整型使用者主鍵描述都不再有效。
 
-## 关键设计决策
+## 關鍵設計決策
 
-| 决策点 | 选择 | 理由 |
+| 決策點 | 選擇 | 理由 |
 |--------|------|------|
-| 审核模式 | 严格审核（所有版本都需审核） | 企业内部平台治理需求，确保技能质量 |
-| 审核权限 | 严格分级（团队自治，平台不越权） | 保持团队自治性，平台管理员只管全局空间和提升审核 |
-| 审核并发控制 | 乐观锁（version 字段） + partial unique index | 防止多 Pod 并发审核同一任务 |
-| CLI 认证 | OAuth Device Flow（Web 授权） | 现代 CLI 标准做法，用户体验最佳 |
-| 兼容层范围 | 核心操作（search、resolve、download、publish、whoami） | 平衡兼容性和实现复杂度 |
-| 评分收藏 | 仅登录用户可用 | 确保数据可信度，避免刷分/刷收藏 |
-| 幂等去重 | Redis SETNX + PostgreSQL idempotency_record | 双层防护，Redis 快速去重，PostgreSQL 持久化兜底 |
-| 实施策略 | 审核优先 + 渐进式 CLI（5 个 Chunk） | 渐进式交付，风险可控 |
+| 稽核模式 | 嚴格稽核（所有版本都需稽核） | 企業內部平臺治理需求，確保技能質量 |
+| 稽核許可權 | 嚴格分級（團隊自治，平臺不越權） | 保持團隊自治性，平臺管理員只管全域性空間和提升稽核 |
+| 稽核併發控制 | 樂觀鎖（version 欄位） + partial unique index | 防止多 Pod 併發稽核同一任務 |
+| CLI 認證 | OAuth Device Flow（Web 授權） | 現代 CLI 標準做法，使用者體驗最佳 |
+| 相容層範圍 | 核心操作（search、resolve、download、publish、whoami） | 平衡相容性和實現複雜度 |
+| 評分收藏 | 僅登入使用者可用 | 確保資料可信度，避免刷分/刷收藏 |
+| 冪等去重 | Redis SETNX + PostgreSQL idempotency_record | 雙層防護，Redis 快速去重，PostgreSQL 持久化兜底 |
+| 實施策略 | 稽核優先 + 漸進式 CLI（5 個 Chunk） | 漸進式交付，風險可控 |
 
 ## Tech Stack（沿用 Phase 1/2 + 新增）
 
 - 沿用：Spring Boot 3.x + JDK 21 + PostgreSQL 16 + Redis 7 + Spring Security + Spring Data JPA + Flyway
 - 沿用前端：React 19 + TypeScript + Vite + TanStack Router + TanStack Query + shadcn/ui + Tailwind CSS
-- 新增前端：react-rating-stars-component（评分组件）
+- 新增前端：react-rating-stars-component（評分元件）
 
 ---
 
-## 1. 数据库迁移（V3__phase3_review_social_tables.sql）
+## 1. 資料庫遷移（V3__phase3_review_social_tables.sql）
 
 Phase 2 已有表：`user_account`, `identity_binding`, `api_token`, `role`, `permission`, `role_permission`, `user_role_binding`, `namespace`, `namespace_member`, `audit_log`, `skill`, `skill_version`, `skill_file`, `skill_tag`, `skill_search_document`
 
 ### 1.1 新增表
 
-#### review_task（发布审核任务）
+#### review_task（發布稽核任務）
 
-| 字段 | 类型 | 说明 |
+| 欄位 | 型別 | 說明 |
 |------|------|------|
 | id | BIGSERIAL PK | |
-| skill_version_id | BIGINT NOT NULL FK → skill_version | 关联的版本 |
-| namespace_id | BIGINT NOT NULL FK → namespace | 所属空间（决定谁能审核） |
+| skill_version_id | BIGINT NOT NULL FK → skill_version | 關聯的版本 |
+| namespace_id | BIGINT NOT NULL FK → namespace | 所屬空間（決定誰能稽核） |
 | status | VARCHAR(32) NOT NULL DEFAULT 'PENDING' | PENDING / APPROVED / REJECTED |
-| version | INT NOT NULL DEFAULT 1 | 乐观锁版本号 |
+| version | INT NOT NULL DEFAULT 1 | 樂觀鎖版本號 |
 | submitted_by | VARCHAR(128) NOT NULL FK → user_account | 提交人 |
-| reviewed_by | VARCHAR(128) FK → user_account | 审核人 |
-| review_comment | TEXT | 审核意见 |
+| reviewed_by | VARCHAR(128) FK → user_account | 稽核人 |
+| review_comment | TEXT | 稽核意見 |
 | submitted_at | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | |
 | reviewed_at | TIMESTAMP | |
 
 索引：
-- `(namespace_id, status)` — 审核列表
+- `(namespace_id, status)` — 稽核列表
 - `(submitted_by, status)` — 我的提交
-- `(skill_version_id) WHERE status = 'PENDING'` — partial unique index，防止重复提交
+- `(skill_version_id) WHERE status = 'PENDING'` — partial unique index，防止重複提交
 
-业务约束：
-- 同一 `skill_version_id` 在 `status=PENDING` 时只能存在一条记录
-- 撤回时物理删除 review_task 记录，依赖 partial unique index 防并发
+業務約束：
+- 同一 `skill_version_id` 在 `status=PENDING` 時只能存在一條記錄
+- 撤回時物理刪除 review_task 記錄，依賴 partial unique index 防併發
 
-#### promotion_request（提升审核任务）
+#### promotion_request（提升稽核任務）
 
-| 字段 | 类型 | 说明 |
+| 欄位 | 型別 | 說明 |
 |------|------|------|
 | id | BIGSERIAL PK | |
-| source_skill_id | BIGINT NOT NULL FK → skill | 来源团队 skill |
-| source_version_id | BIGINT NOT NULL FK → skill_version | 申请提升的版本 |
-| target_namespace_id | BIGINT NOT NULL FK → namespace | 目标全局 namespace |
-| target_skill_id | BIGINT FK → skill | 审批通过后生成的全局 skill ID |
+| source_skill_id | BIGINT NOT NULL FK → skill | 來源團隊 skill |
+| source_version_id | BIGINT NOT NULL FK → skill_version | 申請提升的版本 |
+| target_namespace_id | BIGINT NOT NULL FK → namespace | 目標全域性 namespace |
+| target_skill_id | BIGINT FK → skill | 審批透過後生成的全域性 skill ID |
 | status | VARCHAR(32) NOT NULL DEFAULT 'PENDING' | PENDING / APPROVED / REJECTED |
-| version | INT NOT NULL DEFAULT 1 | 乐观锁版本号 |
+| version | INT NOT NULL DEFAULT 1 | 樂觀鎖版本號 |
 | submitted_by | VARCHAR(128) NOT NULL FK → user_account | 提交人 |
-| reviewed_by | VARCHAR(128) FK → user_account | 审核人 |
-| review_comment | TEXT | 审核意见 |
+| reviewed_by | VARCHAR(128) FK → user_account | 稽核人 |
+| review_comment | TEXT | 稽核意見 |
 | submitted_at | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | |
 | reviewed_at | TIMESTAMP | |
 
 索引：
-- `(source_skill_id)` — 按来源 skill 查询
-- `(status)` — 待审核列表
-- `(source_version_id) WHERE status = 'PENDING'` — partial unique index，防止重复提交
+- `(source_skill_id)` — 按來源 skill 查詢
+- `(status)` — 待稽核列表
+- `(source_version_id) WHERE status = 'PENDING'` — partial unique index，防止重複提交
 
-业务约束：
-- 同一 `source_version_id` 在 `status=PENDING` 时只能存在一条记录
-- 审批通过后填充 `target_skill_id`
+業務約束：
+- 同一 `source_version_id` 在 `status=PENDING` 時只能存在一條記錄
+- 審批透過後填充 `target_skill_id`
 
 #### skill_star（技能收藏）
 
-| 字段 | 类型 | 说明 |
+| 欄位 | 型別 | 說明 |
 |------|------|------|
 | id | BIGSERIAL PK | |
 | skill_id | BIGINT NOT NULL FK → skill | |
@@ -94,13 +94,13 @@ Phase 2 已有表：`user_account`, `identity_binding`, `api_token`, `role`, `pe
 | created_at | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | |
 
 索引：
-- `(skill_id, user_id)` UNIQUE — 唯一约束
+- `(skill_id, user_id)` UNIQUE — 唯一約束
 - `(user_id)` — 我的收藏
-- `(skill_id)` — 技能收藏数
+- `(skill_id)` — 技能收藏數
 
-#### skill_rating（技能评分）
+#### skill_rating（技能評分）
 
-| 字段 | 类型 | 说明 |
+| 欄位 | 型別 | 說明 |
 |------|------|------|
 | id | BIGSERIAL PK | |
 | skill_id | BIGINT NOT NULL FK → skill | |
@@ -110,54 +110,54 @@ Phase 2 已有表：`user_account`, `identity_binding`, `api_token`, `role`, `pe
 | updated_at | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | |
 
 索引：
-- `(skill_id, user_id)` UNIQUE — 唯一约束，每人每技能一条
-- `(skill_id)` — 评分聚合
+- `(skill_id, user_id)` UNIQUE — 唯一約束，每人每技能一條
+- `(skill_id)` — 評分聚合
 
-#### idempotency_record（幂等记录）
+#### idempotency_record（冪等記錄）
 
-| 字段 | 类型 | 说明 |
+| 欄位 | 型別 | 說明 |
 |------|------|------|
-| request_id | VARCHAR(64) PK | 客户端传入的 UUID v4 |
+| request_id | VARCHAR(64) PK | 客戶端傳入的 UUID v4 |
 | resource_type | VARCHAR(64) NOT NULL | 如 skill_version, api_token |
-| resource_id | BIGINT | 业务操作产生的资源 ID |
+| resource_id | BIGINT | 業務操作產生的資源 ID |
 | status | VARCHAR(32) NOT NULL | PROCESSING / COMPLETED / FAILED |
-| response_status_code | INT | 原始响应状态码 |
+| response_status_code | INT | 原始響應狀態碼 |
 | created_at | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | |
-| expires_at | TIMESTAMP NOT NULL | 过期时间（默认 24h） |
+| expires_at | TIMESTAMP NOT NULL | 過期時間（預設 24h） |
 
 索引：
-- `(expires_at)` — 过期清理
-- `(status, created_at)` — 僵死任务检测
+- `(expires_at)` — 過期清理
+- `(status, created_at)` — 僵死任務檢測
 
-### 1.2 Phase 2 表结构调整
+### 1.2 Phase 2 表結構調整
 
-Phase 2 设计中 `skill_version.status` 直接到 PUBLISHED，Phase 3 需要调整为审核流程：
+Phase 2 設計中 `skill_version.status` 直接到 PUBLISHED，Phase 3 需要調整為稽核流程：
 
-**skill_version 表无需修改** - status 枚举已包含 DRAFT / PENDING_REVIEW / PUBLISHED / REJECTED / YANKED
+**skill_version 表無需修改** - status 列舉已包含 DRAFT / PENDING_REVIEW / PUBLISHED / REJECTED / YANKED
 
-**Phase 2 → Phase 3 迁移策略：**
-- Phase 2 发布流程：上传 → DRAFT → 自动提交 → PENDING_REVIEW → 自动通过 → PUBLISHED
-- Phase 3 发布流程：上传 → DRAFT → 提交审核 → PENDING_REVIEW → 人工审核 → PUBLISHED/REJECTED
+**Phase 2 → Phase 3 遷移策略：**
+- Phase 2 發布流程：上傳 → DRAFT → 自動提交 → PENDING_REVIEW → 自動透過 → PUBLISHED
+- Phase 3 發布流程：上傳 → DRAFT → 提交稽核 → PENDING_REVIEW → 人工稽核 → PUBLISHED/REJECTED
 
-Phase 2 代码中的自动审核逻辑在 Phase 3 移除，改为创建 review_task 等待人工审核。
+Phase 2 程式碼中的自動稽核邏輯在 Phase 3 移除，改為建立 review_task 等待人工稽核。
 
-**Phase 2 已有数据的处理：**
+**Phase 2 已有資料的處理：**
 
-1. **已发布的技能（status=PUBLISHED）**
-   - 保持现状，无需补充审核
-   - 视为已通过审核的技能
-   - 后续新版本发布需要经过审核流程
+1. **已發布的技能（status=PUBLISHED）**
+   - 保持現狀，無需補充稽核
+   - 視為已透過稽核的技能
+   - 後續新版本發布需要經過稽核流程
 
-2. **草稿状态的技能（status=DRAFT）**
-   - 保持 DRAFT 状态
-   - 用户需要手动提交审核才能发布
+2. **草稿狀態的技能（status=DRAFT）**
+   - 保持 DRAFT 狀態
+   - 使用者需要手動提交稽核才能發布
 
-3. **待审核状态的技能（status=PENDING_REVIEW）**
-   - Phase 2 中不应该存在此状态（因为自动通过）
-   - 如果存在，需要补充创建 review_task 记录
-   - 迁移脚本：
+3. **待稽核狀態的技能（status=PENDING_REVIEW）**
+   - Phase 2 中不應該存在此狀態（因為自動透過）
+   - 如果存在，需要補充建立 review_task 記錄
+   - 遷移指令碼：
      ```sql
-     -- 为 Phase 2 遗留的 PENDING_REVIEW 版本创建审核任务
+     -- 為 Phase 2 遺留的 PENDING_REVIEW 版本建立稽核任務
      INSERT INTO review_task (skill_version_id, namespace_id, status, submitted_by, submitted_at)
      SELECT
        sv.id,
@@ -173,108 +173,108 @@ Phase 2 代码中的自动审核逻辑在 Phase 3 移除，改为创建 review_t
        );
      ```
 
-4. **数据一致性检查**
-   - 检查所有 PUBLISHED 版本是否有对应的 skill.latest_version_id
-   - 检查所有 PENDING_REVIEW 版本是否有对应的 review_task
-   - 迁移脚本在 Phase 3 部署前执行
+4. **資料一致性檢查**
+   - 檢查所有 PUBLISHED 版本是否有對應的 skill.latest_version_id
+   - 檢查所有 PENDING_REVIEW 版本是否有對應的 review_task
+   - 遷移指令碼在 Phase 3 部署前執行
 
 ---
 
-## 2. 审核流程设计
+## 2. 稽核流程設計
 
-### 2.1 普通发布审核流程
+### 2.1 普通發布稽核流程
 
 ```
-用户发布技能（Phase 2 已实现）
+使用者發布技能（Phase 2 已實現）
     │
     ▼
-① skill_version 创建（status=DRAFT）
+① skill_version 建立（status=DRAFT）
     │
     ▼
-② 用户提交审核（POST /api/v1/skills/{namespace}/{slug}/versions/{version}/submit）
+② 使用者提交稽核（POST /api/v1/skills/{namespace}/{slug}/versions/{version}/submit）
     │
     ▼
-③ 创建 review_task
+③ 建立 review_task
    - skill_version.status → PENDING_REVIEW
    - INSERT INTO review_task (skill_version_id, namespace_id, status=PENDING, submitted_by)
-   - 检查 partial unique index 防止重复提交
+   - 檢查 partial unique index 防止重複提交
     │
     ▼
-④ 审核人审核（PUT /api/v1/review-tasks/{id}/approve 或 /reject）
-   ├── 通过 →
-   │   ① 乐观锁更新：UPDATE review_task SET status='APPROVED', reviewed_by=?, reviewed_at=?, version=version+1 WHERE id=? AND version=?
+④ 稽核人稽核（PUT /api/v1/review-tasks/{id}/approve 或 /reject）
+   ├── 透過 →
+   │   ① 樂觀鎖更新：UPDATE review_task SET status='APPROVED', reviewed_by=?, reviewed_at=?, version=version+1 WHERE id=? AND version=?
    │   ② skill_version.status → PUBLISHED
    │   ③ 更新 skill.latest_version_id（如果是最新版本）
-   │   ④ 发布 SkillPublishedEvent（触发搜索索引更新）
-   │   ⑤ 同步写入 audit_log
+   │   ④ 發布 SkillPublishedEvent（觸發搜尋索引更新）
+   │   ⑤ 同步寫入 audit_log
    │
-   └── 拒绝 →
-       ① 乐观锁更新：UPDATE review_task SET status='REJECTED', reviewed_by=?, reviewed_at=?, review_comment=?, version=version+1 WHERE id=? AND version=?
+   └── 拒絕 →
+       ① 樂觀鎖更新：UPDATE review_task SET status='REJECTED', reviewed_by=?, reviewed_at=?, review_comment=?, version=version+1 WHERE id=? AND version=?
        ② skill_version.status → REJECTED
-       ③ 记录 reject_reason
-       ④ 同步写入 audit_log
+       ③ 記錄 reject_reason
+       ④ 同步寫入 audit_log
 ```
 
-**撤回审核：**
+**撤回稽核：**
 ```
-用户撤回审核（DELETE /api/v1/skills/{namespace}/{slug}/versions/{version}/review）
+使用者撤回稽核（DELETE /api/v1/skills/{namespace}/{slug}/versions/{version}/review）
     │
     ▼
-① 检查 review_task.status = PENDING（只能撤回待审核的）
+① 檢查 review_task.status = PENDING（只能撤回待稽核的）
     │
     ▼
-② 物理删除 review_task 记录
+② 物理刪除 review_task 記錄
     │
     ▼
 ③ skill_version.status → DRAFT
 ```
 
-### 2.2 提升审核流程
+### 2.2 提升稽核流程
 
 ```
-团队空间技能（已发布，status=PUBLISHED）
+團隊空間技能（已發布，status=PUBLISHED）
     │
     ▼
-① 技能 owner 或 namespace ADMIN 发起提升申请
+① 技能 owner 或 namespace ADMIN 發起提升申請
    POST /api/v1/skills/{namespace}/{slug}/promote
    Body: { "targetNamespaceSlug": "global", "versionId": 123 }
     │
     ▼
-② 创建 promotion_request
+② 建立 promotion_request
    - INSERT INTO promotion_request (source_skill_id, source_version_id, target_namespace_id, status=PENDING, submitted_by)
-   - 检查 partial unique index 防止重复提交
-   - 检查 source_version.status = PUBLISHED（只能提升已发布版本）
-   - 检查 target_namespace.type = GLOBAL（只能提升到全局空间）
+   - 檢查 partial unique index 防止重複提交
+   - 檢查 source_version.status = PUBLISHED（只能提升已發布版本）
+   - 檢查 target_namespace.type = GLOBAL（只能提升到全域性空間）
     │
     ▼
-③ 平台管理员审核（PUT /api/v1/promotion-requests/{id}/approve 或 /reject）
-   ├── 通过 →
-   │   ① 乐观锁更新：UPDATE promotion_request SET status='APPROVED', reviewed_by=?, reviewed_at=?, version=version+1 WHERE id=? AND version=?
-   │   ② 在全局空间创建新 skill
+③ 平臺管理員稽核（PUT /api/v1/promotion-requests/{id}/approve 或 /reject）
+   ├── 透過 →
+   │   ① 樂觀鎖更新：UPDATE promotion_request SET status='APPROVED', reviewed_by=?, reviewed_at=?, version=version+1 WHERE id=? AND version=?
+   │   ② 在全域性空間建立新 skill
    │      - namespace_id = target_namespace_id
-   │      - slug = 原 skill.slug（如果冲突则拒绝）
+   │      - slug = 原 skill.slug（如果衝突則拒絕）
    │      - source_skill_id = 原 skill.id
    │      - owner_id = 原 skill.owner_id
    │      - visibility = PUBLIC
-   │   ③ 复制 source_version_id 对应版本的文件和元数据到新 skill
-   │      - 创建新 skill_version（status=PUBLISHED）
-   │      - 复制 skill_file 记录（对象存储文件复用，只复制元数据）
+   │   ③ 複製 source_version_id 對應版本的檔案和後設資料到新 skill
+   │      - 建立新 skill_version（status=PUBLISHED）
+   │      - 複製 skill_file 記錄（物件儲存檔案複用，只複製後設資料）
    │      - 更新新 skill.latest_version_id
    │   ④ 更新 promotion_request.target_skill_id = 新 skill.id
-   │   ⑤ 发布 SkillPromotedEvent（触发搜索索引写入新 skill）
-   │   ⑥ 同步写入 audit_log
+   │   ⑤ 發布 SkillPromotedEvent（觸發搜尋索引寫入新 skill）
+   │   ⑥ 同步寫入 audit_log
    │
-   └── 拒绝 →
-       ① 乐观锁更新：UPDATE promotion_request SET status='REJECTED', reviewed_by=?, reviewed_at=?, review_comment=?, version=version+1 WHERE id=? AND version=?
-       ② 同步写入 audit_log
+   └── 拒絕 →
+       ① 樂觀鎖更新：UPDATE promotion_request SET status='REJECTED', reviewed_by=?, reviewed_at=?, review_comment=?, version=version+1 WHERE id=? AND version=?
+       ② 同步寫入 audit_log
 ```
 
-**提升后的版本管理：**
-- 全局空间的新 skill 由其 owner 独立管理版本
-- 原团队 skill 可继续独立迭代
-- 两者版本不自动同步，如需同步由 owner 手动操作
+**提升後的版本管理：**
+- 全域性空間的新 skill 由其 owner 獨立管理版本
+- 原團隊 skill 可繼續獨立迭代
+- 兩者版本不自動同步，如需同步由 owner 手動操作
 
-### 2.3 审核权限判定
+### 2.3 稽核許可權判定
 
 #### ReviewPermissionChecker（`domain.review.ReviewPermissionChecker`）
 
@@ -282,52 +282,52 @@ Phase 2 代码中的自动审核逻辑在 Phase 3 移除，改为创建 review_t
 public class ReviewPermissionChecker {
 
     /**
-     * 检查用户是否有权审核指定的 review_task
+     * 檢查使用者是否有權稽核指定的 review_task
      */
     public boolean canReview(ReviewTask task, String userId,
                              Map<Long, NamespaceRole> userNamespaceRoles,
                              Set<String> platformRoles) {
-        // 不能审核自己提交的
+        // 不能稽核自己提交的
         if (task.getSubmittedBy().equals(userId)) {
             return false;
         }
 
-        // 全局空间：只有平台 SKILL_ADMIN 或 SUPER_ADMIN 可以审核
+        // 全域性空間：只有平臺 SKILL_ADMIN 或 SUPER_ADMIN 可以稽核
         if (task.getNamespace().getType() == NamespaceType.GLOBAL) {
             return platformRoles.contains("SKILL_ADMIN")
                 || platformRoles.contains("SUPER_ADMIN");
         }
 
-        // 团队空间：该 namespace 的 ADMIN 或 OWNER 可以审核
+        // 團隊空間：該 namespace 的 ADMIN 或 OWNER 可以稽核
         NamespaceRole role = userNamespaceRoles.get(task.getNamespaceId());
         return role == NamespaceRole.ADMIN || role == NamespaceRole.OWNER;
     }
 
     /**
-     * 检查用户是否有权审核提升请求
+     * 檢查使用者是否有權稽核提升請求
      */
     public boolean canReviewPromotion(PromotionRequest request, String userId,
                                       Set<String> platformRoles) {
-        // 只有平台 SKILL_ADMIN 或 SUPER_ADMIN 可以审核提升请求
+        // 只有平臺 SKILL_ADMIN 或 SUPER_ADMIN 可以稽核提升請求
         return platformRoles.contains("SKILL_ADMIN")
             || platformRoles.contains("SUPER_ADMIN");
     }
 }
 ```
 
-#### 权限矩阵
+#### 許可權矩陣
 
-| 操作 | 团队空间 | 全局空间 | 提升请求 |
+| 操作 | 團隊空間 | 全域性空間 | 提升請求 |
 |------|---------|---------|---------|
-| 提交审核 | namespace MEMBER+ | 平台 SKILL_ADMIN+ | namespace ADMIN+ |
-| 审核通过/拒绝 | namespace ADMIN+ | 平台 SKILL_ADMIN+ | 平台 SKILL_ADMIN+ |
-| 撤回审核 | 提交人本人 | 提交人本人 | 提交人本人 |
+| 提交稽核 | namespace MEMBER+ | 平臺 SKILL_ADMIN+ | namespace ADMIN+ |
+| 稽核透過/拒絕 | namespace ADMIN+ | 平臺 SKILL_ADMIN+ | 平臺 SKILL_ADMIN+ |
+| 撤回稽核 | 提交人本人 | 提交人本人 | 提交人本人 |
 
-### 2.4 乐观锁并发控制
+### 2.4 樂觀鎖併發控制
 
-**问题：** 多个审核人同时审核同一任务，可能导致重复审核或状态不一致。
+**問題：** 多個稽核人同時稽核同一任務，可能導致重複稽核或狀態不一致。
 
-**解决方案：** 使用乐观锁（version 字段）+ 数据库 UPDATE 影响行数判定。
+**解決方案：** 使用樂觀鎖（version 欄位）+ 資料庫 UPDATE 影響行數判定。
 
 ```java
 @Service
@@ -335,21 +335,21 @@ public class ReviewService {
 
     @Transactional
     public void approveReview(Long reviewTaskId, String reviewerId, String comment) {
-        // 1. 加载 review_task（带 version）
+        // 1. 載入 review_task（帶 version）
         ReviewTask task = reviewTaskRepository.findById(reviewTaskId)
             .orElseThrow(() -> new NotFoundException("Review task not found"));
 
-        // 2. 检查状态（只能审核 PENDING 状态）
+        // 2. 檢查狀態（只能稽核 PENDING 狀態）
         if (task.getStatus() != ReviewTaskStatus.PENDING) {
             throw new BusinessException("Review task is not pending");
         }
 
-        // 3. 检查权限
+        // 3. 檢查許可權
         if (!reviewPermissionChecker.canReview(task, reviewerId, ...)) {
             throw new ForbiddenException("No permission to review");
         }
 
-        // 4. 乐观锁更新
+        // 4. 樂觀鎖更新
         int updated = reviewTaskRepository.updateStatusWithVersion(
             reviewTaskId,
             ReviewTaskStatus.APPROVED,
@@ -358,7 +358,7 @@ public class ReviewService {
             task.getVersion()  // WHERE version = ?
         );
 
-        // 5. 检查更新结果
+        // 5. 檢查更新結果
         if (updated == 0) {
             throw new ConcurrentModificationException("Review task was modified by another user");
         }
@@ -369,16 +369,16 @@ public class ReviewService {
         // 7. 更新 skill.latest_version_id
         // ...
 
-        // 8. 发布事件
+        // 8. 發布事件
         eventPublisher.publishEvent(new SkillPublishedEvent(...));
 
-        // 9. 写入审计日志
+        // 9. 寫入審計日誌
         auditLogService.log(...);
     }
 }
 ```
 
-**Repository 实现：**
+**Repository 實現：**
 
 ```java
 @Repository
@@ -404,14 +404,14 @@ public interface ReviewTaskRepository extends JpaRepository<ReviewTask, Long> {
 }
 ```
 
-**并发场景：**
-- 审核人 A 和 B 同时审核任务 T（version=1）
-- A 先提交：UPDATE ... WHERE id=T AND version=1 → 成功，version 变为 2
-- B 后提交：UPDATE ... WHERE id=T AND version=1 → 失败（version 已变为 2），返回 409 Conflict
+**併發場景：**
+- 稽核人 A 和 B 同時稽核任務 T（version=1）
+- A 先提交：UPDATE ... WHERE id=T AND version=1 → 成功，version 變為 2
+- B 後提交：UPDATE ... WHERE id=T AND version=1 → 失敗（version 已變為 2），返回 409 Conflict
 
 ---
 
-## 3. 评分收藏设计
+## 3. 評分收藏設計
 
 ### 3.1 收藏功能
 
@@ -426,7 +426,7 @@ public class SkillStarService {
      */
     @Transactional
     public void starSkill(Long skillId, String userId) {
-        // 1. 检查技能存在性和可见性
+        // 1. 檢查技能存在性和可見性
         Skill skill = skillRepository.findById(skillId)
             .orElseThrow(() -> new NotFoundException("Skill not found"));
 
@@ -434,16 +434,16 @@ public class SkillStarService {
             throw new ForbiddenException("No permission to access this skill");
         }
 
-        // 2. 插入 skill_star（唯一约束自动去重）
+        // 2. 插入 skill_star（唯一約束自動去重）
         try {
             SkillStar star = new SkillStar(skillId, userId);
             skillStarRepository.save(star);
         } catch (DataIntegrityViolationException e) {
-            // 已收藏，幂等返回成功
+            // 已收藏，冪等返回成功
             return;
         }
 
-        // 3. 异步更新计数器
+        // 3. 非同步更新計數器
         eventPublisher.publishEvent(new SkillStarredEvent(skillId, true));
     }
 
@@ -455,20 +455,20 @@ public class SkillStarService {
         int deleted = skillStarRepository.deleteBySkillIdAndUserId(skillId, userId);
 
         if (deleted > 0) {
-            // 异步更新计数器
+            // 非同步更新計數器
             eventPublisher.publishEvent(new SkillStarredEvent(skillId, false));
         }
     }
 
     /**
-     * 检查是否已收藏
+     * 檢查是否已收藏
      */
     public boolean isStarred(Long skillId, String userId) {
         return skillStarRepository.existsBySkillIdAndUserId(skillId, userId);
     }
 
     /**
-     * 获取用户的收藏列表
+     * 獲取使用者的收藏列表
      */
     public Page<Skill> getStarredSkills(String userId, Pageable pageable) {
         return skillStarRepository.findStarredSkillsByUserId(userId, pageable);
@@ -476,7 +476,7 @@ public class SkillStarService {
 }
 ```
 
-#### 计数器更新（异步事件）
+#### 計數器更新（非同步事件）
 
 ```java
 @Component
@@ -486,17 +486,17 @@ public class SkillStarEventListener {
     @Async("skillhubEventExecutor")
     public void onSkillStarred(SkillStarredEvent event) {
         if (event.isStarred()) {
-            // 原子递增
+            // 原子遞增
             skillRepository.incrementStarCount(event.skillId());
         } else {
-            // 原子递减
+            // 原子遞減
             skillRepository.decrementStarCount(event.skillId());
         }
     }
 }
 ```
 
-**Repository 实现：**
+**Repository 實現：**
 
 ```java
 @Repository
@@ -512,7 +512,7 @@ public interface SkillRepository extends JpaRepository<Skill, Long> {
 }
 ```
 
-### 3.2 评分功能
+### 3.2 評分功能
 
 #### SkillRatingService（`domain.skill.service.SkillRatingService`）
 
@@ -521,16 +521,16 @@ public interface SkillRepository extends JpaRepository<Skill, Long> {
 public class SkillRatingService {
 
     /**
-     * 提交评分（新增或更新）
+     * 提交評分（新增或更新）
      */
     @Transactional
     public void rateSkill(Long skillId, String userId, int score) {
-        // 1. 校验评分范围
+        // 1. 校驗評分範圍
         if (score < 1 || score > 5) {
             throw new IllegalArgumentException("Score must be between 1 and 5");
         }
 
-        // 2. 检查技能存在性和可见性
+        // 2. 檢查技能存在性和可見性
         Skill skill = skillRepository.findById(skillId)
             .orElseThrow(() -> new NotFoundException("Skill not found"));
 
@@ -538,7 +538,7 @@ public class SkillRatingService {
             throw new ForbiddenException("No permission to access this skill");
         }
 
-        // 3. 插入或更新评分
+        // 3. 插入或更新評分
         SkillRating rating = skillRatingRepository
             .findBySkillIdAndUserId(skillId, userId)
             .orElse(new SkillRating(skillId, userId));
@@ -547,12 +547,12 @@ public class SkillRatingService {
         rating.setUpdatedAt(Instant.now());
         skillRatingRepository.save(rating);
 
-        // 4. 异步重算平均分
+        // 4. 非同步重算平均分
         eventPublisher.publishEvent(new SkillRatedEvent(skillId));
     }
 
     /**
-     * 获取用户对技能的评分
+     * 獲取使用者對技能的評分
      */
     public Optional<Integer> getUserRating(Long skillId, String userId) {
         return skillRatingRepository.findBySkillIdAndUserId(skillId, userId)
@@ -561,7 +561,7 @@ public class SkillRatingService {
 }
 ```
 
-#### 评分重算（异步事件 + Redis 分布式锁）
+#### 評分重算（非同步事件 + Redis 分散式鎖）
 
 ```java
 @Component
@@ -572,17 +572,17 @@ public class SkillRatingEventListener {
     public void onSkillRated(SkillRatedEvent event) {
         String lockKey = "rating:recalc:" + event.skillId();
 
-        // 获取 Redis 分布式锁（TTL 10s）
+        // 獲取 Redis 分散式鎖（TTL 10s）
         boolean locked = redisTemplate.opsForValue()
             .setIfAbsent(lockKey, "1", Duration.ofSeconds(10));
 
         if (!locked) {
-            // 已有其他线程在重算，跳过
+            // 已有其他執行緒在重算，跳過
             return;
         }
 
         try {
-            // 重新计算平均分和评分人数
+            // 重新計算平均分和評分人數
             RatingStats stats = skillRatingRepository.calculateStats(event.skillId());
 
             // 更新 skill 表
@@ -592,14 +592,14 @@ public class SkillRatingEventListener {
                 stats.count()
             );
         } finally {
-            // 释放锁
+            // 釋放鎖
             redisTemplate.delete(lockKey);
         }
     }
 }
 ```
 
-**Repository 实现：**
+**Repository 實現：**
 
 ```java
 @Repository
@@ -621,23 +621,23 @@ public interface SkillRatingRepository extends JpaRepository<SkillRating, Long> 
 public record RatingStats(Double avgScore, Long count) {}
 ```
 
-**容错机制：**
-- 如果 Redis 不可用，跳过分布式锁，直接重算（可能重复计算，但结果最终一致）
-- 定时任务每天凌晨从 `skill_rating` 表重算所有技能的评分，修正异步事件丢失导致的不一致
+**容錯機制：**
+- 如果 Redis 不可用，跳過分散式鎖，直接重算（可能重複計算，但結果最終一致）
+- 定時任務每天凌晨從 `skill_rating` 表重算所有技能的評分，修正非同步事件丟失導致的不一致
 
 ---
 
-## 4. CLI API 设计
+## 4. CLI API 設計
 
-### 4.1 OAuth Device Flow 认证
+### 4.1 OAuth Device Flow 認證
 
-**标准流程（RFC 8628）：**
+**標準流程（RFC 8628）：**
 
 ```
-CLI 用户运行 skillhub login
+CLI 使用者執行 skillhub login
     │
     ▼
-① CLI 请求 device code
+① CLI 請求 device code
    POST /api/v1/cli/auth/device/code
    Response: {
      "device_code": "xxx",
@@ -648,32 +648,32 @@ CLI 用户运行 skillhub login
    }
     │
     ▼
-② CLI 显示提示信息
+② CLI 顯示提示資訊
    "Please visit https://skills.example.com/device and enter code: ABCD-1234"
-   CLI 自动打开浏览器（可选）
+   CLI 自動開啟瀏覽器（可選）
     │
     ▼
-③ 用户在浏览器中访问 verification_uri
-   输入 user_code
-   登录（如果未登录）
-   确认授权
+③ 使用者在瀏覽器中訪問 verification_uri
+   輸入 user_code
+   登入（如果未登入）
+   確認授權
     │
     ▼
-④ CLI 轮询 token 端点
+④ CLI 輪詢 token 端點
    POST /api/v1/cli/auth/device/token
    Body: { "device_code": "xxx" }
 
-   - 授权前：返回 { "error": "authorization_pending" }
-   - 授权后：返回 { "access_token": "sk_xxx", "token_type": "Bearer", "expires_in": null }
+   - 授權前：返回 { "error": "authorization_pending" }
+   - 授權後：返回 { "access_token": "sk_xxx", "token_type": "Bearer", "expires_in": null }
     │
     ▼
-⑤ CLI 保存 token 到本地配置文件
+⑤ CLI 儲存 token 到本地配置檔案
    ~/.skillhub/config.json: { "token": "sk_xxx" }
 ```
 
-#### 后端实现
+#### 後端實現
 
-**DeviceAuthService（`skillhub-auth` 模块）**
+**DeviceAuthService（`skillhub-auth` 模組）**
 
 ```java
 @Service
@@ -683,15 +683,15 @@ public class DeviceAuthService {
      * 生成 device code 和 user code
      */
     public DeviceCodeResponse generateDeviceCode() {
-        String deviceCode = generateSecureToken(32);  // 长随机字符串
+        String deviceCode = generateSecureToken(32);  // 長隨機字串
         String userCode = generateUserFriendlyCode();  // ABCD-1234 格式
 
-        // 存储到 Redis（TTL 15 分钟）
+        // 儲存到 Redis（TTL 15 分鐘）
         DeviceCodeData data = new DeviceCodeData(
             deviceCode,
             userCode,
             DeviceCodeStatus.PENDING,
-            null  // userId，授权后填充
+            null  // userId，授權後填充
         );
         redisTemplate.opsForValue().set(
             "device:code:" + deviceCode,
@@ -709,16 +709,16 @@ public class DeviceAuthService {
     }
 
     /**
-     * 用户授权 device code
+     * 使用者授權 device code
      */
     public void authorizeDeviceCode(String userCode, String userId) {
-        // 1. 通过 user_code 查找 device_code
+        // 1. 透過 user_code 查詢 device_code
         String deviceCode = findDeviceCodeByUserCode(userCode);
         if (deviceCode == null) {
             throw new NotFoundException("Invalid user code");
         }
 
-        // 2. 更新状态为 AUTHORIZED，填充 userId
+        // 2. 更新狀態為 AUTHORIZED，填充 userId
         DeviceCodeData data = getDeviceCodeData(deviceCode);
         data.setStatus(DeviceCodeStatus.AUTHORIZED);
         data.setUserId(userId);
@@ -730,7 +730,7 @@ public class DeviceAuthService {
     }
 
     /**
-     * CLI 轮询获取 token
+     * CLI 輪詢獲取 token
      */
     public DeviceTokenResponse pollToken(String deviceCode) {
         DeviceCodeData data = getDeviceCodeData(deviceCode);
@@ -746,10 +746,10 @@ public class DeviceAuthService {
                 ApiToken token = apiTokenService.createToken(
                     data.getUserId(),
                     "CLI Device Auth",
-                    null  // 永不过期
+                    null  // 永不過期
                 );
 
-                // 标记为已使用，防止重复获取
+                // 標記為已使用，防止重複獲取
                 data.setStatus(DeviceCodeStatus.USED);
                 redisTemplate.opsForValue().set(
                     "device:code:" + deviceCode,
@@ -764,8 +764,8 @@ public class DeviceAuthService {
     }
 
     private String generateUserFriendlyCode() {
-        // 生成 ABCD-1234 格式的 8 字符码
-        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";  // 去除易混淆字符
+        // 生成 ABCD-1234 格式的 8 字元碼
+        String chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";  // 去除易混淆字元
         Random random = new SecureRandom();
         StringBuilder code = new StringBuilder();
         for (int i = 0; i < 8; i++) {
@@ -777,7 +777,7 @@ public class DeviceAuthService {
 }
 ```
 
-**Controller 层**
+**Controller 層**
 
 ```java
 @RestController
@@ -812,14 +812,14 @@ public class DeviceAuthWebController {
 public record AuthorizeDeviceRequest(String userCode) {}
 ```
 
-**说明：**
-- 前端是 React SPA，后端只提供 REST API 端点，不需要 Thymeleaf 模板
-- `/device` 路由由前端 React Router 处理
-- 后端只提供 `/api/v1/device/authorize` API 端点用于授权操作
+**說明：**
+- 前端是 React SPA，後端只提供 REST API 端點，不需要 Thymeleaf 模板
+- `/device` 路由由前端 React Router 處理
+- 後端只提供 `/api/v1/device/authorize` API 端點用於授權操作
 
-### 4.2 CLI API 端点
+### 4.2 CLI API 端點
 
-#### whoami - 查询当前用户信息
+#### whoami - 查詢當前使用者資訊
 
 ```
 GET /api/v1/cli/whoami
@@ -830,7 +830,7 @@ Response 200:
   "code": 0,
   "data": {
     "userId": 123,
-    "displayName": "张三",
+    "displayName": "張三",
     "email": "zhangsan@example.com",
     "namespaces": [
       {
@@ -848,19 +848,19 @@ Response 200:
 }
 ```
 
-#### publish - 发布技能
+#### publish - 發布技能
 
 ```
 POST /api/v1/cli/publish
 Authorization: Bearer sk_xxx
 Content-Type: multipart/form-data
-X-Request-Id: uuid-v4（可选，用于幂等）
+X-Request-Id: uuid-v4（可選，用於冪等）
 
 Parts:
   - file: zip 包（必需）
-  - namespace: 目标命名空间 slug（必需）
-  - visibility: PUBLIC / NAMESPACE_ONLY / PRIVATE（可选，默认 PUBLIC）
-  - auto_submit: boolean（可选，默认 true，自动提交审核）
+  - namespace: 目標名稱空間 slug（必需）
+  - visibility: PUBLIC / NAMESPACE_ONLY / PRIVATE（可選，預設 PUBLIC）
+  - auto_submit: boolean（可選，預設 true，自動提交稽核）
 
 Response 200:
 {
@@ -871,26 +871,26 @@ Response 200:
     "namespace": "team-ai",
     "slug": "my-skill",
     "version": "1.2.0",
-    "status": "PENDING_REVIEW",  // auto_submit=true 时
+    "status": "PENDING_REVIEW",  // auto_submit=true 時
     "fileCount": 5,
     "totalSize": 12345
   }
 }
 ```
 
-**与 Phase 2 的差异：**
-- Phase 2：上传 → DRAFT → 自动 PUBLISHED
-- Phase 3：上传 → DRAFT → 提交审核 → PENDING_REVIEW → 人工审核 → PUBLISHED
+**與 Phase 2 的差異：**
+- Phase 2：上傳 → DRAFT → 自動 PUBLISHED
+- Phase 3：上傳 → DRAFT → 提交稽核 → PENDING_REVIEW → 人工稽核 → PUBLISHED
 
 #### resolve - 解析技能版本
 
 ```
 GET /api/v1/cli/resolve?skill=@team-ai/my-skill&version=1.2.0
-Authorization: Bearer sk_xxx（可选，匿名可访问 PUBLIC 技能）
+Authorization: Bearer sk_xxx（可選，匿名可訪問 PUBLIC 技能）
 
 Query Parameters:
-  - skill: 技能坐标（@namespace/slug）
-  - version: 版本号 / 标签名 / "latest"（可选，默认 latest）
+  - skill: 技能座標（@namespace/slug）
+  - version: 版本號 / 標籤名 / "latest"（可選，預設 latest）
 
 Response 200:
 {
@@ -911,7 +911,7 @@ Response 200:
 }
 ```
 
-#### check - 检查技能包有效性
+#### check - 檢查技能包有效性
 
 ```
 POST /api/v1/cli/check
@@ -937,7 +937,7 @@ Response 200:
   }
 }
 
-Response 200（校验失败）:
+Response 200（校驗失敗）:
 {
   "code": 0,
   "data": {
@@ -952,32 +952,32 @@ Response 200（校验失败）:
 
 ---
 
-## 5. ClawHub 兼容层设计
+## 5. ClawHub 相容層設計
 
-### 5.1 Canonical Slug 映射规则
+### 5.1 Canonical Slug 對映規則
 
-根据 `00-product-direction.md` 1.1 节的冻结决策：
+根據 `00-product-direction.md` 1.1 節的凍結決策：
 
-| skillhub 坐标 | ClawHub canonical slug | 说明 |
+| skillhub 座標 | ClawHub canonical slug | 說明 |
 |--------------|----------------------|------|
-| `@global/my-skill` | `my-skill` | 全局空间省略前缀 |
-| `@team-ai/my-skill` | `team-ai--my-skill` | 团队空间使用双连字符 |
+| `@global/my-skill` | `my-skill` | 全域性空間省略字首 |
+| `@team-ai/my-skill` | `team-ai--my-skill` | 團隊空間使用雙連字元 |
 
-**映射规则：**
-- 分隔符为双连字符 `--`
-- skill slug 和 namespace slug 均禁止包含 `--`（在校验规则中已强制）
-- 兼容层解析 canonical slug 时：
-  - 包含 `--` → 拆分为 `namespace_slug` + `skill_slug`
-  - 不包含 `--` → 视为 `@global/{slug}`
+**對映規則：**
+- 分隔符為雙連字元 `--`
+- skill slug 和 namespace slug 均禁止包含 `--`（在校驗規則中已強制）
+- 相容層解析 canonical slug 時：
+  - 包含 `--` → 拆分為 `namespace_slug` + `skill_slug`
+  - 不包含 `--` → 視為 `@global/{slug}`
 
-**CanonicalSlugMapper（`skillhub-app` 模块）**
+**CanonicalSlugMapper（`skillhub-app` 模組）**
 
 ```java
 @Component
 public class CanonicalSlugMapper {
 
     /**
-     * skillhub 坐标 → canonical slug
+     * skillhub 座標 → canonical slug
      */
     public String toCanonical(String namespaceSlug, String skillSlug) {
         if ("global".equals(namespaceSlug)) {
@@ -987,17 +987,17 @@ public class CanonicalSlugMapper {
     }
 
     /**
-     * canonical slug → skillhub 坐标
+     * canonical slug → skillhub 座標
      */
     public SkillCoordinate fromCanonical(String canonicalSlug) {
         int separatorIndex = canonicalSlug.indexOf("--");
 
         if (separatorIndex == -1) {
-            // 无 --，视为全局空间
+            // 無 --，視為全域性空間
             return new SkillCoordinate("global", canonicalSlug);
         }
 
-        // 有 --，拆分为 namespace + skill
+        // 有 --，拆分為 namespace + skill
         String namespaceSlug = canonicalSlug.substring(0, separatorIndex);
         String skillSlug = canonicalSlug.substring(separatorIndex + 2);
         return new SkillCoordinate(namespaceSlug, skillSlug);
@@ -1007,9 +1007,9 @@ public class CanonicalSlugMapper {
 public record SkillCoordinate(String namespaceSlug, String skillSlug) {}
 ```
 
-### 5.2 兼容层端点
+### 5.2 相容層端點
 
-#### /.well-known/clawhub.json - 服务发现
+#### /.well-known/clawhub.json - 服務發現
 
 ```
 GET /.well-known/clawhub.json
@@ -1020,11 +1020,11 @@ Response 200:
 }
 ```
 
-#### search - 搜索技能
+#### search - 搜尋技能
 
 ```
 GET /api/v1/search?q=keyword&page=0&size=20
-Authorization: Bearer sk_xxx（可选）
+Authorization: Bearer sk_xxx（可選）
 
 Response 200:
 {
@@ -1052,13 +1052,13 @@ Response 200:
 }
 ```
 
-**实现：** 调用 skillhub 搜索 API，将结果转换为 canonical slug 格式。
+**實現：** 呼叫 skillhub 搜尋 API，將結果轉換為 canonical slug 格式。
 
 #### resolve - 解析技能版本
 
 ```
 GET /api/v1/resolve?slug=my-skill&version=1.2.0
-Authorization: Bearer sk_xxx（可选）
+Authorization: Bearer sk_xxx（可選）
 
 Response 200:
 {
@@ -1071,16 +1071,16 @@ Response 200:
 }
 ```
 
-**实现：**
-1. 解析 canonical slug → skillhub 坐标
-2. 调用 skillhub resolve API
-3. 转换响应格式
+**實現：**
+1. 解析 canonical slug → skillhub 座標
+2. 呼叫 skillhub resolve API
+3. 轉換響應格式
 
-#### download - 下载技能包
+#### download - 下載技能包
 
 ```
 GET /api/v1/download/{slug}/{version}
-Authorization: Bearer sk_xxx（可选）
+Authorization: Bearer sk_xxx（可選）
 
 Response 200:
 Content-Type: application/zip
@@ -1089,12 +1089,12 @@ Content-Disposition: attachment; filename="my-skill-1.2.0.zip"
 <binary data>
 ```
 
-**实现：**
-1. 解析 canonical slug → skillhub 坐标
-2. 调用 skillhub download API
-3. 透传 zip 文件
+**實現：**
+1. 解析 canonical slug → skillhub 座標
+2. 呼叫 skillhub download API
+3. 透傳 zip 檔案
 
-#### publish - 发布技能
+#### publish - 發布技能
 
 ```
 POST /api/v1/publish
@@ -1103,7 +1103,7 @@ Content-Type: multipart/form-data
 
 Parts:
   - file: zip 包（必需）
-  - namespace: 目标命名空间 slug（可选，默认 global）
+  - namespace: 目標名稱空間 slug（可選，預設 global）
 
 Response 200:
 {
@@ -1113,9 +1113,9 @@ Response 200:
 }
 ```
 
-**实现：** 调用 skillhub publish API，转换响应格式。
+**實現：** 呼叫 skillhub publish API，轉換響應格式。
 
-#### whoami - 查询当前用户
+#### whoami - 查詢當前使用者
 
 ```
 GET /api/v1/whoami
@@ -1129,9 +1129,9 @@ Response 200:
 }
 ```
 
-**实现：** 调用 skillhub whoami API，转换响应格式。
+**實現：** 呼叫 skillhub whoami API，轉換響應格式。
 
-### 5.3 兼容层 Controller 实现
+### 5.3 相容層 Controller 實現
 
 ```java
 @RestController
@@ -1151,12 +1151,12 @@ public class ClawHubCompatController {
             @RequestParam(defaultValue = "20") int size,
             @AuthenticationPrincipal PlatformPrincipal principal) {
 
-        // 调用 skillhub 搜索
+        // 呼叫 skillhub 搜尋
         SearchResultDTO result = skillSearchAppService.searchSkills(
             q, null, "relevance", page, size, principal
         );
 
-        // 转换为 ClawHub 格式
+        // 轉換為 ClawHub 格式
         List<ClawHubSkillItem> items = result.items().stream()
             .map(item -> new ClawHubSkillItem(
                 slugMapper.toCanonical(item.namespace(), item.slug()),
@@ -1180,7 +1180,7 @@ public class ClawHubCompatController {
         // 解析 canonical slug
         SkillCoordinate coord = slugMapper.fromCanonical(slug);
 
-        // 调用 skillhub resolve
+        // 呼叫 skillhub resolve
         SkillVersionDetailDTO detail = skillQueryService.getVersionDetail(
             coord.namespaceSlug(),
             coord.skillSlug(),
@@ -1188,7 +1188,7 @@ public class ClawHubCompatController {
             principal
         );
 
-        // 转换为 ClawHub 格式
+        // 轉換為 ClawHub 格式
         return new ClawHubResolveResponse(
             slug,
             detail.displayName(),
@@ -1208,7 +1208,7 @@ public class ClawHubCompatController {
         // 解析 canonical slug
         SkillCoordinate coord = slugMapper.fromCanonical(slug);
 
-        // 调用 skillhub download
+        // 呼叫 skillhub download
         DownloadResult result = skillDownloadService.downloadVersion(
             coord.namespaceSlug(),
             coord.skillSlug(),
@@ -1230,7 +1230,7 @@ public class ClawHubCompatController {
             @RequestParam(defaultValue = "global") String namespace,
             @AuthenticationPrincipal PlatformPrincipal principal) {
 
-        // 调用 skillhub publish
+        // 呼叫 skillhub publish
         SkillVersion version = skillPublishService.publishSkill(
             namespace,
             file.getInputStream(),
@@ -1238,7 +1238,7 @@ public class ClawHubCompatController {
             SkillVisibility.PUBLIC
         );
 
-        // 转换为 ClawHub 格式
+        // 轉換為 ClawHub 格式
         String canonicalSlug = slugMapper.toCanonical(namespace, version.getSkill().getSlug());
         return new ClawHubPublishResponse(
             canonicalSlug,
@@ -1263,21 +1263,21 @@ public class ClawHubCompatController {
 
 ---
 
-## 6. 幂等去重设计
+## 6. 冪等去重設計
 
-### 6.1 双层防护架构
+### 6.1 雙層防護架構
 
-**Redis 层（快速去重）：**
+**Redis 層（快速去重）：**
 - Key: `idempotent:{requestId}`
 - Value: "1"
-- TTL: 24 小时
-- 作用：快速拦截重复请求，避免数据库查询
+- TTL: 24 小時
+- 作用：快速攔截重複請求，避免資料庫查詢
 
-**PostgreSQL 层（持久化兜底）：**
+**PostgreSQL 層（持久化兜底）：**
 - 表：`idempotency_record`
-- 作用：持久化幂等记录，Redis 失效后仍能去重
+- 作用：持久化冪等記錄，Redis 失效後仍能去重
 
-### 6.2 幂等拦截器
+### 6.2 冪等攔截器
 
 ```java
 @Component
@@ -1291,27 +1291,27 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
                              HttpServletResponse response,
                              Object handler) throws Exception {
 
-        // 只拦截写操作
+        // 只攔截寫操作
         String method = request.getMethod();
         if (!("POST".equals(method) || "PUT".equals(method) || "DELETE".equals(method))) {
             return true;
         }
 
-        // 获取 Request-Id
+        // 獲取 Request-Id
         String requestId = request.getHeader(REQUEST_ID_HEADER);
         if (requestId == null || requestId.isBlank()) {
-            // 客户端未传 Request-Id，不做幂等处理
+            // 客戶端未傳 Request-Id，不做冪等處理
             return true;
         }
 
-        // 校验 UUID 格式
+        // 校驗 UUID 格式
         if (!isValidUUID(requestId)) {
             response.setStatus(HttpStatus.BAD_REQUEST.value());
             response.getWriter().write("{\"error\":\"Invalid X-Request-Id format\"}");
             return false;
         }
 
-        // 检查 Redis 快速去重
+        // 檢查 Redis 快速去重
         String redisKey = "idempotent:" + requestId;
         Boolean exists = redisTemplate.opsForValue().setIfAbsent(
             redisKey,
@@ -1320,44 +1320,44 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
         );
 
         if (Boolean.FALSE.equals(exists)) {
-            // Redis 中已存在，查询 PostgreSQL 获取原始结果
+            // Redis 中已存在，查詢 PostgreSQL 獲取原始結果
             IdempotencyRecord record = idempotencyRecordRepository
                 .findById(requestId)
                 .orElse(null);
 
             if (record == null) {
-                // Redis 有但 PostgreSQL 无，可能是脏数据，删除 Redis key 允许重试
+                // Redis 有但 PostgreSQL 無，可能是髒資料，刪除 Redis key 允許重試
                 redisTemplate.delete(redisKey);
                 return true;
             }
 
             return switch (record.getStatus()) {
                 case COMPLETED -> {
-                    // 返回原始结果
+                    // 返回原始結果
                     response.setStatus(record.getResponseStatusCode());
                     response.setContentType("application/json");
                     response.getWriter().write(buildIdempotentResponse(record));
-                    yield false;  // 拦截请求
+                    yield false;  // 攔截請求
                 }
                 case PROCESSING -> {
-                    // 正在处理中，返回 409 Conflict
+                    // 正在處理中，返回 409 Conflict
                     response.setStatus(HttpStatus.CONFLICT.value());
                     response.getWriter().write("{\"error\":\"Request is being processed\"}");
                     yield false;
                 }
                 case FAILED -> {
-                    // 失败状态，允许重试
+                    // 失敗狀態，允許重試
                     redisTemplate.delete(redisKey);
                     yield true;
                 }
             };
         }
 
-        // Redis SETNX 成功，插入 PostgreSQL PROCESSING 记录
+        // Redis SETNX 成功，插入 PostgreSQL PROCESSING 記錄
         IdempotencyRecord record = new IdempotencyRecord(
             requestId,
-            null,  // resourceType，业务层填充
-            null,  // resourceId，业务层填充
+            null,  // resourceType，業務層填充
+            null,  // resourceId，業務層填充
             IdempotencyStatus.PROCESSING,
             null,
             Instant.now(),
@@ -1365,14 +1365,14 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
         );
         idempotencyRecordRepository.save(record);
 
-        // 将 requestId 存入 request attribute，供业务层使用
+        // 將 requestId 存入 request attribute，供業務層使用
         request.setAttribute(IDEMPOTENCY_ATTR, requestId);
 
         return true;
     }
 
     private String buildIdempotentResponse(IdempotencyRecord record) {
-        // 根据 resourceType 和 resourceId 构建响应
+        // 根據 resourceType 和 resourceId 構建響應
         return String.format(
             "{\"code\":0,\"data\":{\"resourceType\":\"%s\",\"resourceId\":%d}}",
             record.getResourceType(),
@@ -1382,7 +1382,7 @@ public class IdempotencyInterceptor implements HandlerInterceptor {
 }
 ```
 
-### 6.3 业务层使用
+### 6.3 業務層使用
 
 ```java
 @Service
@@ -1390,10 +1390,10 @@ public class SkillPublishService {
 
     @Transactional
     public SkillVersion publishSkill(..., HttpServletRequest request) {
-        // 业务逻辑
+        // 業務邏輯
         SkillVersion version = doPublish(...);
 
-        // 更新幂等记录为 COMPLETED
+        // 更新冪等記錄為 COMPLETED
         String requestId = (String) request.getAttribute("idempotency.requestId");
         if (requestId != null) {
             idempotencyRecordRepository.updateToCompleted(
@@ -1409,21 +1409,21 @@ public class SkillPublishService {
 }
 ```
 
-### 6.4 定时清理任务
+### 6.4 定時清理任務
 
 ```java
 @Component
 public class IdempotencyCleanupTask {
 
-    @Scheduled(cron = "0 0 2 * * ?")  // 每天凌晨 2 点
+    @Scheduled(cron = "0 0 2 * * ?")  // 每天凌晨 2 點
     public void cleanupExpiredRecords() {
         int deleted = idempotencyRecordRepository.deleteExpired(Instant.now());
         log.info("Cleaned up {} expired idempotency records", deleted);
     }
 
-    @Scheduled(fixedDelay = 300000)  // 每 5 分钟
+    @Scheduled(fixedDelay = 300000)  // 每 5 分鐘
     public void cleanupStaleProcessing() {
-        // 清理超过 5 分钟仍在 PROCESSING 状态的记录（视为僵死）
+        // 清理超過 5 分鐘仍在 PROCESSING 狀態的記錄（視為僵死）
         Instant staleThreshold = Instant.now().minus(5, ChronoUnit.MINUTES);
         int updated = idempotencyRecordRepository.markStaleAsFailed(staleThreshold);
         if (updated > 0) {
@@ -1435,131 +1435,131 @@ public class IdempotencyCleanupTask {
 
 ---
 
-## 7. 前端设计
+## 7. 前端設計
 
-### 7.1 审核中心
+### 7.1 稽核中心
 
-#### 路由结构
+#### 路由結構
 
 ```
-/dashboard/reviews                          → 我的审核任务（我有权审核的）
-/dashboard/reviews/my-submissions           → 我的提交（我提交的审核）
-/dashboard/reviews/{id}                     → 审核详情页
-/dashboard/promotions                       → 提升审核列表（仅平台管理员）
-/dashboard/promotions/{id}                  → 提升审核详情页
+/dashboard/reviews                          → 我的稽核任務（我有權稽核的）
+/dashboard/reviews/my-submissions           → 我的提交（我提交的稽核）
+/dashboard/reviews/{id}                     → 稽核詳情頁
+/dashboard/promotions                       → 提升稽核列表（僅平臺管理員）
+/dashboard/promotions/{id}                  → 提升稽核詳情頁
 ```
 
-#### 审核任务列表页（`/dashboard/reviews`）
+#### 稽核任務列表頁（`/dashboard/reviews`）
 
-**布局：**
-- Tab 切换：待审核 / 已审核 / 全部
-- 筛选器：命名空间下拉、提交人搜索、提交时间范围
-- 表格列：技能名、版本号、提交人、提交时间、状态、操作
+**佈局：**
+- Tab 切換：待稽核 / 已稽核 / 全部
+- 篩選器：名稱空間下拉、提交人搜尋、提交時間範圍
+- 表格列：技能名、版本號、提交人、提交時間、狀態、操作
 
-**表格列定义：**
+**表格列定義：**
 
-| 列 | 内容 |
+| 列 | 內容 |
 |----|------|
 | 技能名 | `@namespace/slug` + displayName |
-| 版本号 | `1.2.0` |
-| 提交人 | 用户头像 + 名称 |
-| 提交时间 | 相对时间（2 小时前） |
-| 状态 | Badge（PENDING 黄色 / APPROVED 绿色 / REJECTED 红色） |
-| 操作 | 查看详情按钮 |
+| 版本號 | `1.2.0` |
+| 提交人 | 使用者頭像 + 名稱 |
+| 提交時間 | 相對時間（2 小時前） |
+| 狀態 | Badge（PENDING 黃色 / APPROVED 綠色 / REJECTED 紅色） |
+| 操作 | 檢視詳情按鈕 |
 
-**权限过滤：**
-- 团队管理员：只看到自己管理的 namespace 的审核任务
-- 平台 SKILL_ADMIN：只看到全局空间的审核任务
-- SUPER_ADMIN：看到所有审核任务
+**許可權過濾：**
+- 團隊管理員：只看到自己管理的 namespace 的稽核任務
+- 平臺 SKILL_ADMIN：只看到全域性空間的稽核任務
+- SUPER_ADMIN：看到所有稽核任務
 
-#### 审核详情页（`/dashboard/reviews/{id}`）
+#### 稽核詳情頁（`/dashboard/reviews/{id}`）
 
-**布局：**
-- 左侧主区域（70%）：
-  - 技能信息卡片：名称、版本、提交人、提交时间
-  - Tab 切换：README / 文件列表 / 变更历史
+**佈局：**
+- 左側主區域（70%）：
+  - 技能資訊卡片：名稱、版本、提交人、提交時間
+  - Tab 切換：README / 檔案列表 / 變更歷史
   - README tab：Markdown 渲染
-  - 文件列表 tab：文件树 + 文件内容预览
-  - 变更历史 tab：与上一版本的 diff（如果有）
-- 右侧操作栏（30%）：
-  - 审核状态 Badge
-  - 审核意见输入框（Textarea）
-  - 通过按钮（绿色，带确认对话框）
-  - 拒绝按钮（红色，必须填写拒绝原因）
-  - 审核历史（如果已审核）
+  - 檔案列表 tab：檔案樹 + 檔案內容預覽
+  - 變更歷史 tab：與上一版本的 diff（如果有）
+- 右側操作欄（30%）：
+  - 稽核狀態 Badge
+  - 稽核意見輸入框（Textarea）
+  - 透過按鈕（綠色，帶確認對話方塊）
+  - 拒絕按鈕（紅色，必須填寫拒絕原因）
+  - 稽核歷史（如果已稽核）
 
-**通过确认对话框：**
+**透過確認對話方塊：**
 ```
-标题：确认通过审核
-内容：确认通过技能 @team-ai/my-skill v1.2.0 的审核？通过后技能将立即发布。
-按钮：取消 / 确认通过
-```
-
-**拒绝对话框：**
-```
-标题：拒绝审核
-内容：
-  - 拒绝原因（必填，Textarea）
-  - 提示：拒绝原因将发送给提交人
-按钮：取消 / 确认拒绝
+標題：確認透過稽核
+內容：確認透過技能 @team-ai/my-skill v1.2.0 的稽核？透過後技能將立即發布。
+按鈕：取消 / 確認透過
 ```
 
-#### 我的提交列表页（`/dashboard/reviews/my-submissions`）
+**拒絕對話方塊：**
+```
+標題：拒絕稽核
+內容：
+  - 拒絕原因（必填，Textarea）
+  - 提示：拒絕原因將傳送給提交人
+按鈕：取消 / 確認拒絕
+```
 
-**布局：** 与审核任务列表页类似，但只显示当前用户提交的审核。
+#### 我的提交列表頁（`/dashboard/reviews/my-submissions`）
+
+**佈局：** 與稽核任務列表頁類似，但只顯示當前使用者提交的稽核。
 
 **操作列：**
-- PENDING 状态：撤回按钮
-- APPROVED 状态：查看详情
-- REJECTED 状态：查看详情 + 查看拒绝原因
+- PENDING 狀態：撤回按鈕
+- APPROVED 狀態：檢視詳情
+- REJECTED 狀態：檢視詳情 + 檢視拒絕原因
 
-#### 提升审核列表页（`/dashboard/promotions`）
+#### 提升稽核列表頁（`/dashboard/promotions`）
 
-**仅平台 SKILL_ADMIN 和 SUPER_ADMIN 可访问。**
+**僅平臺 SKILL_ADMIN 和 SUPER_ADMIN 可訪問。**
 
-**布局：**
-- Tab 切换：待审核 / 已审核 / 全部
-- 表格列：来源技能、目标空间、申请版本、提交人、提交时间、状态、操作
+**佈局：**
+- Tab 切換：待稽核 / 已稽核 / 全部
+- 表格列：來源技能、目標空間、申請版本、提交人、提交時間、狀態、操作
 
-**表格列定义：**
+**表格列定義：**
 
-| 列 | 内容 |
+| 列 | 內容 |
 |----|------|
-| 来源技能 | `@team-ai/my-skill` |
-| 目标空间 | `@global` |
-| 申请版本 | `1.2.0` |
-| 提交人 | 用户头像 + 名称 |
-| 提交时间 | 相对时间 |
-| 状态 | Badge |
-| 操作 | 查看详情按钮 |
+| 來源技能 | `@team-ai/my-skill` |
+| 目標空間 | `@global` |
+| 申請版本 | `1.2.0` |
+| 提交人 | 使用者頭像 + 名稱 |
+| 提交時間 | 相對時間 |
+| 狀態 | Badge |
+| 操作 | 檢視詳情按鈕 |
 
-#### 提升审核详情页（`/dashboard/promotions/{id}`）
+#### 提升稽核詳情頁（`/dashboard/promotions/{id}`）
 
-**布局：** 与审核详情页类似，但增加提升信息：
-- 来源技能：`@team-ai/my-skill`
-- 目标空间：`@global`
-- 提升后坐标：`@global/my-skill`
-- 冲突检查：如果目标空间已存在同名技能，显示警告
+**佈局：** 與稽核詳情頁類似，但增加提升資訊：
+- 來源技能：`@team-ai/my-skill`
+- 目標空間：`@global`
+- 提升後坐標：`@global/my-skill`
+- 衝突檢查：如果目標空間已存在同名技能，顯示警告
 
-### 7.2 评分收藏 UI
+### 7.2 評分收藏 UI
 
-#### 技能详情页增强（Phase 2 已有，Phase 3 增强）
+#### 技能詳情頁增強（Phase 2 已有，Phase 3 增強）
 
-**右侧信息栏新增：**
+**右側資訊欄新增：**
 
 ```tsx
-// 评分组件
+// 評分元件
 <div className="rating-section">
   <div className="rating-display">
     <StarRating value={skill.ratingAvg} readonly />
     <span className="rating-text">
-      {skill.ratingAvg.toFixed(1)} ({skill.ratingCount} 评分)
+      {skill.ratingAvg.toFixed(1)} ({skill.ratingCount} 評分)
     </span>
   </div>
 
   {isAuthenticated ? (
     <div className="user-rating">
-      <label>你的评分：</label>
+      <label>你的評分：</label>
       <StarRating
         value={userRating}
         onChange={handleRatingChange}
@@ -1567,12 +1567,12 @@ public class IdempotencyCleanupTask {
     </div>
   ) : (
     <p className="login-prompt">
-      <Link to="/login">登录</Link> 后可评分
+      <Link to="/login">登入</Link> 後可評分
     </p>
   )}
 </div>
 
-// 收藏按钮
+// 收藏按鈕
 <Button
   variant={isStarred ? "default" : "outline"}
   onClick={handleStarToggle}
@@ -1584,310 +1584,310 @@ public class IdempotencyCleanupTask {
 </Button>
 ```
 
-**匿名用户点击评分/收藏：**
-- 弹出 Toast 提示："请先登录"
-- 点击 Toast 跳转到登录页
+**匿名使用者點選評分/收藏：**
+- 彈出 Toast 提示："請先登入"
+- 點選 Toast 跳轉到登入頁
 
-#### 我的收藏页（`/dashboard/favorites`）
+#### 我的收藏頁（`/dashboard/favorites`）
 
-**布局：**
-- 网格布局 SkillCard 列表（与搜索页类似）
-- 排序选项：收藏时间 / 下载量 / 评分
-- 空状态：引导用户浏览技能并收藏
+**佈局：**
+- 網格佈局 SkillCard 列表（與搜尋頁類似）
+- 排序選項：收藏時間 / 下載量 / 評分
+- 空狀態：引導使用者瀏覽技能並收藏
 
-**SkillCard 增强：**
-- 右上角显示收藏时间（相对时间）
-- 悬浮显示取消收藏按钮
+**SkillCard 增強：**
+- 右上角顯示收藏時間（相對時間）
+- 懸浮顯示取消收藏按鈕
 
-### 7.3 Device Auth 页面（CLI 授权）
+### 7.3 Device Auth 頁面（CLI 授權）
 
 #### 路由：`/device`
 
-**权限要求：** 需要登录（未登录用户跳转到登录页）
+**許可權要求：** 需要登入（未登入使用者跳轉到登入頁）
 
-**页面布局：**
+**頁面佈局：**
 
 ```
 ┌─────────────────────────────────────────┐
 │  skillhub Logo                          │
 │                                         │
-│  授权 CLI 设备访问                       │
+│  授權 CLI 裝置訪問                       │
 │                                         │
 │  ┌───────────────────────────────────┐ │
-│  │  请输入 CLI 显示的授权码：          │ │
+│  │  請輸入 CLI 顯示的授權碼：          │ │
 │  │                                   │ │
 │  │  ┌─────┐   ┌─────┐               │ │
 │  │  │ABCD │ - │1234 │               │ │
 │  │  └─────┘   └─────┘               │ │
 │  │                                   │ │
-│  │  [确认授权]                        │ │
+│  │  [確認授權]                        │ │
 │  └───────────────────────────────────┘ │
 │                                         │
-│  提示：授权后，CLI 将获得访问你账号的权限  │
+│  提示：授權後，CLI 將獲得訪問你賬號的許可權  │
 └─────────────────────────────────────────┘
 ```
 
-**组件设计：**
+**元件設計：**
 
-1. **User Code 输入表单**
-   - 两个输入框，分别输入 4 个字符
-   - 自动格式化为大写字母和数字
-   - 自动聚焦到第一个输入框
-   - 输入 4 个字符后自动跳转到第二个输入框
-   - 支持粘贴完整的 8 字符码（自动拆分）
-   - 实时校验：只允许字母和数字
+1. **User Code 輸入表單**
+   - 兩個輸入框，分別輸入 4 個字元
+   - 自動格式化為大寫字母和數字
+   - 自動聚焦到第一個輸入框
+   - 輸入 4 個字元後自動跳轉到第二個輸入框
+   - 支援貼上完整的 8 字元碼（自動拆分）
+   - 實時校驗：只允許字母和數字
 
-2. **确认授权按钮**
-   - 只有输入完整 8 字符后才启用
-   - 点击后弹出确认对话框
+2. **確認授權按鈕**
+   - 只有輸入完整 8 字元後才啟用
+   - 點選後彈出確認對話方塊
 
-3. **授权确认对话框**
+3. **授權確認對話方塊**
    ```
-   标题：确认授权 CLI 设备
-   内容：
-     - 授权码：ABCD-1234
-     - 设备信息：skillhub CLI
-     - 权限：读取和管理你的技能、命名空间
-     - 警告：请确认这是你正在使用的 CLI 设备
-   按钮：取消 / 确认授权
+   標題：確認授權 CLI 裝置
+   內容：
+     - 授權碼：ABCD-1234
+     - 裝置資訊：skillhub CLI
+     - 許可權：讀取和管理你的技能、名稱空間
+     - 警告：請確認這是你正在使用的 CLI 裝置
+   按鈕：取消 / 確認授權
    ```
 
-4. **授权成功页面**
+4. **授權成功頁面**
    ```
    ┌─────────────────────────────────────────┐
-   │  ✓ 授权成功                              │
+   │  ✓ 授權成功                              │
    │                                         │
-   │  你的 CLI 设备已成功授权                  │
+   │  你的 CLI 裝置已成功授權                  │
    │                                         │
-   │  请返回 CLI 继续操作                      │
+   │  請返回 CLI 繼續操作                      │
    │                                         │
-   │  [关闭窗口]                              │
+   │  [關閉視窗]                              │
    └─────────────────────────────────────────┘
    ```
 
-5. **错误处理**
+5. **錯誤處理**
 
-   | 错误类型 | 提示信息 | 用户操作 |
+   | 錯誤型別 | 提示資訊 | 使用者操作 |
    |---------|---------|---------|
-   | 无效授权码 | "授权码无效，请检查后重试" | 重新输入 |
-   | 授权码已过期 | "授权码已过期（15 分钟有效期），请返回 CLI 重新获取" | 返回 CLI |
-   | 授权码已使用 | "授权码已被使用，请返回 CLI 重新获取" | 返回 CLI |
-   | 网络错误 | "网络错误，请稍后重试" | 重试按钮 |
+   | 無效授權碼 | "授權碼無效，請檢查後重試" | 重新輸入 |
+   | 授權碼已過期 | "授權碼已過期（15 分鐘有效期），請返回 CLI 重新獲取" | 返回 CLI |
+   | 授權碼已使用 | "授權碼已被使用，請返回 CLI 重新獲取" | 返回 CLI |
+   | 網路錯誤 | "網路錯誤，請稍後重試" | 重試按鈕 |
 
-**交互流程：**
+**互動流程：**
 
 ```
-用户访问 /device
+使用者訪問 /device
     │
     ▼
-检查登录状态
+檢查登入狀態
     │
-    ├── 未登录 → 跳转到登录页（带 returnUrl=/device）
+    ├── 未登入 → 跳轉到登入頁（帶 returnUrl=/device）
     │
-    └── 已登录 → 显示授权页面
+    └── 已登入 → 顯示授權頁面
             │
             ▼
-        用户输入 user code
+        使用者輸入 user code
             │
             ▼
-        点击"确认授权"
+        點選"確認授權"
             │
             ▼
-        弹出确认对话框
+        彈出確認對話方塊
             │
             ▼
-        用户确认
+        使用者確認
             │
             ▼
-        调用后端 API：POST /device/authorize
+        呼叫後端 API：POST /device/authorize
             │
-            ├── 成功 → 显示授权成功页面
+            ├── 成功 → 顯示授權成功頁面
             │
-            └── 失败 → 显示错误提示
+            └── 失敗 → 顯示錯誤提示
 ```
 
-**前端实现文件：**
-- `web/src/pages/device-auth.tsx` - 主页面
-- `web/src/features/device-auth/user-code-input.tsx` - User Code 输入组件
-- `web/src/features/device-auth/authorize-confirm-dialog.tsx` - 授权确认对话框
-- `web/src/features/device-auth/authorize-success.tsx` - 授权成功页面
-- `web/src/features/device-auth/use-authorize-device.ts` - 授权 Hook
+**前端實現檔案：**
+- `web/src/pages/device-auth.tsx` - 主頁面
+- `web/src/features/device-auth/user-code-input.tsx` - User Code 輸入元件
+- `web/src/features/device-auth/authorize-confirm-dialog.tsx` - 授權確認對話方塊
+- `web/src/features/device-auth/authorize-success.tsx` - 授權成功頁面
+- `web/src/features/device-auth/use-authorize-device.ts` - 授權 Hook
 
-### 7.4 Token 管理页
+### 7.4 Token 管理頁
 
 #### 路由：`/dashboard/tokens`
 
-**布局：**
-- 顶部：创建 Token 按钮
-- 表格列：名称、前缀、创建时间、最后使用时间、过期时间、操作
+**佈局：**
+- 頂部：建立 Token 按鈕
+- 表格列：名稱、字首、建立時間、最後使用時間、過期時間、操作
 
-**表格列定义：**
+**表格列定義：**
 
-| 列 | 内容 |
+| 列 | 內容 |
 |----|------|
-| 名称 | Token 名称（如"CI/CD"、"本地开发"） |
-| 前缀 | `sk_abc...`（只显示前 10 个字符） |
-| 创建时间 | 相对时间 |
-| 最后使用时间 | 相对时间 / "从未使用" |
-| 过期时间 | 日期 / "永不过期" |
-| 操作 | 吊销按钮（红色，带确认） |
+| 名稱 | Token 名稱（如"CI/CD"、"本地開發"） |
+| 字首 | `sk_abc...`（只顯示前 10 個字元） |
+| 建立時間 | 相對時間 |
+| 最後使用時間 | 相對時間 / "從未使用" |
+| 過期時間 | 日期 / "永不過期" |
+| 操作 | 吊銷按鈕（紅色，帶確認） |
 
-**创建 Token 对话框：**
-
-```
-标题：创建 API Token
-内容：
-  - Token 名称（必填，Text Input）
-  - 过期时间（可选，Date Picker / "永不过期"）
-  - 提示：Token 只会显示一次，请妥善保存
-按钮：取消 / 创建
-```
-
-**创建成功对话框：**
+**建立 Token 對話方塊：**
 
 ```
-标题：Token 创建成功
-内容：
-  - Token 字符串（Monospace 字体，带复制按钮）
-  - 警告：此 Token 只会显示一次，请立即复制保存
-按钮：我已复制
+標題：建立 API Token
+內容：
+  - Token 名稱（必填，Text Input）
+  - 過期時間（可選，Date Picker / "永不過期"）
+  - 提示：Token 只會顯示一次，請妥善儲存
+按鈕：取消 / 建立
 ```
 
-**吊销确认对话框：**
+**建立成功對話方塊：**
 
 ```
-标题：吊销 Token
-内容：确认吊销 Token "CI/CD"？吊销后无法恢复，使用此 Token 的应用将无法访问。
-按钮：取消 / 确认吊销
+標題：Token 建立成功
+內容：
+  - Token 字串（Monospace 字型，帶複製按鈕）
+  - 警告：此 Token 只會顯示一次，請立即複製儲存
+按鈕：我已複製
 ```
 
-### 7.5 管理后台
-
-#### 路由结构
+**吊銷確認對話方塊：**
 
 ```
-/admin                                      → 管理后台首页（仅平台管理员）
-/admin/users                                → 用户管理
-/admin/users/{id}                           → 用户详情
+標題：吊銷 Token
+內容：確認吊銷 Token "CI/CD"？吊銷後無法恢復，使用此 Token 的應用將無法訪問。
+按鈕：取消 / 確認吊銷
+```
+
+### 7.5 管理後臺
+
+#### 路由結構
+
+```
+/admin                                      → 管理後臺首頁（僅平臺管理員）
+/admin/users                                → 使用者管理
+/admin/users/{id}                           → 使用者詳情
 /admin/roles                                → 角色管理
-/admin/audit-logs                           → 审计日志
+/admin/audit-logs                           → 審計日誌
 ```
 
-**权限要求：**
+**許可權要求：**
 - `/admin/users`：USER_ADMIN 或 SUPER_ADMIN
 - `/admin/roles`：SUPER_ADMIN
 - `/admin/audit-logs`：AUDITOR 或 SUPER_ADMIN
 
-#### 用户管理页（`/admin/users`）
+#### 使用者管理頁（`/admin/users`）
 
-**布局：**
-- 搜索框：按用户名/邮箱搜索
-- 筛选器：状态（ACTIVE / PENDING / DISABLED / MERGED）
-- 表格列：用户名、邮箱、状态、角色、创建时间、操作
+**佈局：**
+- 搜尋框：按使用者名稱/郵箱搜尋
+- 篩選器：狀態（ACTIVE / PENDING / DISABLED / MERGED）
+- 表格列：使用者名稱、郵箱、狀態、角色、建立時間、操作
 
-**表格列定义：**
+**表格列定義：**
 
-| 列 | 内容 |
+| 列 | 內容 |
 |----|------|
-| 用户名 | 头像 + displayName |
-| 邮箱 | email |
-| 状态 | Badge（ACTIVE 绿色 / PENDING 黄色 / DISABLED 红色） |
-| 角色 | 平台角色列表（Tag） |
-| 创建时间 | 相对时间 |
-| 操作 | 查看详情 / 编辑角色 / 封禁/解封 |
+| 使用者名稱 | 頭像 + displayName |
+| 郵箱 | email |
+| 狀態 | Badge（ACTIVE 綠色 / PENDING 黃色 / DISABLED 紅色） |
+| 角色 | 平臺角色列表（Tag） |
+| 建立時間 | 相對時間 |
+| 操作 | 檢視詳情 / 編輯角色 / 封禁/解封 |
 
-**操作按钮：**
-- **查看详情** - 跳转到用户详情页
-- **编辑角色** - 弹出对话框，多选平台角色（SKILL_ADMIN / USER_ADMIN / AUDITOR）
-- **封禁/解封** - 切换用户状态（ACTIVE ↔ DISABLED），带确认对话框
+**操作按鈕：**
+- **檢視詳情** - 跳轉到使用者詳情頁
+- **編輯角色** - 彈出對話方塊，多選平臺角色（SKILL_ADMIN / USER_ADMIN / AUDITOR）
+- **封禁/解封** - 切換使用者狀態（ACTIVE ↔ DISABLED），帶確認對話方塊
 
-**编辑角色对话框：**
+**編輯角色對話方塊：**
 
 ```
-标题：编辑用户角色
-内容：
-  - 用户：张三 (zhangsan@example.com)
-  - 角色（多选 Checkbox）：
+標題：編輯使用者角色
+內容：
+  - 使用者：張三 (zhangsan@example.com)
+  - 角色（多選 Checkbox）：
     □ SKILL_ADMIN - 技能治理
-    □ USER_ADMIN - 用户治理
-    □ AUDITOR - 审计只读
+    □ USER_ADMIN - 使用者治理
+    □ AUDITOR - 審計只讀
   - 提示：SUPER_ADMIN 角色只能由超管分配
-按钮：取消 / 保存
+按鈕：取消 / 儲存
 ```
 
-#### 用户详情页（`/admin/users/{id}`）
+#### 使用者詳情頁（`/admin/users/{id}`）
 
-**布局：**
-- 用户信息卡片：头像、名称、邮箱、状态、创建时间
-- Tab 切换：基本信息 / 平台角色 / 命名空间成员 / 操作历史
+**佈局：**
+- 使用者資訊卡片：頭像、名稱、郵箱、狀態、建立時間
+- Tab 切換：基本資訊 / 平臺角色 / 名稱空間成員 / 操作歷史
 
-**基本信息 Tab：**
-- 显示用户的所有身份绑定（GitHub、GitLab 等）
-- 显示用户的 API Token 列表（只显示前缀和创建时间）
+**基本資訊 Tab：**
+- 顯示使用者的所有身份繫結（GitHub、GitLab 等）
+- 顯示使用者的 API Token 列表（只顯示字首和建立時間）
 
-**平台角色 Tab：**
-- 显示用户的平台角色列表
-- 添加/移除角色按钮
+**平臺角色 Tab：**
+- 顯示使用者的平臺角色列表
+- 新增/移除角色按鈕
 
-**命名空间成员 Tab：**
-- 显示用户所属的命名空间及角色
-- 表格列：命名空间、角色、加入时间
+**名稱空間成員 Tab：**
+- 顯示使用者所屬的名稱空間及角色
+- 表格列：名稱空間、角色、加入時間
 
-**操作历史 Tab：**
-- 显示用户的审计日志（最近 100 条）
-- 表格列：操作、目标、时间、IP
+**操作歷史 Tab：**
+- 顯示使用者的審計日誌（最近 100 條）
+- 表格列：操作、目標、時間、IP
 
-#### 审计日志页（`/admin/audit-logs`）
+#### 審計日誌頁（`/admin/audit-logs`）
 
-**布局：**
-- 筛选器：
-  - 操作类型下拉（发布、审核、下载、删除等）
-  - 用户搜索
-  - 时间范围选择器
-  - 目标类型下拉（skill、namespace、user 等）
-- 表格列：时间、操作人、操作、目标、IP、详情
+**佈局：**
+- 篩選器：
+  - 操作型別下拉（發布、稽核、下載、刪除等）
+  - 使用者搜尋
+  - 時間範圍選擇器
+  - 目標型別下拉（skill、namespace、user 等）
+- 表格列：時間、操作人、操作、目標、IP、詳情
 
-**表格列定义：**
+**表格列定義：**
 
-| 列 | 内容 |
+| 列 | 內容 |
 |----|------|
-| 时间 | 精确时间（2026-03-12 10:30:45） |
-| 操作人 | 用户头像 + 名称 |
+| 時間 | 精確時間（2026-03-12 10:30:45） |
+| 操作人 | 使用者頭像 + 名稱 |
 | 操作 | Badge（PUBLISH / APPROVE / REJECT / DELETE 等） |
-| 目标 | 目标类型 + ID（如"skill #123"） |
-| IP | 客户端 IP |
-| 详情 | 展开按钮，显示 detail_json |
+| 目標 | 目標型別 + ID（如"skill #123"） |
+| IP | 客戶端 IP |
+| 詳情 | 展開按鈕，顯示 detail_json |
 
-**详情展开：**
-- JSON 格式化显示
-- 语法高亮
-- 可复制
+**詳情展開：**
+- JSON 格式化顯示
+- 語法高亮
+- 可複製
 
-### 7.6 前端文件结构（Phase 3 新增）
+### 7.6 前端檔案結構（Phase 3 新增）
 
 ```
 web/src/
 ├── pages/
-│   ├── device-auth.tsx                     # Device Auth 授权页面
+│   ├── device-auth.tsx                     # Device Auth 授權頁面
 │   ├── dashboard/
-│   │   ├── reviews.tsx                    # 审核任务列表
-│   │   ├── review-detail.tsx              # 审核详情
+│   │   ├── reviews.tsx                    # 稽核任務列表
+│   │   ├── review-detail.tsx              # 稽核詳情
 │   │   ├── my-submissions.tsx             # 我的提交
-│   │   ├── promotions.tsx                 # 提升审核列表
-│   │   ├── promotion-detail.tsx           # 提升审核详情
+│   │   ├── promotions.tsx                 # 提升稽核列表
+│   │   ├── promotion-detail.tsx           # 提升稽核詳情
 │   │   ├── favorites.tsx                  # 我的收藏
 │   │   └── tokens.tsx                     # Token 管理
 │   └── admin/
-│       ├── users.tsx                      # 用户管理
-│       ├── user-detail.tsx                # 用户详情
+│       ├── users.tsx                      # 使用者管理
+│       ├── user-detail.tsx                # 使用者詳情
 │       ├── roles.tsx                      # 角色管理
-│       └── audit-logs.tsx                 # 审计日志
+│       └── audit-logs.tsx                 # 審計日誌
 ├── features/
 │   ├── device-auth/
-│   │   ├── user-code-input.tsx            # User Code 输入组件
-│   │   ├── authorize-confirm-dialog.tsx   # 授权确认对话框
-│   │   ├── authorize-success.tsx          # 授权成功页面
-│   │   └── use-authorize-device.ts        # 授权 Hook
+│   │   ├── user-code-input.tsx            # User Code 輸入元件
+│   │   ├── authorize-confirm-dialog.tsx   # 授權確認對話方塊
+│   │   ├── authorize-success.tsx          # 授權成功頁面
+│   │   └── use-authorize-device.ts        # 授權 Hook
 │   ├── review/
 │   │   ├── review-task-table.tsx
 │   │   ├── review-detail-view.tsx
@@ -1903,12 +1903,12 @@ web/src/
 │   │   ├── use-promotions.ts
 │   │   └── use-approve-promotion.ts
 │   ├── rating/
-│   │   ├── star-rating.tsx                # 评分组件
-│   │   ├── rating-display.tsx             # 评分展示
+│   │   ├── star-rating.tsx                # 評分元件
+│   │   ├── rating-display.tsx             # 評分展示
 │   │   ├── use-rate-skill.ts
 │   │   └── use-user-rating.ts
 │   ├── star/
-│   │   ├── star-button.tsx                # 收藏按钮
+│   │   ├── star-button.tsx                # 收藏按鈕
 │   │   ├── use-star-skill.ts
 │   │   └── use-starred-skills.ts
 │   ├── token/
@@ -1929,299 +1929,299 @@ web/src/
 │       └── use-update-user-roles.ts
 └── shared/
     └── components/
-        ├── confirm-dialog.tsx             # 通用确认对话框
-        └── json-viewer.tsx                # JSON 查看器
+        ├── confirm-dialog.tsx             # 通用確認對話方塊
+        └── json-viewer.tsx                # JSON 檢視器
 ```
 
 ---
 
-## 8. Chunk 划分与验收标准
+## 8. Chunk 劃分與驗收標準
 
-### Chunk 1：审核流程核心（后端）
+### Chunk 1：稽核流程核心（後端）
 
-**范围：** 数据库迁移 + 审核流程 + 提升流程 + 乐观锁 + 分级权限
+**範圍：** 資料庫遷移 + 稽核流程 + 提升流程 + 樂觀鎖 + 分級許可權
 
-**任务清单：**
-1. 数据库迁移 `V3__phase3_review_social_tables.sql`
-   - 创建 review_task、promotion_request、skill_star、skill_rating、idempotency_record 表
-   - 创建 partial unique index
-2. 领域实体
+**任務清單：**
+1. 資料庫遷移 `V3__phase3_review_social_tables.sql`
+   - 建立 review_task、promotion_request、skill_star、skill_rating、idempotency_record 表
+   - 建立 partial unique index
+2. 領域實體
    - ReviewTask、PromotionRequest、SkillStar、SkillRating、IdempotencyRecord
-3. 审核服务
-   - ReviewService：提交审核、审核通过/拒绝、撤回审核
-   - PromotionService：提交提升、审核提升
-   - ReviewPermissionChecker：权限判定
-4. Repository 实现
-   - ReviewTaskRepository：乐观锁更新方法
-   - PromotionRequestRepository：乐观锁更新方法
-5. Controller 层
-   - ReviewController：审核任务 CRUD、审核操作
-   - PromotionController：提升请求 CRUD、审核操作
-6. 单元测试 + 集成测试
+3. 稽核服務
+   - ReviewService：提交稽核、稽核透過/拒絕、撤回稽核
+   - PromotionService：提交提升、稽核提升
+   - ReviewPermissionChecker：許可權判定
+4. Repository 實現
+   - ReviewTaskRepository：樂觀鎖更新方法
+   - PromotionRequestRepository：樂觀鎖更新方法
+5. Controller 層
+   - ReviewController：稽核任務 CRUD、稽核操作
+   - PromotionController：提升請求 CRUD、稽核操作
+6. 單元測試 + 整合測試
 
-**验收标准：**
-1. 用户可以提交审核，创建 review_task（status=PENDING）
-2. 审核人可以通过/拒绝审核，乐观锁防止并发冲突
-3. 审核通过后，skill_version.status → PUBLISHED，触发搜索索引更新
-4. 审核拒绝后，skill_version.status → REJECTED，记录拒绝原因
-5. 用户可以撤回 PENDING 状态的审核
-6. 团队管理员只能审核自己管理的 namespace 的技能
-7. 平台 SKILL_ADMIN 只能审核全局空间的技能
-8. 用户可以提交提升请求，创建 promotion_request（status=PENDING）
-9. 平台 SKILL_ADMIN 可以审核提升请求
-10. 提升通过后，在全局空间创建新 skill，复制版本和文件
-11. 所有审核操作写入 audit_log
-12. 所有测试通过
+**驗收標準：**
+1. 使用者可以提交稽核，建立 review_task（status=PENDING）
+2. 稽核人可以透過/拒絕稽核，樂觀鎖防止併發衝突
+3. 稽核透過後，skill_version.status → PUBLISHED，觸發搜尋索引更新
+4. 稽核拒絕後，skill_version.status → REJECTED，記錄拒絕原因
+5. 使用者可以撤回 PENDING 狀態的稽核
+6. 團隊管理員只能稽核自己管理的 namespace 的技能
+7. 平臺 SKILL_ADMIN 只能稽核全域性空間的技能
+8. 使用者可以提交提升請求，建立 promotion_request（status=PENDING）
+9. 平臺 SKILL_ADMIN 可以稽核提升請求
+10. 提升透過後，在全域性空間建立新 skill，複製版本和檔案
+11. 所有稽核操作寫入 audit_log
+12. 所有測試透過
 
-### Chunk 2：评分收藏 + 前端审核中心
+### Chunk 2：評分收藏 + 前端稽核中心
 
-**范围：** 评分收藏后端 + 审核中心前端 + Token 管理前端
+**範圍：** 評分收藏後端 + 稽核中心前端 + Token 管理前端
 
-**任务清单：**
+**任務清單：**
 
-**后端：**
-1. 评分收藏服务
+**後端：**
+1. 評分收藏服務
    - SkillStarService：收藏/取消收藏
-   - SkillRatingService：提交评分
-2. 异步事件监听器
+   - SkillRatingService：提交評分
+2. 非同步事件監聽器
    - SkillStarEventListener：更新 star_count
    - SkillRatingEventListener：重算 rating_avg
-3. Controller 层
+3. Controller 層
    - SkillStarController：收藏操作、我的收藏列表
-   - SkillRatingController：评分操作、获取用户评分
+   - SkillRatingController：評分操作、獲取使用者評分
 
 **前端：**
-1. 审核中心页面
-   - 审核任务列表页
-   - 审核详情页
-   - 我的提交列表页
-   - 提升审核列表页
-   - 提升审核详情页
-2. 评分收藏组件
-   - StarRating 组件
-   - StarButton 组件
-   - 技能详情页集成
-   - 我的收藏页
-3. Token 管理页
+1. 稽核中心頁面
+   - 稽核任務列表頁
+   - 稽核詳情頁
+   - 我的提交列表頁
+   - 提升稽核列表頁
+   - 提升稽核詳情頁
+2. 評分收藏元件
+   - StarRating 元件
+   - StarButton 元件
+   - 技能詳情頁整合
+   - 我的收藏頁
+3. Token 管理頁
    - Token 列表
-   - 创建 Token 对话框
-   - 吊销 Token 对话框
+   - 建立 Token 對話方塊
+   - 吊銷 Token 對話方塊
 
-**验收标准：**
-1. 用户可以收藏技能，skill.star_count 异步更新
-2. 用户可以取消收藏，star_count 异步递减
-3. 用户可以对技能评分（1-5 分），skill.rating_avg 异步重算
-4. 用户可以修改评分，rating_avg 重新计算
-5. 匿名用户点击评分/收藏，提示登录
-6. 审核中心：审核人可以查看待审核任务列表
-7. 审核中心：审核人可以查看审核详情，通过/拒绝审核
-8. 审核中心：用户可以查看自己的提交列表，撤回 PENDING 审核
-9. 提升审核：平台管理员可以查看提升请求列表，审核提升
-10. Token 管理：用户可以创建 Token，查看 Token 列表，吊销 Token
-11. 前端测试通过
+**驗收標準：**
+1. 使用者可以收藏技能，skill.star_count 非同步更新
+2. 使用者可以取消收藏，star_count 非同步遞減
+3. 使用者可以對技能評分（1-5 分），skill.rating_avg 非同步重算
+4. 使用者可以修改評分，rating_avg 重新計算
+5. 匿名使用者點選評分/收藏，提示登入
+6. 稽核中心：稽核人可以檢視待稽核任務列表
+7. 稽核中心：稽核人可以檢視稽核詳情，透過/拒絕稽核
+8. 稽核中心：使用者可以檢視自己的提交列表，撤回 PENDING 稽核
+9. 提升稽核：平臺管理員可以檢視提升請求列表，稽核提升
+10. Token 管理：使用者可以建立 Token，檢視 Token 列表，吊銷 Token
+11. 前端測試透過
 
-### Chunk 3：CLI API + Web 授权
+### Chunk 3：CLI API + Web 授權
 
-**范围：** OAuth Device Flow + CLI API 端点
+**範圍：** OAuth Device Flow + CLI API 端點
 
-**任务清单：**
-1. OAuth Device Flow 实现
-   - DeviceAuthService：生成 device code、授权、轮询 token
-   - DeviceAuthController：device code 端点、token 端点
-   - DeviceAuthWebController：Web 授权页面后端
-2. CLI API 端点
-   - whoami：查询当前用户信息
-   - publish：发布技能（复用 Phase 2 逻辑）
+**任務清單：**
+1. OAuth Device Flow 實現
+   - DeviceAuthService：生成 device code、授權、輪詢 token
+   - DeviceAuthController：device code 端點、token 端點
+   - DeviceAuthWebController：Web 授權頁面後端
+2. CLI API 端點
+   - whoami：查詢當前使用者資訊
+   - publish：發布技能（複用 Phase 2 邏輯）
    - resolve：解析技能版本
-   - check：检查技能包有效性
-3. 前端 Device Auth 页面（`/device`）
-   - 页面组件：`web/src/pages/device-auth.tsx`
-   - User Code 输入表单（8 字符，自动格式化为 ABCD-1234）
-   - 输入校验（格式校验、存在性校验）
-   - 授权确认对话框（显示 CLI 设备信息）
-   - 授权成功页面（提示用户返回 CLI）
-   - 错误处理（无效 code、过期 code、已使用 code）
-   - 路由配置：`/device` 路由需要登录
-4. CLI 工具集成测试（手动测试）
+   - check：檢查技能包有效性
+3. 前端 Device Auth 頁面（`/device`）
+   - 頁面元件：`web/src/pages/device-auth.tsx`
+   - User Code 輸入表單（8 字元，自動格式化為 ABCD-1234）
+   - 輸入校驗（格式校驗、存在性校驗）
+   - 授權確認對話方塊（顯示 CLI 裝置資訊）
+   - 授權成功頁面（提示使用者返回 CLI）
+   - 錯誤處理（無效 code、過期 code、已使用 code）
+   - 路由配置：`/device` 路由需要登入
+4. CLI 工具整合測試（手動測試）
 
-**验收标准：**
-1. CLI 运行 `skillhub login`，获取 device code 和 user code
-2. CLI 打开浏览器，跳转到授权页面
-3. 用户输入 user code，确认授权
-4. CLI 轮询获取 token，保存到本地配置文件
-5. CLI 运行 `skillhub whoami`，返回当前用户信息
-6. CLI 运行 `skillhub publish`，上传技能包，提交审核
-7. CLI 运行 `skillhub resolve @team-ai/my-skill`，返回版本信息
-8. CLI 运行 `skillhub check skill.zip`，返回校验结果
-9. 所有 CLI API 端点测试通过
+**驗收標準：**
+1. CLI 執行 `skillhub login`，獲取 device code 和 user code
+2. CLI 開啟瀏覽器，跳轉到授權頁面
+3. 使用者輸入 user code，確認授權
+4. CLI 輪詢獲取 token，儲存到本地配置檔案
+5. CLI 執行 `skillhub whoami`，返回當前使用者資訊
+6. CLI 執行 `skillhub publish`，上傳技能包，提交稽核
+7. CLI 執行 `skillhub resolve @team-ai/my-skill`，返回版本資訊
+8. CLI 執行 `skillhub check skill.zip`，返回校驗結果
+9. 所有 CLI API 端點測試透過
 
-### Chunk 4：ClawHub 兼容层
+### Chunk 4：ClawHub 相容層
 
-**范围：** canonical slug 映射 + 兼容层端点
+**範圍：** canonical slug 對映 + 相容層端點
 
-**任务清单：**
-1. CanonicalSlugMapper 实现
-2. Well-known 端点：`/.well-known/clawhub.json`
-3. 兼容层 Controller
-   - search：搜索技能
+**任務清單：**
+1. CanonicalSlugMapper 實現
+2. Well-known 端點：`/.well-known/clawhub.json`
+3. 相容層 Controller
+   - search：搜尋技能
    - resolve：解析技能版本
-   - download：下载技能包
-   - publish：发布技能
-   - whoami：查询当前用户
-4. 协议适配测试（使用 ClawHub CLI 真实请求）
+   - download：下載技能包
+   - publish：發布技能
+   - whoami：查詢當前使用者
+4. 協議適配測試（使用 ClawHub CLI 真實請求）
 
-**验收标准：**
-1. ClawHub CLI 可以通过 `/.well-known/clawhub.json` 发现兼容层 API
-2. ClawHub CLI 可以搜索技能，返回 canonical slug 格式
+**驗收標準：**
+1. ClawHub CLI 可以透過 `/.well-known/clawhub.json` 發現相容層 API
+2. ClawHub CLI 可以搜尋技能，返回 canonical slug 格式
 3. ClawHub CLI 可以解析技能版本（`my-skill` 和 `team-ai--my-skill`）
-4. ClawHub CLI 可以下载技能包
-5. ClawHub CLI 可以发布技能（需要 Token 认证）
-6. ClawHub CLI 可以查询当前用户信息
-7. 所有兼容层端点测试通过
+4. ClawHub CLI 可以下載技能包
+5. ClawHub CLI 可以發布技能（需要 Token 認證）
+6. ClawHub CLI 可以查詢當前使用者資訊
+7. 所有相容層端點測試透過
 
-### Chunk 5：幂等去重 + 管理后台
+### Chunk 5：冪等去重 + 管理後臺
 
-**范围：** 幂等拦截器 + 管理后台前端
+**範圍：** 冪等攔截器 + 管理後臺前端
 
-**任务清单：**
+**任務清單：**
 
-**后端：**
-1. 幂等拦截器
-   - IdempotencyInterceptor：Redis + PostgreSQL 双层去重
-   - IdempotencyCleanupTask：定时清理过期记录
-2. 管理后台 API
-   - UserManagementController：用户管理、角色分配
-   - AuditLogController：审计日志查询
+**後端：**
+1. 冪等攔截器
+   - IdempotencyInterceptor：Redis + PostgreSQL 雙層去重
+   - IdempotencyCleanupTask：定時清理過期記錄
+2. 管理後臺 API
+   - UserManagementController：使用者管理、角色分配
+   - AuditLogController：審計日誌查詢
 
 **前端：**
-1. 管理后台页面
-   - 用户管理页
-   - 用户详情页
-   - 审计日志页
-2. 权限守卫
-   - 路由守卫：检查平台角色
-   - 组件级权限控制
+1. 管理後臺頁面
+   - 使用者管理頁
+   - 使用者詳情頁
+   - 審計日誌頁
+2. 許可權守衛
+   - 路由守衛：檢查平臺角色
+   - 元件級許可權控制
 
-**验收标准：**
-1. 写操作带 `X-Request-Id` 时，重复请求返回原始结果
-2. Redis 不可用时，PostgreSQL 兜底去重
-3. 定时任务清理过期幂等记录
-4. 管理后台：USER_ADMIN 可以查看用户列表，编辑角色，封禁/解封用户
-5. 管理后台：AUDITOR 可以查看审计日志，筛选和搜索
-6. 管理后台：SUPER_ADMIN 可以访问所有管理功能
-7. 前端路由守卫：非管理员访问 `/admin` 跳转到 403 页面
-8. 所有测试通过
+**驗收標準：**
+1. 寫操作帶 `X-Request-Id` 時，重複請求返回原始結果
+2. Redis 不可用時，PostgreSQL 兜底去重
+3. 定時任務清理過期冪等記錄
+4. 管理後臺：USER_ADMIN 可以檢視使用者列表，編輯角色，封禁/解封使用者
+5. 管理後臺：AUDITOR 可以檢視審計日誌，篩選和搜尋
+6. 管理後臺：SUPER_ADMIN 可以訪問所有管理功能
+7. 前端路由守衛：非管理員訪問 `/admin` 跳轉到 403 頁面
+8. 所有測試透過
 
 ---
 
-## 9. 测试策略
+## 9. 測試策略
 
-### 9.1 后端测试
+### 9.1 後端測試
 
-| 层级 | 范围 | 工具 | 覆盖重点 |
+| 層級 | 範圍 | 工具 | 覆蓋重點 |
 |------|------|------|---------|
-| 单元测试 | 领域服务、权限检查器 | JUnit 5 + Mockito | ReviewService、PromotionService、ReviewPermissionChecker、SkillStarService、SkillRatingService |
-| 集成测试 | Repository + DB | @DataJpaTest + Testcontainers | 乐观锁更新、partial unique index、计数器原子操作 |
-| 集成测试 | Redis 幂等去重 | @SpringBootTest + Testcontainers Redis | IdempotencyInterceptor、Redis SETNX |
-| API 测试 | Controller | @WebMvcTest + MockMvc | 审核操作、评分收藏、CLI API、兼容层端点 |
-| 端到端测试 | 审核全链路 | @SpringBootTest + Testcontainers | 提交审核 → 审核通过 → 发布 → 搜索索引更新 |
+| 單元測試 | 領域服務、許可權檢查器 | JUnit 5 + Mockito | ReviewService、PromotionService、ReviewPermissionChecker、SkillStarService、SkillRatingService |
+| 整合測試 | Repository + DB | @DataJpaTest + Testcontainers | 樂觀鎖更新、partial unique index、計數器原子操作 |
+| 整合測試 | Redis 冪等去重 | @SpringBootTest + Testcontainers Redis | IdempotencyInterceptor、Redis SETNX |
+| API 測試 | Controller | @WebMvcTest + MockMvc | 稽核操作、評分收藏、CLI API、相容層端點 |
+| 端到端測試 | 稽核全鏈路 | @SpringBootTest + Testcontainers | 提交稽核 → 稽核透過 → 發布 → 搜尋索引更新 |
 
-### 9.2 关键测试用例
+### 9.2 關鍵測試用例
 
-#### 审核流程测试
+#### 稽核流程測試
 
-- 提交审核 → review_task 创建，skill_version.status → PENDING_REVIEW
-- 审核通过 → skill_version.status → PUBLISHED，搜索索引更新
-- 审核拒绝 → skill_version.status → REJECTED，记录拒绝原因
-- 撤回审核 → review_task 删除，skill_version.status → DRAFT
-- 并发审核 → 乐观锁冲突，第二个审核人返回 409 Conflict
-- 重复提交 → partial unique index 防止重复
+- 提交稽核 → review_task 建立，skill_version.status → PENDING_REVIEW
+- 稽核透過 → skill_version.status → PUBLISHED，搜尋索引更新
+- 稽核拒絕 → skill_version.status → REJECTED，記錄拒絕原因
+- 撤回稽核 → review_task 刪除，skill_version.status → DRAFT
+- 併發稽核 → 樂觀鎖衝突，第二個稽核人返回 409 Conflict
+- 重複提交 → partial unique index 防止重複
 
-#### 提升审核测试
+#### 提升稽核測試
 
-- 提交提升 → promotion_request 创建
-- 提升通过 → 全局空间创建新 skill，复制版本和文件
-- 提升拒绝 → 原技能不受影响
-- slug 冲突 → 提升失败，返回错误
+- 提交提升 → promotion_request 建立
+- 提升透過 → 全域性空間建立新 skill，複製版本和檔案
+- 提升拒絕 → 原技能不受影響
+- slug 衝突 → 提升失敗，返回錯誤
 
-#### 评分收藏测试
+#### 評分收藏測試
 
-- 收藏技能 → skill_star 创建，star_count 异步递增
-- 取消收藏 → skill_star 删除，star_count 异步递减
-- 重复收藏 → 幂等，不重复计数
-- 提交评分 → skill_rating 创建/更新，rating_avg 异步重算
-- 修改评分 → rating_avg 重新计算
+- 收藏技能 → skill_star 建立，star_count 非同步遞增
+- 取消收藏 → skill_star 刪除，star_count 非同步遞減
+- 重複收藏 → 冪等，不重複計數
+- 提交評分 → skill_rating 建立/更新，rating_avg 非同步重算
+- 修改評分 → rating_avg 重新計算
 
-#### CLI API 测试
+#### CLI API 測試
 
-- Device Flow → 生成 device code → 授权 → 轮询获取 token
-- whoami → 返回当前用户信息
-- publish → 上传技能包，提交审核
+- Device Flow → 生成 device code → 授權 → 輪詢獲取 token
+- whoami → 返回當前使用者資訊
+- publish → 上傳技能包，提交稽核
 - resolve → 解析技能版本
-- check → 校验技能包
+- check → 校驗技能包
 
-#### 兼容层测试
+#### 相容層測試
 
-- canonical slug 映射 → `my-skill` ↔ `@global/my-skill`，`team-ai--my-skill` ↔ `@team-ai/my-skill`
+- canonical slug 對映 → `my-skill` ↔ `@global/my-skill`，`team-ai--my-skill` ↔ `@team-ai/my-skill`
 - search → 返回 canonical slug 格式
 - resolve → 解析 canonical slug
-- download → 下载技能包
-- publish → 发布技能
+- download → 下載技能包
+- publish → 發布技能
 
-#### 幂等去重测试
+#### 冪等去重測試
 
-- 带 Request-Id 的重复请求 → 返回原始结果
+- 帶 Request-Id 的重複請求 → 返回原始結果
 - Redis 不可用 → PostgreSQL 兜底
-- PROCESSING 状态超时 → 标记为 FAILED
+- PROCESSING 狀態超時 → 標記為 FAILED
 
-### 9.3 前端测试
+### 9.3 前端測試
 
-| 类型 | 工具 | 覆盖重点 |
+| 型別 | 工具 | 覆蓋重點 |
 |------|------|---------|
-| 组件测试 | Vitest + React Testing Library | StarRating、StarButton、ReviewTaskTable、TokenTable |
-| Hook 测试 | renderHook | useReviewTasks、useRateSkill、useStarSkill、useTokens |
-| 页面测试 | Vitest + MSW | 审核中心交互、评分收藏交互、Token 管理交互 |
+| 元件測試 | Vitest + React Testing Library | StarRating、StarButton、ReviewTaskTable、TokenTable |
+| Hook 測試 | renderHook | useReviewTasks、useRateSkill、useStarSkill、useTokens |
+| 頁面測試 | Vitest + MSW | 稽核中心互動、評分收藏互動、Token 管理互動 |
 
 ---
 
-## 10. 风险与应对
+## 10. 風險與應對
 
-| 风险 | 应对 |
+| 風險 | 應對 |
 |------|------|
-| 审核流程需求变更 | 状态机设计灵活，支持扩展新状态 |
-| 乐观锁冲突频繁 | 前端提示用户刷新重试，后端记录冲突日志监控 |
-| 评分重算性能问题 | Redis 分布式锁防止重复重算，定时任务兜底修正 |
-| ClawHub CLI 协议细节不一致 | 兼容层独立 Controller，协议回归测试覆盖 |
-| Device Flow 用户体验问题 | 提供手动 Token 配置备选方案 |
-| 幂等去重 Redis 不可用 | PostgreSQL 兜底，容错设计 |
+| 稽核流程需求變更 | 狀態機設計靈活，支援擴充套件新狀態 |
+| 樂觀鎖衝突頻繁 | 前端提示使用者重新整理重試，後端記錄衝突日誌監控 |
+| 評分重算效能問題 | Redis 分散式鎖防止重複重算，定時任務兜底修正 |
+| ClawHub CLI 協議細節不一致 | 相容層獨立 Controller，協議迴歸測試覆蓋 |
+| Device Flow 使用者體驗問題 | 提供手動 Token 配置備選方案 |
+| 冪等去重 Redis 不可用 | PostgreSQL 兜底，容錯設計 |
 
 ---
 
-## 11. 总结
+## 11. 總結
 
-Phase 3 在 Phase 2 的基础上，建立了完整的治理体系、CLI 生态和社交功能：
+Phase 3 在 Phase 2 的基礎上，建立了完整的治理體系、CLI 生態和社交功能：
 
-**核心价值：**
-1. **审核流程** - 所有技能发布必须经过审核，建立分级审核权限体系，确保技能质量
-2. **提升机制** - 团队技能可以申请提升到全局空间，经平台管理员审核，建立技能晋升通道
-3. **评分收藏** - 用户可以对技能评分和收藏，建立技能质量反馈机制
-4. **CLI API** - 提供 skillhub CLI 所需的核心 API，支持 Web 授权流程，用户体验最佳
-5. **ClawHub 兼容层** - 实现 ClawHub CLI 协议兼容，支持现有 ClawHub CLI 用户无缝迁移
-6. **幂等去重** - 基于 Redis + PostgreSQL 的双层幂等机制，保证写操作的幂等性
-7. **管理后台** - 用户管理、角色分配、审计日志查询，建立完整的运营能力
+**核心價值：**
+1. **稽核流程** - 所有技能發布必須經過稽核，建立分級稽核許可權體系，確保技能質量
+2. **提升機制** - 團隊技能可以申請提升到全域性空間，經平臺管理員稽核，建立技能晉升通道
+3. **評分收藏** - 使用者可以對技能評分和收藏，建立技能質量反饋機制
+4. **CLI API** - 提供 skillhub CLI 所需的核心 API，支援 Web 授權流程，使用者體驗最佳
+5. **ClawHub 相容層** - 實現 ClawHub CLI 協議相容，支援現有 ClawHub CLI 使用者無縫遷移
+6. **冪等去重** - 基於 Redis + PostgreSQL 的雙層冪等機制，保證寫操作的冪等性
+7. **管理後臺** - 使用者管理、角色分配、審計日誌查詢，建立完整的運營能力
 
-**技术亮点：**
-- 乐观锁 + partial unique index 防止并发冲突
-- Redis + PostgreSQL 双层幂等去重
-- OAuth Device Flow 提供最佳 CLI 认证体验
-- Canonical slug 映射实现 ClawHub 兼容
-- 异步事件 + 分布式锁实现计数器更新
-- 严格分级权限体系保持团队自治
+**技術亮點：**
+- 樂觀鎖 + partial unique index 防止併發衝突
+- Redis + PostgreSQL 雙層冪等去重
+- OAuth Device Flow 提供最佳 CLI 認證體驗
+- Canonical slug 對映實現 ClawHub 相容
+- 非同步事件 + 分散式鎖實現計數器更新
+- 嚴格分級許可權體系保持團隊自治
 
 **交付策略：**
-- 5 个 Chunk 渐进式交付，每个 Chunk 都有明确的验收标准
-- 审核流程优先，建立治理能力
-- CLI API 和兼容层后置，不阻塞核心功能
-- 前后端并行开发，提高交付效率
+- 5 個 Chunk 漸進式交付，每個 Chunk 都有明確的驗收標準
+- 稽核流程優先，建立治理能力
+- CLI API 和相容層後置，不阻塞核心功能
+- 前後端並行開發，提高交付效率
 
-Phase 3 完成后，skillhub 将具备完整的企业内部技能注册中心能力，支持 Web 端和 CLI 端的完整工作流，兼容 ClawHub CLI，建立完善的治理体系和社交功能。
+Phase 3 完成後，skillhub 將具備完整的企業內部技能註冊中心能力，支援 Web 端和 CLI 端的完整工作流，相容 ClawHub CLI，建立完善的治理體系和社交功能。

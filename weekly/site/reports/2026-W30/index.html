@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="SkillHub 2026 年第 30 周开源周报：仓库状态、功能迭代、生态进展及项目健康明细。">
-  <title>SkillHub 开源周报｜2026 年第 30 周</title>
+  <meta name="description" content="SkillHub 2026 年第 30 周開源週報：倉庫狀態、功能迭代、生態進展及專案健康明細。">
+  <title>SkillHub 開源週報｜2026 年第 30 周</title>
   <script>document.documentElement.classList.add('js')</script>
   <style data-report-theme="notion-light">
 :root {
@@ -1192,7 +1192,7 @@ footer {
   </noscript>
 </head>
 <body>
-  <a class="skip-link" href="#report-content">跳到报告正文</a>
+  <a class="skip-link" href="#report-content">跳到報告正文</a>
   <article class="report"
     data-period-start="2026-07-17T00:00:00+08:00"
     data-period-end="2026-07-24T00:00:00+08:00"
@@ -1209,64 +1209,64 @@ footer {
         <div class="brand">
           <span class="brand-mark" aria-hidden="true">SH</span>
           <span class="brand-name">SkillHub</span>
-          <span class="brand-tag">开源周报</span>
+          <span class="brand-tag">開源週報</span>
         </div>
-        <nav class="utility-links" aria-label="站点链接">
-          <a href="../../archive.html">历史周报</a>
-          <a href="https://iflytek.github.io/skillhub/">项目文档</a>
-          <a href="https://github.com/iflytek/skillhub">GitHub 仓库</a>
+        <nav class="utility-links" aria-label="站點連結">
+          <a href="../../archive.html">歷史週報</a>
+          <a href="https://iflytek.github.io/skillhub/">專案檔案</a>
+          <a href="https://github.com/iflytek/skillhub">GitHub 倉庫</a>
         </nav>
       </div>
       <h1>2026 年第 30 周</h1>
-      <p class="report-sub">项目健康 · 版本交付 · 开源生态 · Issue/PR 流转与价值队列</p>
+      <p class="report-sub">專案健康 · 版本交付 · 開源生態 · Issue/PR 流轉與價值佇列</p>
       <div class="header-grid">
         <div class="meta-card">
           <div class="meta-grid">
             <div class="meta-item">
-              <span class="key">统计周期</span>
+              <span class="key">統計週期</span>
               <span class="value">2026-07-17 00:00—2026-07-23 23:59 · Asia/Shanghai</span>
             </div>
             <div class="meta-item">
-              <span class="key">期末状态复核</span>
+              <span class="key">期末狀態複核</span>
               <span class="value">2026-07-24 00:00（Asia/Shanghai）</span>
             </div>
             <div class="meta-item">
-              <span class="key">项目仓库</span>
+              <span class="key">專案倉庫</span>
               <span class="value"><a href="https://github.com/iflytek/skillhub">iflytek/skillhub</a></span>
             </div>
             <div class="meta-item">
-              <span class="key">数据来源</span>
-              <span class="value">GitHub API（认证）· Actions · Git · npm Downloads API</span>
+              <span class="key">資料來源</span>
+              <span class="value">GitHub API（認證）· Actions · Git · npm Downloads API</span>
             </div>
           </div>
         </div>
         <div class="headline">
-          <span class="headline-label">总体状态</span>
+          <span class="headline-label">總體狀態</span>
           <div class="headline-status">
-            <strong>需关注</strong>
+            <strong>需關注</strong>
             <span class="status warn">Attention</span>
           </div>
-          <p>应用与 CLI 均完成 Release，安全流水线稳定；PR E2E 失败集中、长期 Issue/PR 占比仍高，需要优先治理。</p>
+          <p>應用與 CLI 均完成 Release，安全流水線穩定；PR E2E 失敗集中、長期 Issue/PR 佔比仍高，需要優先治理。</p>
         </div>
       </div>
-      <div class="metrics" aria-label="四项核心指标">
-        <div class="metric"><strong>4,823</strong><span>Stars · 本期当前可见新增 803</span></div>
-        <div class="metric"><strong>652</strong><span>Forks · 本期当前可见创建 26</span></div>
+      <div class="metrics" aria-label="四項核心指標">
+        <div class="metric"><strong>4,823</strong><span>Stars · 本期當前可見新增 803</span></div>
+        <div class="metric"><strong>652</strong><span>Forks · 本期當前可見建立 26</span></div>
         <div class="metric"><strong>90.8%</strong><span>Actions 有效成功率 · 118/130</span></div>
-        <div class="metric"><strong>1 / 1</strong><span>应用 / CLI Release · W30</span></div>
+        <div class="metric"><strong>1 / 1</strong><span>應用 / CLI Release · W30</span></div>
       </div>
     </header>
 
     <div class="tabs-wrap">
-      <nav class="tabs" role="tablist" aria-label="周报视图">
+      <nav class="tabs" role="tablist" aria-label="週報檢視">
         <button class="tab" id="tab-overview" type="button" role="tab" aria-selected="true"
-          aria-controls="panel-overview" tabindex="0" data-tab="overview">总览</button>
+          aria-controls="panel-overview" tabindex="0" data-tab="overview">總覽</button>
         <button class="tab" id="tab-health" type="button" role="tab" aria-selected="false"
-          aria-controls="panel-health" tabindex="-1" data-tab="health">项目健康</button>
+          aria-controls="panel-health" tabindex="-1" data-tab="health">專案健康</button>
         <button class="tab" id="tab-flow" type="button" role="tab" aria-selected="false"
-          aria-controls="panel-flow" tabindex="-1" data-tab="flow">Issue 与 PR</button>
+          aria-controls="panel-flow" tabindex="-1" data-tab="flow">Issue 與 PR</button>
         <button class="tab" id="tab-method" type="button" role="tab" aria-selected="false"
-          aria-controls="panel-method" tabindex="-1" data-tab="method">数据说明</button>
+          aria-controls="panel-method" tabindex="-1" data-tab="method">資料說明</button>
       </nav>
     </div>
 
@@ -1274,75 +1274,75 @@ footer {
       <div class="tab-panel" id="panel-overview" role="tabpanel" tabindex="0"
         aria-labelledby="tab-overview" data-panel="overview">
         <div class="panel-intro">
-          <p>三分钟总览：只保留仓库、迭代和生态三类决策信息。</p>
-          <p>详细健康和维护队列请使用上方 Tab。</p>
+          <p>三分鐘總覽：只保留倉庫、迭代和生態三類決策資訊。</p>
+          <p>詳細健康和維護佇列請使用上方 Tab。</p>
         </div>
 
         <section class="report-section" data-module="repository-summary" aria-labelledby="repository-title">
-          <h2 id="repository-title">一、仓库关键信息</h2>
+          <h2 id="repository-title">一、倉庫關鍵資訊</h2>
           <div class="repo-visuals">
             <div class="chart-box" data-module="repository-scale">
-              <h3>规模快照</h3>
+              <h3>規模快照</h3>
               <div class="snapshot-list">
                 <div class="snapshot-row">
                   <span class="snapshot-label">Stars</span>
                   <strong>4,823</strong>
-                  <span class="snapshot-change positive">本期当前可见新增 803</span>
+                  <span class="snapshot-change positive">本期當前可見新增 803</span>
                 </div>
                 <div class="snapshot-row">
                   <span class="snapshot-label">Forks</span>
                   <strong>652</strong>
-                  <span class="snapshot-change positive">本期当前可见创建 26</span>
+                  <span class="snapshot-change positive">本期當前可見建立 26</span>
                 </div>
               </div>
-              <p class="chart-note">Stars 与 Forks 的本期值按认证 API 中当前仍可见、创建时间落入半开周期的记录统计；分别为 803 与 26，不代表库存净增长。</p>
+              <p class="chart-note">Stars 與 Forks 的本期值按認證 API 中當前仍可見、建立時間落入半開週期的記錄統計；分別為 803 與 26，不代表庫存淨增長。</p>
             </div>
             <div class="chart-box" data-module="weekly-collaboration-chart">
-              <h3>本周协作流转</h3>
-              <div class="bars" role="img" aria-label="W30 协作流转：Issue 新增 7 个、关闭 3 个；PR 新增 12 个、合并 5 个、关闭未合并 9 个">
+              <h3>本週協作流轉</h3>
+              <div class="bars" role="img" aria-label="W30 協作流轉：Issue 新增 7 個、關閉 3 個；PR 新增 12 個、合併 5 個、關閉未合併 9 個">
                 <div class="bar-row"><span class="bar-label">Issue 新增</span><span class="bar-track"><span class="bar-fill" style="width:58.3%"></span></span><span class="bar-value">7</span></div>
-                <div class="bar-row"><span class="bar-label">Issue 关闭</span><span class="bar-track"><span class="bar-fill" style="width:25%"></span></span><span class="bar-value">3</span></div>
+                <div class="bar-row"><span class="bar-label">Issue 關閉</span><span class="bar-track"><span class="bar-fill" style="width:25%"></span></span><span class="bar-value">3</span></div>
                 <div class="bar-row"><span class="bar-label">PR 新增</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-value">12</span></div>
-                <div class="bar-row"><span class="bar-label">PR 合并</span><span class="bar-track"><span class="bar-fill" style="width:41.7%"></span></span><span class="bar-value">5</span></div>
-                <div class="bar-row"><span class="bar-label">PR 关闭未合并</span><span class="bar-track"><span class="bar-fill" style="width:75%"></span></span><span class="bar-value">9</span></div>
+                <div class="bar-row"><span class="bar-label">PR 合併</span><span class="bar-track"><span class="bar-fill" style="width:41.7%"></span></span><span class="bar-value">5</span></div>
+                <div class="bar-row"><span class="bar-label">PR 關閉未合併</span><span class="bar-track"><span class="bar-fill" style="width:75%"></span></span><span class="bar-value">9</span></div>
               </div>
-              <p class="chart-note">Issue 净增 4、期末开放 21；PR 净减 2、期末开放 19。主分支新增 18 个提交，本期合并 5 个 PR。</p>
+              <p class="chart-note">Issue 淨增 4、期末開放 21；PR 淨減 2、期末開放 19。主分支新增 18 個提交，本期合併 5 個 PR。</p>
             </div>
           </div>
-          <p class="risk-note"><strong>主要风险：</strong>发布目标已经恢复，但开放 Issue 和 PR 中分别有 52.4% 与 52.6% 超过 30 天，且 PR E2E 本期有 8 次失败。</p>
+          <p class="risk-note"><strong>主要風險：</strong>釋出目標已經恢復，但開放 Issue 和 PR 中分別有 52.4% 與 52.6% 超過 30 天，且 PR E2E 本期有 8 次失敗。</p>
         </section>
 
         <section class="report-section" data-module="feature-iterations" aria-labelledby="feature-title">
-          <h2 id="feature-title">二、功能迭代信息</h2>
+          <h2 id="feature-title">二、功能迭代資訊</h2>
           <div class="table-wrap">
             <table>
-              <caption>按用户价值排序的重要事项</caption>
-              <thead><tr><th>状态</th><th>事项</th><th>进展与下一步</th></tr></thead>
+              <caption>按使用者價值排序的重要事項</caption>
+              <thead><tr><th>狀態</th><th>事項</th><th>進展與下一步</th></tr></thead>
               <tbody>
                 <tr>
                   <td><span class="status ok">已完成</span></td>
-                  <td><a href="https://github.com/iflytek/skillhub/releases/tag/v0.2.14">应用 v0.2.14</a></td>
-                  <td>集成 Hermes 指南、Scanner 依赖修复、通用安装目标及社区 FAQ。</td>
+                  <td><a href="https://github.com/iflytek/skillhub/releases/tag/v0.2.14">應用 v0.2.14</a></td>
+                  <td>整合 Hermes 指南、Scanner 依賴修復、通用安裝目標及社群 FAQ。</td>
                 </tr>
                 <tr>
                   <td><span class="status ok">已完成</span></td>
                   <td><a href="https://github.com/iflytek/skillhub/releases/tag/cli-v0.1.9">CLI 0.1.9</a></td>
-                  <td>发布通用用户级 Agent 安装目标，降低跨 Agent 使用门槛。</td>
+                  <td>釋出通用使用者級 Agent 安裝目標，降低跨 Agent 使用門檻。</td>
                 </tr>
                 <tr>
                   <td><span class="status ok">已完成</span></td>
-                  <td><a href="https://github.com/iflytek/skillhub/pull/584">PR #584 Hermes Agent 集成指南</a></td>
-                  <td>本周合并并关闭 #582，形成新的 Agent 生态接入路径。</td>
+                  <td><a href="https://github.com/iflytek/skillhub/pull/584">PR #584 Hermes Agent 整合指南</a></td>
+                  <td>本週合併並關閉 #582，形成新的 Agent 生態接入路徑。</td>
                 </tr>
                 <tr>
-                  <td><span class="status warn">期后完成</span></td>
-                  <td><a href="https://github.com/iflytek/skillhub/issues/596">#596</a> / <a href="https://github.com/iflytek/skillhub/pull/601">PR #601 驳回版本重传 500</a></td>
-                  <td>7 月 23 日本期提交，期后合并并完成回归。</td>
+                  <td><span class="status warn">期後完成</span></td>
+                  <td><a href="https://github.com/iflytek/skillhub/issues/596">#596</a> / <a href="https://github.com/iflytek/skillhub/pull/601">PR #601 駁回版本重傳 500</a></td>
+                  <td>7 月 23 日本期提交，期後合併並完成迴歸。</td>
                 </tr>
                 <tr>
-                  <td><span class="status warn">推进中</span></td>
-                  <td><a href="https://github.com/iflytek/skillhub/pull/592">PR #592 标签变更后异步重建搜索索引</a></td>
-                  <td>修复搜索一致性；可观察性增强由 #597 跟踪。</td>
+                  <td><span class="status warn">推進中</span></td>
+                  <td><a href="https://github.com/iflytek/skillhub/pull/592">PR #592 標籤變更後非同步重建搜尋索引</a></td>
+                  <td>修復搜尋一致性；可觀察性增強由 #597 跟蹤。</td>
                 </tr>
               </tbody>
             </table>
@@ -1350,27 +1350,27 @@ footer {
         </section>
 
         <section class="report-section" data-module="ecosystem-progress" aria-labelledby="ecosystem-title">
-          <h2 id="ecosystem-title">三、生态相关进展</h2>
+          <h2 id="ecosystem-title">三、生態相關進展</h2>
           <div class="ecosystem-signals" data-module="ecosystem-signals" role="img"
-            aria-label="W30 开源生态参与信号：7 位新 Issue 作者、5 位新 PR 作者、3 位合并作者；当前可见本期创建 Fork 26 个；SkillHub CLI 在 2026 年 7 月 17 日至 23 日 UTC 日桶下载 746 次">
-            <div class="ecosystem-signal"><strong>7 / 5 / 3</strong><span>新 Issue 作者 / 新 PR 作者 / 合并作者</span></div>
-            <div class="ecosystem-signal"><strong>26</strong><span>当前可见本期创建 Fork</span></div>
-            <div class="ecosystem-signal"><strong>746</strong><span>CLI 下载 · 7 个 UTC 日桶</span></div>
-            <p class="ecosystem-signal-note">以上为独立参与信号，不构成转化漏斗。</p>
+            aria-label="W30 開源生態參與訊號：7 位新 Issue 作者、5 位新 PR 作者、3 位合併作者；當前可見本期建立 Fork 26 個；SkillHub CLI 在 2026 年 7 月 17 日至 23 日 UTC 日桶下載 746 次">
+            <div class="ecosystem-signal"><strong>7 / 5 / 3</strong><span>新 Issue 作者 / 新 PR 作者 / 合併作者</span></div>
+            <div class="ecosystem-signal"><strong>26</strong><span>當前可見本期建立 Fork</span></div>
+            <div class="ecosystem-signal"><strong>746</strong><span>CLI 下載 · 7 個 UTC 日桶</span></div>
+            <p class="ecosystem-signal-note">以上為獨立參與訊號，不構成轉化漏斗。</p>
           </div>
           <ul class="ecosystem-list">
-            <li><strong>Agent 集成</strong><span>Hermes 指南已合并；<a href="https://github.com/iflytek/skillhub/pull/598">HarnessClaw Engine 指南 PR #598</a> 继续推进。</span></li>
-            <li><strong>文档沉淀</strong><span>v0.2.14 纳入社区 FAQ；<a href="https://github.com/iflytek/skillhub/pull/593">PR #593</a> 继续补充部署与运维问答。</span></li>
-            <li><strong>推广与合作</strong><span>本周尚未收到文章、直播、社区分享或合作项目清单；缺失数据不记为 0。</span></li>
+            <li><strong>Agent 整合</strong><span>Hermes 指南已合併；<a href="https://github.com/iflytek/skillhub/pull/598">HarnessClaw Engine 指南 PR #598</a> 繼續推進。</span></li>
+            <li><strong>檔案沉澱</strong><span>v0.2.14 納入社群 FAQ；<a href="https://github.com/iflytek/skillhub/pull/593">PR #593</a> 繼續補充部署與運維問答。</span></li>
+            <li><strong>推廣與合作</strong><span>本週尚未收到文章、直播、社群分享或合作專案清單；缺失資料不記為 0。</span></li>
           </ul>
         </section>
 
         <aside class="next-actions" data-module="next-actions" aria-labelledby="next-title">
-          <h2 id="next-title">下周关注</h2>
+          <h2 id="next-title">下週關注</h2>
           <ol>
-            <li>处理 PR E2E 的集中失败，优先使 <a href="https://github.com/iflytek/skillhub/pull/601">#601</a>、<a href="https://github.com/iflytek/skillhub/pull/581">#581</a> 获得完整门禁结论。</li>
-            <li>保持固定 Release 窗口；无可发布内容时记录跳过原因。</li>
-            <li>批量处理 14 个 <code>needs-info</code> Issue，并清理已实现或被替代的长期 PR。</li>
+            <li>處理 PR E2E 的集中失敗，優先使 <a href="https://github.com/iflytek/skillhub/pull/601">#601</a>、<a href="https://github.com/iflytek/skillhub/pull/581">#581</a> 獲得完整門禁結論。</li>
+            <li>保持固定 Release 視窗；無可釋出內容時記錄跳過原因。</li>
+            <li>批次處理 14 個 <code>needs-info</code> Issue，並清理已實現或被替代的長期 PR。</li>
           </ol>
         </aside>
       </div>
@@ -1378,58 +1378,58 @@ footer {
       <div class="tab-panel" id="panel-health" role="tabpanel" tabindex="0"
         aria-labelledby="tab-health" data-panel="health" hidden>
         <div class="panel-intro">
-          <p>项目健康详情：用于维护者判断工程、交付和治理风险。</p>
-          <p>成功流水线不等同于“无漏洞”。</p>
+          <p>專案健康詳情：用於維護者判斷工程、交付和治理風險。</p>
+          <p>成功流水線不等同於“無漏洞”。</p>
         </div>
 
         <section class="report-section" data-module="health-summary" aria-labelledby="health-summary-title">
-          <h2 id="health-summary-title">项目健康状态</h2>
+          <h2 id="health-summary-title">專案健康狀態</h2>
           <div class="health-cards">
             <article class="health-card">
-              <div class="top"><span class="name">工程稳定性</span><span class="status warn">需关注</span></div>
+              <div class="top"><span class="name">工程穩定性</span><span class="status warn">需關注</span></div>
               <div class="health-metric">90.8% <small>118/130</small></div>
-              <p>12 次失败中有 8 次来自 PR E2E。</p>
-              <div class="detail">失败覆盖多个开发分支，需要区分回归与环境问题。</div>
+              <p>12 次失敗中有 8 次來自 PR E2E。</p>
+              <div class="detail">失敗覆蓋多個開發分支，需要區分迴歸與環境問題。</div>
             </article>
             <article class="health-card">
-              <div class="top"><span class="name">安全流水线</span><span class="status ok">稳定</span></div>
-              <div class="health-metric">31 / 31 <small>执行成功</small></div>
-              <p>另有 9 次等待授权、1 次条件跳过。</p>
-              <div class="detail">执行成功不代表公开漏洞数量为 0。</div>
+              <div class="top"><span class="name">安全流水線</span><span class="status ok">穩定</span></div>
+              <div class="health-metric">31 / 31 <small>執行成功</small></div>
+              <p>另有 9 次等待授權、1 次條件跳過。</p>
+              <div class="detail">執行成功不代表公開漏洞數量為 0。</div>
             </article>
             <article class="health-card">
-              <div class="top"><span class="name">自动化运营</span><span class="status warn">需关注</span></div>
+              <div class="top"><span class="name">自動化運營</span><span class="status warn">需關注</span></div>
               <div class="health-metric">27 / 28 <small>Backlog Rescore</small></div>
-              <p>DeepWiki 1 次失败；镜像发布 2 成功、1 失败。</p>
-              <div class="detail">治理自动化整体可用，但存在分散失败点。</div>
+              <p>DeepWiki 1 次失敗；映象釋出 2 成功、1 失敗。</p>
+              <div class="detail">治理自動化整體可用，但存在分散失敗點。</div>
             </article>
             <article class="health-card">
-              <div class="top"><span class="name">Release 交付</span><span class="status ok">达成</span></div>
-              <div class="health-metric">1 / 1 <small>应用 / CLI</small></div>
-              <p>v0.2.14 与 cli-v0.1.9 均在本周发布。</p>
-              <div class="detail">周度 Release 目标恢复。</div>
+              <div class="top"><span class="name">Release 交付</span><span class="status ok">達成</span></div>
+              <div class="health-metric">1 / 1 <small>應用 / CLI</small></div>
+              <p>v0.2.14 與 cli-v0.1.9 均在本週釋出。</p>
+              <div class="detail">周度 Release 目標恢復。</div>
             </article>
             <article class="health-card">
-              <div class="top"><span class="name">Issue 治理</span><span class="status warn">需关注</span></div>
+              <div class="top"><span class="name">Issue 治理</span><span class="status warn">需關注</span></div>
               <div class="health-metric">52.4% <small>11/21 超 30 天</small></div>
-              <p>14 个开放 Issue 仍带有 <code>needs-info</code>。</p>
-              <div class="detail">长期积压与信息补充队列需要并行清理。</div>
+              <p>14 個開放 Issue 仍帶有 <code>needs-info</code>。</p>
+              <div class="detail">長期積壓與資訊補充佇列需要並行清理。</div>
             </article>
             <article class="health-card">
-              <div class="top"><span class="name">PR 治理</span><span class="status risk">风险</span></div>
+              <div class="top"><span class="name">PR 治理</span><span class="status risk">風險</span></div>
               <div class="health-metric">52.6% <small>10/19 超 30 天</small></div>
-              <p>Review 与关闭决策不足。</p>
-              <div class="detail">长期存量占比已成为本周最明显治理风险。</div>
+              <p>Review 與關閉決策不足。</p>
+              <div class="detail">長期存量佔比已成為本週最明顯治理風險。</div>
             </article>
           </div>
         </section>
 
         <section class="report-section" data-module="workflow-execution" aria-labelledby="ci-title">
-          <h2 id="ci-title">CI 与自动化执行</h2>
-          <p class="section-lead">统计期内有 205 条 Actions 记录，其中 118 次成功、12 次失败、32 次等待授权、42 次跳过、1 次取消。</p>
+          <h2 id="ci-title">CI 與自動化執行</h2>
+          <p class="section-lead">統計期內有 205 條 Actions 記錄，其中 118 次成功、12 次失敗、32 次等待授權、42 次跳過、1 次取消。</p>
           <div class="chart-box" data-module="actions-outcome-chart">
-            <h3>Actions 结果构成</h3>
-            <div class="segbar" role="img" aria-label="W30 Actions 共 205 条记录：成功 118，失败 12，等待授权 32，条件跳过 42，取消 1">
+            <h3>Actions 結果構成</h3>
+            <div class="segbar" role="img" aria-label="W30 Actions 共 205 條記錄：成功 118，失敗 12，等待授權 32，條件跳過 42，取消 1">
               <span class="seg-success" style="width:57.56%"></span>
               <span class="seg-failure" style="width:5.85%"></span>
               <span class="seg-auth" style="width:15.61%"></span>
@@ -1438,17 +1438,17 @@ footer {
             </div>
             <div class="chart-legend" aria-hidden="true">
               <span><i class="seg-success"></i>成功 <b>118</b></span>
-              <span><i class="seg-failure"></i>失败 <b>12</b></span>
-              <span><i class="seg-auth"></i>等待授权 <b>32</b></span>
-              <span><i class="seg-skipped"></i>跳过 <b>42</b></span>
+              <span><i class="seg-failure"></i>失敗 <b>12</b></span>
+              <span><i class="seg-auth"></i>等待授權 <b>32</b></span>
+              <span><i class="seg-skipped"></i>跳過 <b>42</b></span>
               <span><i class="seg-cancelled"></i>取消 <b>1</b></span>
             </div>
           </div>
           <div class="table-wrap">
             <table>
-              <caption>工作流执行明细</caption>
+              <caption>工作流執行明細</caption>
               <thead>
-                <tr><th>工作流</th><th class="number">总记录</th><th class="number">成功</th><th class="number">失败</th><th class="number">等待授权</th><th class="number">跳过/取消</th></tr>
+                <tr><th>工作流</th><th class="number">總記錄</th><th class="number">成功</th><th class="number">失敗</th><th class="number">等待授權</th><th class="number">跳過/取消</th></tr>
               </thead>
               <tbody>
                 <tr><td>PR Tests</td><td class="number">35</td><td class="number">23</td><td class="number">1</td><td class="number">9</td><td class="number">2</td></tr>
@@ -1461,170 +1461,170 @@ footer {
                 <tr><td>Issue Triage</td><td class="number">49</td><td class="number">12</td><td class="number">0</td><td class="number">0</td><td class="number">37</td></tr>
                 <tr><td>Publish Images</td><td class="number">3</td><td class="number">2</td><td class="number">1</td><td class="number">0</td><td class="number">0</td></tr>
                 <tr><td>Release CLI</td><td class="number">1</td><td class="number">1</td><td class="number">0</td><td class="number">0</td><td class="number">0</td></tr>
-                <tr><td>其他自动化</td><td class="number">8</td><td class="number">4</td><td class="number">1</td><td class="number">0</td><td class="number">3</td></tr>
+                <tr><td>其他自動化</td><td class="number">8</td><td class="number">4</td><td class="number">1</td><td class="number">0</td><td class="number">3</td></tr>
               </tbody>
             </table>
           </div>
-          <p class="risk-note"><strong>本期薄弱点：</strong>PR E2E 实际形成结论的 13 次运行中有 8 次失败；需区分真实回归、环境不稳定和分支早期失败，不能只看最终合并结果。</p>
+          <p class="risk-note"><strong>本期薄弱點：</strong>PR E2E 實際形成結論的 13 次執行中有 8 次失敗；需區分真實迴歸、環境不穩定和分支早期失敗，不能只看最終合併結果。</p>
         </section>
 
         <section class="report-section" data-module="delivery-and-backlog" aria-labelledby="delivery-title">
-          <h2 id="delivery-title">安全、Release 与存量健康</h2>
+          <h2 id="delivery-title">安全、Release 與存量健康</h2>
           <div class="health-grid">
             <article class="health-note">
-              <h3>安全与供应链</h3>
-              <p>Security 31 次实际执行全部成功，另有 9 次等待授权、1 次条件跳过。公开数据无法确认 Dependabot、CodeQL 未修复告警和生产扫描任务数量。</p>
+              <h3>安全與供應鏈</h3>
+              <p>Security 31 次實際執行全部成功，另有 9 次等待授權、1 次條件跳過。公開資料無法確認 Dependabot、CodeQL 未修復告警和生產掃描任務數量。</p>
             </article>
             <article class="health-note">
               <h3>Release 交付</h3>
-              <p><a href="https://github.com/iflytek/skillhub/releases/tag/v0.2.14">v0.2.14</a> 与 <a href="https://github.com/iflytek/skillhub/releases/tag/cli-v0.1.9">cli-v0.1.9</a> 均在 7 月 22 日发布，本周目标达成。</p>
+              <p><a href="https://github.com/iflytek/skillhub/releases/tag/v0.2.14">v0.2.14</a> 與 <a href="https://github.com/iflytek/skillhub/releases/tag/cli-v0.1.9">cli-v0.1.9</a> 均在 7 月 22 日釋出，本週目標達成。</p>
             </article>
           </div>
           <h3>Issue 健康</h3>
           <div class="chart-grid">
             <div class="chart-box" data-module="issue-age-chart">
-              <h3>开放 Issue 年龄结构</h3>
-              <div class="bars" role="img" aria-label="W30 当前开放 Issue 21 个：不足 7 天 5 个，7 到 13 天 3 个，14 到 29 天 2 个，30 天以上 11 个">
+              <h3>開放 Issue 年齡結構</h3>
+              <div class="bars" role="img" aria-label="W30 當前開放 Issue 21 個：不足 7 天 5 個，7 到 13 天 3 個，14 到 29 天 2 個，30 天以上 11 個">
                 <div class="bar-row"><span class="bar-label">&lt; 7 天</span><span class="bar-track"><span class="bar-fill" style="width:45.5%"></span></span><span class="bar-value">5</span></div>
                 <div class="bar-row"><span class="bar-label">7—13 天</span><span class="bar-track"><span class="bar-fill" style="width:27.3%"></span></span><span class="bar-value">3</span></div>
                 <div class="bar-row"><span class="bar-label">14—29 天</span><span class="bar-track"><span class="bar-fill" style="width:18.2%"></span></span><span class="bar-value">2</span></div>
                 <div class="bar-row"><span class="bar-label">≥ 30 天</span><span class="bar-track"><span class="bar-fill hot" style="width:100%"></span></span><span class="bar-value">11</span></div>
               </div>
-              <p class="chart-note">52.4% 已超过 30 天；长期存量与信息补充队列仍需并行治理。</p>
+              <p class="chart-note">52.4% 已超過 30 天；長期存量與資訊補充佇列仍需並行治理。</p>
             </div>
             <div class="chart-box" data-module="issue-needs-info-chart">
-              <h3><code>needs-info</code> 占比</h3>
+              <h3><code>needs-info</code> 佔比</h3>
               <div class="donut-layout">
-                <div class="donut" style="--value:66.7%" role="img" aria-label="W30 当前开放 Issue 中，14 个带 needs-info 标签，占 21 个开放 Issue 的 66.7%">
+                <div class="donut" style="--value:66.7%" role="img" aria-label="W30 當前開放 Issue 中，14 個帶 needs-info 標籤，佔 21 個開放 Issue 的 66.7%">
                   <div class="donut-center"><strong>66.7%</strong><span>14 / 21</span></div>
                 </div>
                 <div class="donut-copy">
-                  <p><strong>14 个</strong>开放 Issue 仍需补充信息。</p>
-                  <p>数量与 W29 持平，尚未形成可观察的清理进展。</p>
+                  <p><strong>14 個</strong>開放 Issue 仍需補充資訊。</p>
+                  <p>數量與 W29 持平，尚未形成可觀察的清理進展。</p>
                 </div>
               </div>
             </div>
           </div>
           <h3>PR 健康</h3>
           <div class="chart-box" data-module="pr-age-chart">
-            <h3>开放 PR 年龄结构</h3>
-            <div class="bars" role="img" aria-label="W30 当前开放 PR 19 个：不足 7 天 5 个，7 到 13 天 1 个，14 到 29 天 3 个，30 天以上 10 个">
+            <h3>開放 PR 年齡結構</h3>
+            <div class="bars" role="img" aria-label="W30 當前開放 PR 19 個：不足 7 天 5 個，7 到 13 天 1 個，14 到 29 天 3 個，30 天以上 10 個">
               <div class="bar-row"><span class="bar-label">&lt; 7 天</span><span class="bar-track"><span class="bar-fill" style="width:50%"></span></span><span class="bar-value">5</span></div>
               <div class="bar-row"><span class="bar-label">7—13 天</span><span class="bar-track"><span class="bar-fill" style="width:10%"></span></span><span class="bar-value">1</span></div>
               <div class="bar-row"><span class="bar-label">14—29 天</span><span class="bar-track"><span class="bar-fill" style="width:30%"></span></span><span class="bar-value">3</span></div>
               <div class="bar-row"><span class="bar-label">≥ 30 天</span><span class="bar-track"><span class="bar-fill hot" style="width:100%"></span></span><span class="bar-value">10</span></div>
             </div>
-            <p class="chart-note">52.6% 已超过 30 天；Review 与关闭决策仍是主要治理瓶颈。</p>
+            <p class="chart-note">52.6% 已超過 30 天；Review 與關閉決策仍是主要治理瓶頸。</p>
           </div>
         </section>
 
         <section class="report-section" data-module="observable-response" aria-labelledby="response-title">
-          <h2 id="response-title">社区响应</h2>
-          <p>本期 7 个新增 Issue 中，#586、#594 已关闭，#596 在期后形成配对 PR #601，#597 由 PR #592 继续跟踪。按“关闭或形成明确配对实现”统计，截至快照可观察处置覆盖为 4/7；该口径不等同于首次维护者响应 SLA。</p>
+          <h2 id="response-title">社群響應</h2>
+          <p>本期 7 個新增 Issue 中，#586、#594 已關閉，#596 在期後形成配對 PR #601，#597 由 PR #592 繼續跟蹤。按“關閉或形成明確配對實現”統計，截至快照可觀察處置覆蓋為 4/7；該口徑不等同於首次維護者響應 SLA。</p>
         </section>
       </div>
 
       <div class="tab-panel" id="panel-flow" role="tabpanel" tabindex="0"
         aria-labelledby="tab-flow" data-panel="flow" hidden>
         <div class="panel-intro">
-          <p>先看本周流转，再看当前高价值维护队列。</p>
-          <p>价值级别是人工治理判断，不替代仓库标签。</p>
+          <p>先看本週流轉，再看當前高價值維護佇列。</p>
+          <p>價值級別是人工治理判斷，不替代倉庫標籤。</p>
         </div>
 
         <section class="report-section" data-module="weekly-flow" aria-labelledby="flow-title">
-          <h2 id="flow-title">本周 Issue 与 PR 流转</h2>
+          <h2 id="flow-title">本週 Issue 與 PR 流轉</h2>
           <div class="flow-summary">
-            <div class="flow-item"><strong>Issue +7 / -3</strong><span>净增 4 · 期末开放 21</span></div>
-            <div class="flow-item"><strong>PR +12 / 合并 5</strong><span>关闭未合并 9 · 净减 2 · 期末开放 19</span></div>
+            <div class="flow-item"><strong>Issue +7 / -3</strong><span>淨增 4 · 期末開放 21</span></div>
+            <div class="flow-item"><strong>PR +12 / 合併 5</strong><span>關閉未合併 9 · 淨減 2 · 期末開放 19</span></div>
           </div>
 
-          <h3>新增 Issue（按价值排序）</h3>
+          <h3>新增 Issue（按價值排序）</h3>
           <div class="table-wrap">
             <table>
-              <caption class="sr-only">W30 新增 Issue 价值排序</caption>
-              <thead><tr><th>价值</th><th>Issue</th><th>判断</th><th>当前进展</th></tr></thead>
+              <caption class="sr-only">W30 新增 Issue 價值排序</caption>
+              <thead><tr><th>價值</th><th>Issue</th><th>判斷</th><th>當前進展</th></tr></thead>
               <tbody>
-                <tr><td><span class="value-level value-a">A</span></td><td><a href="https://github.com/iflytek/skillhub/issues/596">#596 驳回版本同版本号重传返回 500</a></td><td>直接阻断发布核心流程。</td><td>配对 PR #601 已提交，CI/E2E 待修复。</td></tr>
-                <tr><td><span class="value-level value-a">A</span></td><td><a href="https://github.com/iflytek/skillhub/issues/586">#586 启动脚本缺少 Cookie Secret</a></td><td>阻断依赖 OSS 脚本部署的用户。</td><td>本期完成同步并关闭。</td></tr>
-                <tr><td><span class="value-level value-a">A</span></td><td><a href="https://github.com/iflytek/skillhub/issues/594">#594 GitLab OAuth Base URI 不生效</a></td><td>影响企业身份接入，官方标记 high risk。</td><td>本周约 4 小时内关闭；需保留关闭依据。</td></tr>
-                <tr><td><span class="value-level value-b">B</span></td><td><a href="https://github.com/iflytek/skillhub/issues/602">#602 MCP 广场与专家包</a></td><td>有生态价值，但会扩大产品与维护边界。</td><td>需先确认与 Registry 集合、Agent 集成的关系。</td></tr>
-                <tr><td><span class="value-level value-b">B</span></td><td><a href="https://github.com/iflytek/skillhub/issues/597">#597 搜索异步重建缺少 MDC、重试与指标</a></td><td>关系到索引长期一致性和可运维性。</td><td>作为 PR #592 的稳健性后续。</td></tr>
-                <tr><td><span class="value-level value-c">C</span></td><td><a href="https://github.com/iflytek/skillhub/issues/587">#587 Skill Health Score</a></td><td>治理价值存在，但需先定义外部遥测契约。</td><td>当前信息不足，需明确遥测来源与责任边界。</td></tr>
-                <tr><td><span class="value-level value-d">D</span></td><td><a href="https://github.com/iflytek/skillhub/issues/589">#589 Skill 工作台</a></td><td>可能把 Registry 扩展为创作 IDE。</td><td>已标记 deferred，建议独立验证。</td></tr>
+                <tr><td><span class="value-level value-a">A</span></td><td><a href="https://github.com/iflytek/skillhub/issues/596">#596 駁回版本同版本號重傳返回 500</a></td><td>直接阻斷髮布核心流程。</td><td>配對 PR #601 已提交，CI/E2E 待修復。</td></tr>
+                <tr><td><span class="value-level value-a">A</span></td><td><a href="https://github.com/iflytek/skillhub/issues/586">#586 啟動指令碼缺少 Cookie Secret</a></td><td>阻斷依賴 OSS 指令碼部署的使用者。</td><td>本期完成同步並關閉。</td></tr>
+                <tr><td><span class="value-level value-a">A</span></td><td><a href="https://github.com/iflytek/skillhub/issues/594">#594 GitLab OAuth Base URI 不生效</a></td><td>影響企業身份接入，官方標記 high risk。</td><td>本週約 4 小時內關閉；需保留關閉依據。</td></tr>
+                <tr><td><span class="value-level value-b">B</span></td><td><a href="https://github.com/iflytek/skillhub/issues/602">#602 MCP 廣場與專家包</a></td><td>有生態價值，但會擴大產品與維護邊界。</td><td>需先確認與 Registry 集合、Agent 整合的關係。</td></tr>
+                <tr><td><span class="value-level value-b">B</span></td><td><a href="https://github.com/iflytek/skillhub/issues/597">#597 搜尋非同步重建缺少 MDC、重試與指標</a></td><td>關係到索引長期一致性和可運維性。</td><td>作為 PR #592 的穩健性後續。</td></tr>
+                <tr><td><span class="value-level value-c">C</span></td><td><a href="https://github.com/iflytek/skillhub/issues/587">#587 Skill Health Score</a></td><td>治理價值存在，但需先定義外部遙測契約。</td><td>當前資訊不足，需明確遙測來源與責任邊界。</td></tr>
+                <tr><td><span class="value-level value-d">D</span></td><td><a href="https://github.com/iflytek/skillhub/issues/589">#589 Skill 工作臺</a></td><td>可能把 Registry 擴充套件為創作 IDE。</td><td>已標記 deferred，建議獨立驗證。</td></tr>
               </tbody>
             </table>
           </div>
 
-          <h3>新增、合并与关闭 PR</h3>
+          <h3>新增、合併與關閉 PR</h3>
           <div class="table-wrap">
             <table>
-              <caption class="sr-only">W30 关键 PR 流转</caption>
-              <thead><tr><th>类型</th><th>价值</th><th>PR</th><th>结果与判断</th></tr></thead>
+              <caption class="sr-only">W30 關鍵 PR 流轉</caption>
+              <thead><tr><th>型別</th><th>價值</th><th>PR</th><th>結果與判斷</th></tr></thead>
               <tbody>
-                <tr><td>新增</td><td><span class="value-level value-a">A</span></td><td><a href="https://github.com/iflytek/skillhub/pull/601">#601 驳回版本重传修复</a></td><td>7 月 23 日本期提交，期后合并并完成回归。</td></tr>
-                <tr><td>新增</td><td><span class="value-level value-a">A</span></td><td><a href="https://github.com/iflytek/skillhub/pull/592">#592 搜索索引异步重建</a></td><td>修复标签变化后的搜索一致性，当前仍开放。</td></tr>
-                <tr><td>合并</td><td><span class="value-level value-b">B</span></td><td><a href="https://github.com/iflytek/skillhub/pull/529">#529 双语 FAQ</a> / <a href="https://github.com/iflytek/skillhub/pull/591">#591 Scanner 依赖固定</a> / <a href="https://github.com/iflytek/skillhub/pull/595">#595 CLI 0.1.9</a></td><td>完成社区文档、镜像构建和 CLI 发版闭环。</td></tr>
-                <tr><td>合并</td><td><span class="value-level value-b">B</span></td><td><a href="https://github.com/iflytek/skillhub/pull/584">#584 Hermes 指南</a> / <a href="https://github.com/iflytek/skillhub/pull/585">#585 通用安装目标</a></td><td>完成 Agent 集成和跨 Agent 安装路径。</td></tr>
-                <tr><td>新增</td><td><span class="value-level value-c">C</span></td><td><a href="https://github.com/iflytek/skillhub/pull/593">#593 运维 FAQ</a> / <a href="https://github.com/iflytek/skillhub/pull/598">#598 HarnessClaw 指南</a></td><td>文档型贡献，完成事实核对后可小步合并。</td></tr>
-                <tr><td>新增</td><td><span class="value-level value-c">C</span></td><td><a href="https://github.com/iflytek/skillhub/pull/599">#599 README 引导</a> / <a href="https://github.com/iflytek/skillhub/pull/600">#600 项目网站</a></td><td>#599 期后合并；#600 本期关闭未合并。</td></tr>
-                <tr><td>其他新增</td><td>—</td><td>#588 / #590</td><td>覆盖俄语本地化与安全修复，均在本期关闭未合并。</td></tr>
-                <tr><td>关闭未合并</td><td>—</td><td>#317 / #459 / #569 / #572 / #575 / #578</td><td>配合新增后关闭的 #588、#590、#600，本期共完成 9 个未合并关闭决策。</td></tr>
+                <tr><td>新增</td><td><span class="value-level value-a">A</span></td><td><a href="https://github.com/iflytek/skillhub/pull/601">#601 駁回版本重傳修復</a></td><td>7 月 23 日本期提交，期後合併並完成迴歸。</td></tr>
+                <tr><td>新增</td><td><span class="value-level value-a">A</span></td><td><a href="https://github.com/iflytek/skillhub/pull/592">#592 搜尋索引非同步重建</a></td><td>修復標籤變化後的搜尋一致性，當前仍開放。</td></tr>
+                <tr><td>合併</td><td><span class="value-level value-b">B</span></td><td><a href="https://github.com/iflytek/skillhub/pull/529">#529 雙語 FAQ</a> / <a href="https://github.com/iflytek/skillhub/pull/591">#591 Scanner 依賴固定</a> / <a href="https://github.com/iflytek/skillhub/pull/595">#595 CLI 0.1.9</a></td><td>完成社群檔案、映象構建和 CLI 發版閉環。</td></tr>
+                <tr><td>合併</td><td><span class="value-level value-b">B</span></td><td><a href="https://github.com/iflytek/skillhub/pull/584">#584 Hermes 指南</a> / <a href="https://github.com/iflytek/skillhub/pull/585">#585 通用安裝目標</a></td><td>完成 Agent 整合和跨 Agent 安裝路徑。</td></tr>
+                <tr><td>新增</td><td><span class="value-level value-c">C</span></td><td><a href="https://github.com/iflytek/skillhub/pull/593">#593 運維 FAQ</a> / <a href="https://github.com/iflytek/skillhub/pull/598">#598 HarnessClaw 指南</a></td><td>檔案型貢獻，完成事實核對後可小步合併。</td></tr>
+                <tr><td>新增</td><td><span class="value-level value-c">C</span></td><td><a href="https://github.com/iflytek/skillhub/pull/599">#599 README 引導</a> / <a href="https://github.com/iflytek/skillhub/pull/600">#600 專案網站</a></td><td>#599 期後合併；#600 本期關閉未合併。</td></tr>
+                <tr><td>其他新增</td><td>—</td><td>#588 / #590</td><td>覆蓋俄語本地化與安全修復，均在本期關閉未合併。</td></tr>
+                <tr><td>關閉未合併</td><td>—</td><td>#317 / #459 / #569 / #572 / #575 / #578</td><td>配合新增後關閉的 #588、#590、#600，本期共完成 9 個未合併關閉決策。</td></tr>
               </tbody>
             </table>
           </div>
         </section>
 
         <section class="report-section" data-module="priority-queue" aria-labelledby="priority-title">
-          <h2 id="priority-title">当前高价值维护队列</h2>
-          <p class="section-lead">以下为 2026-07-23 22:00 快照，只列需要明确决策的 A/B 项；价值分级不替代仓库标签。</p>
+          <h2 id="priority-title">當前高價值維護佇列</h2>
+          <p class="section-lead">以下為 2026-07-23 22:00 快照，只列需要明確決策的 A/B 項；價值分級不替代倉庫標籤。</p>
 
-          <h3>Issue：A 级优先处理</h3>
+          <h3>Issue：A 級優先處理</h3>
           <div class="table-wrap">
             <table>
-              <caption class="sr-only">A 级开放 Issue</caption>
-              <thead><tr><th>Issue</th><th>价值判断</th><th>建议动作</th></tr></thead>
+              <caption class="sr-only">A 級開放 Issue</caption>
+              <thead><tr><th>Issue</th><th>價值判斷</th><th>建議動作</th></tr></thead>
               <tbody>
-                <tr><td><a href="https://github.com/iflytek/skillhub/issues/596">#596 驳回版本重传 500</a></td><td>发布核心流程确定性错误。</td><td>修复 #601 门禁后优先合并并回归版本指针。</td></tr>
-                <tr><td><a href="https://github.com/iflytek/skillhub/issues/580">#580 namespace 可见性</a></td><td>企业治理核心体验，已有配对实现。</td><td>收敛 PR #581 范围并完成完整门禁。</td></tr>
-                <tr><td><a href="https://github.com/iflytek/skillhub/issues/516">#516 多 Skill 仓库导入与同步</a></td><td>与 Registry 增长定位高度一致。</td><td>先形成一期验收标准，再做扫描与批量发布。</td></tr>
-                <tr><td><a href="https://github.com/iflytek/skillhub/issues/518">#518 SemVer 与预发布版本</a></td><td>Registry 基础协议，文档与实现需统一。</td><td>先统一兼容、排序、latest 与 prerelease 规则。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/issues/596">#596 駁回版本重傳 500</a></td><td>釋出核心流程確定性錯誤。</td><td>修復 #601 門禁後優先合併並回歸版本指標。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/issues/580">#580 namespace 可見性</a></td><td>企業治理核心體驗，已有配對實現。</td><td>收斂 PR #581 範圍並完成完整門禁。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/issues/516">#516 多 Skill 倉庫匯入與同步</a></td><td>與 Registry 增長定位高度一致。</td><td>先形成一期驗收標準，再做掃描與批次釋出。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/issues/518">#518 SemVer 與預釋出版本</a></td><td>Registry 基礎協議，檔案與實現需統一。</td><td>先統一相容、排序、latest 與 prerelease 規則。</td></tr>
               </tbody>
             </table>
           </div>
 
-          <h3>Issue：B 级需设计或严格审查</h3>
+          <h3>Issue：B 級需設計或嚴格審查</h3>
           <div class="table-wrap">
             <table>
-              <caption class="sr-only">B 级开放 Issue</caption>
-              <thead><tr><th>Issue</th><th>建议动作</th></tr></thead>
+              <caption class="sr-only">B 級開放 Issue</caption>
+              <thead><tr><th>Issue</th><th>建議動作</th></tr></thead>
               <tbody>
-                <tr><td><a href="https://github.com/iflytek/skillhub/issues/597">#597 搜索异步路径可观察性</a></td><td>先补失败指标与 MDC，再决定有界重试。</td></tr>
-                <tr><td><a href="https://github.com/iflytek/skillhub/issues/583">#583 DingTalk OAuth</a></td><td>围绕 Issue 对 PR #467 做集中安全评审。</td></tr>
-                <tr><td><a href="https://github.com/iflytek/skillhub/issues/579">#579 来源证明、签名与 SBOM</a></td><td>拆分 fingerprint、签名验证和 SBOM。</td></tr>
-                <tr><td><a href="https://github.com/iflytek/skillhub/issues/556">#556 合规元数据与审计</a></td><td>审查领域模型、迁移、查询性能与 API 生成。</td></tr>
-                <tr><td><a href="https://github.com/iflytek/skillhub/issues/452">#452 Skill Evaluation</a></td><td>先做外部执行、SkillHub 接收并展示结果的窄版本。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/issues/597">#597 搜尋非同步路徑可觀察性</a></td><td>先補失敗指標與 MDC，再決定有界重試。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/issues/583">#583 DingTalk OAuth</a></td><td>圍繞 Issue 對 PR #467 做集中安全評審。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/issues/579">#579 來源證明、簽名與 SBOM</a></td><td>拆分 fingerprint、簽名驗證和 SBOM。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/issues/556">#556 合規後設資料與審計</a></td><td>審查領域模型、遷移、查詢效能與 API 生成。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/issues/452">#452 Skill Evaluation</a></td><td>先做外部執行、SkillHub 接收並展示結果的窄版本。</td></tr>
               </tbody>
             </table>
           </div>
 
-          <h3>PR：A 级优先推进</h3>
+          <h3>PR：A 級優先推進</h3>
           <div class="table-wrap">
             <table>
-              <caption class="sr-only">A 级开放 PR</caption>
-              <thead><tr><th>PR</th><th>价值判断</th><th>建议动作</th></tr></thead>
+              <caption class="sr-only">A 級開放 PR</caption>
+              <thead><tr><th>PR</th><th>價值判斷</th><th>建議動作</th></tr></thead>
               <tbody>
-                <tr><td><a href="https://github.com/iflytek/skillhub/pull/601">#601 修复驳回版本重传 500</a></td><td>直接修复发布核心流程。</td><td>定位 PR Tests/E2E 失败，完整通过后优先合并。</td></tr>
-                <tr><td><a href="https://github.com/iflytek/skillhub/pull/581">#581 namespace 可见性</a></td><td>用户价值高，但范围较大。</td><td>核对无关变更，rebase 后重跑完整门禁。</td></tr>
-                <tr><td><a href="https://github.com/iflytek/skillhub/pull/592">#592 搜索索引异步重建</a></td><td>修复真实索引一致性错误。</td><td>确认完整 CI；稳健性问题由 #597 跟踪。</td></tr>
-                <tr><td><a href="https://github.com/iflytek/skillhub/pull/593">#593 部署与运维 FAQ</a></td><td>低风险，可降低社区支持成本。</td><td>完成事实校对后合并。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/pull/601">#601 修復駁回版本重傳 500</a></td><td>直接修復釋出核心流程。</td><td>定位 PR Tests/E2E 失敗，完整透過後優先合併。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/pull/581">#581 namespace 可見性</a></td><td>使用者價值高，但範圍較大。</td><td>核對無關變更，rebase 後重跑完整門禁。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/pull/592">#592 搜尋索引非同步重建</a></td><td>修復真實索引一致性錯誤。</td><td>確認完整 CI；穩健性問題由 #597 跟蹤。</td></tr>
+                <tr><td><a href="https://github.com/iflytek/skillhub/pull/593">#593 部署與運維 FAQ</a></td><td>低風險，可降低社群支援成本。</td><td>完成事實校對後合併。</td></tr>
               </tbody>
             </table>
           </div>
 
           <details data-module="cleanup-queue">
-            <summary>展开：需要清理的长期 PR</summary>
+            <summary>展開：需要清理的長期 PR</summary>
             <div class="details-body">
-              <p><a href="https://github.com/iflytek/skillhub/pull/460">#460</a>、<a href="https://github.com/iflytek/skillhub/pull/457">#457</a>、<a href="https://github.com/iflytek/skillhub/pull/442">#442</a> 已被主干实现或替代；<a href="https://github.com/iflytek/skillhub/pull/437">#437</a> 依赖未推进的父 PR。建议确认无剩余差异后关闭。</p>
+              <p><a href="https://github.com/iflytek/skillhub/pull/460">#460</a>、<a href="https://github.com/iflytek/skillhub/pull/457">#457</a>、<a href="https://github.com/iflytek/skillhub/pull/442">#442</a> 已被主幹實現或替代；<a href="https://github.com/iflytek/skillhub/pull/437">#437</a> 依賴未推進的父 PR。建議確認無剩餘差異後關閉。</p>
             </div>
           </details>
         </section>
@@ -1633,46 +1633,46 @@ footer {
       <div class="tab-panel" id="panel-method" role="tabpanel" tabindex="0"
         aria-labelledby="tab-method" data-panel="method" hidden>
         <div class="panel-intro">
-          <p>这里说明时间边界、数据来源与缺失项。</p>
-          <p>缺失数据均标为“未取得”，不替换为 0。</p>
+          <p>這裡說明時間邊界、資料來源與缺失項。</p>
+          <p>缺失資料均標為“未取得”，不替換為 0。</p>
         </div>
 
         <section class="report-section" data-module="metric-definitions" aria-labelledby="method-title">
-          <h2 id="method-title">统计口径</h2>
+          <h2 id="method-title">統計口徑</h2>
           <ul class="method-list">
-            <li><strong>统计周期</strong><span>展示为 2026-07-17 00:00—2026-07-23 23:59，Asia/Shanghai；程序过滤采用等价半开区间 <code>[2026-07-17 00:00, 2026-07-24 00:00)</code>，对应 UTC 为 7 月 16 日 16:00 至 7 月 23 日 16:00。</span></li>
-            <li><strong>期末状态</strong><span>仓库累计数与开放队列取 2026-07-23 22:00 快照；复核后续两小时 Issue/PR 事件流无变化，因此期末开放 Issue 21、PR 19。Star 当前可见新增另按 7 月 31 日认证列表重算。</span></li>
-            <li><strong>Star 证据</strong><span>803 表示 7 月 31 日 16:35 认证 API 中，<code>starred_at</code> 落入本期且当前仍可见的 Stargazer；它不代表 Star 库存净增长。</span></li>
-            <li><strong>周期衔接</strong><span>W29 的排他截止与 W30 起始均为 7 月 17 日 00:00；W30 的排他截止与 W31 起始均为 7 月 24 日 00:00，相邻报告无重叠。</span></li>
-            <li><strong>期后进展</strong><span>7 月 24 日 00:00 及以后发生的合并、关闭和 Release 只作为后续状态，不计入 W30。</span></li>
-            <li><strong>Actions 成功率</strong><span><code>success / (success + failure)</code>；等待授权、条件跳过和取消不进入分母。</span></li>
-            <li><strong>Issue / PR</strong><span>GitHub Issues API 会同时返回 PR，本报告分开统计；价值 A—D 为人工治理判断。</span></li>
-            <li><strong>推广数据</strong><span>推广动作由维护者补录；Fork、下载、Issue 作者和 PR 作者不组成转化漏斗。</span></li>
+            <li><strong>統計週期</strong><span>展示為 2026-07-17 00:00—2026-07-23 23:59，Asia/Shanghai；程式過濾採用等價半開區間 <code>[2026-07-17 00:00, 2026-07-24 00:00)</code>，對應 UTC 為 7 月 16 日 16:00 至 7 月 23 日 16:00。</span></li>
+            <li><strong>期末狀態</strong><span>倉庫累計數與開放佇列取 2026-07-23 22:00 快照；複核後續兩小時 Issue/PR 事件流無變化，因此期末開放 Issue 21、PR 19。Star 當前可見新增另按 7 月 31 日認證列表重算。</span></li>
+            <li><strong>Star 證據</strong><span>803 表示 7 月 31 日 16:35 認證 API 中，<code>starred_at</code> 落入本期且當前仍可見的 Stargazer；它不代表 Star 庫存淨增長。</span></li>
+            <li><strong>週期銜接</strong><span>W29 的排他截止與 W30 起始均為 7 月 17 日 00:00；W30 的排他截止與 W31 起始均為 7 月 24 日 00:00，相鄰報告無重疊。</span></li>
+            <li><strong>期後進展</strong><span>7 月 24 日 00:00 及以後發生的合併、關閉和 Release 只作為後續狀態，不計入 W30。</span></li>
+            <li><strong>Actions 成功率</strong><span><code>success / (success + failure)</code>；等待授權、條件跳過和取消不進入分母。</span></li>
+            <li><strong>Issue / PR</strong><span>GitHub Issues API 會同時返回 PR，本報告分開統計；價值 A—D 為人工治理判斷。</span></li>
+            <li><strong>推廣資料</strong><span>推廣動作由維護者補錄；Fork、下載、Issue 作者和 PR 作者不組成轉化漏斗。</span></li>
           </ul>
         </section>
 
         <section class="report-section" data-module="source-coverage" aria-labelledby="source-title">
-          <h2 id="source-title">数据来源与限制</h2>
+          <h2 id="source-title">資料來源與限制</h2>
           <div class="table-wrap">
             <table>
-              <caption>来源覆盖</caption>
-              <thead><tr><th>来源</th><th>用途</th><th>限制</th></tr></thead>
+              <caption>來源覆蓋</caption>
+              <thead><tr><th>來源</th><th>用途</th><th>限制</th></tr></thead>
               <tbody>
-                <tr><td>GitHub API（认证）</td><td>仓库、Issue、PR、Release、Actions、Fork、Stargazer <code>starred_at</code></td><td>没有周期起止两份库存快照；当前可见新增不等于净增长。</td></tr>
-                <tr><td>Git 标签与提交历史</td><td>核对 v0.2.14 交付内容</td><td>只用于补充公开 Release 信息。</td></tr>
-                <tr><td>npm Downloads API</td><td><code>@astron-team/skillhub</code> 的 7 个 UTC 日桶</td><td>746 次下载不等同于独立用户，且覆盖范围与 Asia/Shanghai 周期不完全对齐。</td></tr>
-                <tr><td>维护者人工判断</td><td>价值排序、推广动作和产品边界</td><td>推广动作尚未提供。</td></tr>
+                <tr><td>GitHub API（認證）</td><td>倉庫、Issue、PR、Release、Actions、Fork、Stargazer <code>starred_at</code></td><td>沒有周期起止兩份庫存快照；當前可見新增不等於淨增長。</td></tr>
+                <tr><td>Git 標籤與提交歷史</td><td>核對 v0.2.14 交付內容</td><td>只用於補充公開 Release 資訊。</td></tr>
+                <tr><td>npm Downloads API</td><td><code>@astron-team/skillhub</code> 的 7 個 UTC 日桶</td><td>746 次下載不等同於獨立使用者，且覆蓋範圍與 Asia/Shanghai 週期不完全對齊。</td></tr>
+                <tr><td>維護者人工判斷</td><td>價值排序、推廣動作和產品邊界</td><td>推廣動作尚未提供。</td></tr>
               </tbody>
             </table>
           </div>
-          <p class="risk-note"><strong>未取得：</strong>GitHub Traffic、Referrers、W30 起止两份可比 Star/Fork 库存快照、私有安全告警，以及生产 SkillHub 实例的可用率、延迟、Skill 数量和扫描成功率。</p>
+          <p class="risk-note"><strong>未取得：</strong>GitHub Traffic、Referrers、W30 起止兩份可比 Star/Fork 庫存快照、私有安全告警，以及生產 SkillHub 例項的可用率、延遲、Skill 數量和掃描成功率。</p>
         </section>
       </div>
     </main>
 
     <footer>
       <span>SkillHub Open Source Weekly · 2026-W30</span>
-      <span>公开报告 · 维护者治理视图</span>
+      <span>公開報告 · 維護者治理檢視</span>
     </footer>
   </article>
 

@@ -4,12 +4,12 @@ import zh from './locales/zh.json'
 
 describe('security audit locales', () => {
   it('defines the scanning label in both locales', () => {
-    expect(zh.securityAudit.statusScanning).toBe('扫描中')
+    expect(zh.securityAudit.statusScanning).toBe('掃描中')
     expect(en.securityAudit.statusScanning).toBe('Scanning')
   })
 
   it('uses the updated blocked wording in both locales', () => {
-    expect(zh.securityAudit.verdict.BLOCKED).toBe('高风险')
+    expect(zh.securityAudit.verdict.BLOCKED).toBe('高風險')
     expect(en.securityAudit.verdict.BLOCKED).toBe('High Risk')
   })
 })

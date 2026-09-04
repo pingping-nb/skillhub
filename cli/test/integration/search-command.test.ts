@@ -210,7 +210,7 @@ describe('search command', () => {
   // -------------------------------------------------------------------------
   // P2: query containing non-ASCII characters must be URL-encoded in the
   // outgoing request. We capture the raw URL via a custom Bun.serve and
-  // assert the q parameter is the percent-encoded UTF-8 form of "中文测试".
+  // assert the q parameter is the percent-encoded UTF-8 form of "中文測試".
   // -------------------------------------------------------------------------
   test('non-ASCII query is URL-encoded as UTF-8 percent escapes', async () => {
     let capturedUrl = ''
@@ -227,9 +227,9 @@ describe('search command', () => {
     })
     const registryUrl = `http://localhost:${server.port}`
     try {
-      const result = await runCli(['search', '中文测试', '--registry', registryUrl])
+      const result = await runCli(['search', '中文測試', '--registry', registryUrl])
       expect(result.exitCode).toBe(0)
-      // UTF-8 of 中文测试 = E4 B8 AD E6 96 87 E6 B5 8B E8 AF 95
+      // UTF-8 of 中文測試 = E4 B8 AD E6 96 87 E6 B5 8B E8 AF 95
       expect(capturedUrl).toContain('q=%E4%B8%AD%E6%96%87%E6%B5%8B%E8%AF%95')
     } finally {
       server.stop()

@@ -1,20 +1,20 @@
 ---
-title: 变更日志
+title: 變更日誌
 sidebar_position: 3
-description: 版本变更历史
+description: 版本變更歷史
 ---
 
-# 变更日志
+# 變更日誌
 
 ## [Unreleased]
 
 ### Added
-- 初始版本发布
-- 技能发布与管理
-- 命名空间与 RBAC
-- 全文搜索
-- ClawHub CLI 兼容层
+- 初始版本發布
+- 技能發布與管理
+- 名稱空間與 RBAC
+- 全文搜尋
+- ClawHub CLI 相容層
 
 ## 下一步
 
-- [路线图](./roadmap) - 未来规划
+- [路線圖](./roadmap) - 未來規劃

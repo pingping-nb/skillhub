@@ -39,7 +39,7 @@ test.describe('Password Reset (Real API)', () => {
     await page.getByRole('button', { name: 'Reset Password' }).click()
 
     await expect(
-      page.getByText(/The verification code is invalid or has expired\.|验证码无效或已过期。/)
+      page.getByText(/The verification code is invalid or has expired\.|驗證碼無效或已過期。/)
     ).toBeVisible()
   })
 })

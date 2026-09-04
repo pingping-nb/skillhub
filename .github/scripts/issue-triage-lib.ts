@@ -112,7 +112,7 @@ export function analyzeIssue(
   const matchedUrgentKeywords = urgentKeywords(searchText);
   if (matchedUrgentKeywords.length > 0) {
     reasons.push(
-      `包含紧急信号（${
+      `包含緊急訊號（${
         matchedUrgentKeywords.slice(0, 3).join(", ")
       }） / Contains urgency signals (${
         matchedUrgentKeywords.slice(0, 3).join(", ")
@@ -126,7 +126,7 @@ export function analyzeIssue(
   const requiresCoreMaintainer = matchedCriticalWorkflowKeywords.length > 0;
   if (matchedCriticalWorkflowKeywords.length > 0) {
     reasons.push(
-      `阻塞已定义的用户主流程（${
+      `阻塞已定義的使用者主流程（${
         matchedCriticalWorkflowKeywords.slice(0, 3).join(", ")
       }） / Blocks a documented user workflow (${
         matchedCriticalWorkflowKeywords.slice(0, 3).join(", ")
@@ -141,7 +141,7 @@ export function analyzeIssue(
   const matchedHighRiskKeywords = highRiskKeywords(riskText);
   if (matchedHighRiskKeywords.length > 0) {
     highRiskReasons.push(
-      `提到敏感区域（${
+      `提到敏感區域（${
         matchedHighRiskKeywords.slice(0, 3).join(", ")
       }） / Mentions sensitive areas (${
         matchedHighRiskKeywords.slice(0, 3).join(", ")
@@ -154,13 +154,13 @@ export function analyzeIssue(
     hasMeaningfulSection(sections["contract or sdk impact"])
   ) {
     highRiskReasons.push(
-      "提到 API、SDK 或契约变更 / Issue mentions API, SDK, or contract changes.",
+      "提到 API、SDK 或契約變更 / Issue mentions API, SDK, or contract changes.",
     );
   }
 
   if (hasMeaningfulSection(sections["impact"])) {
     reasons.push(
-      "包含用户或产品影响说明 / Issue includes operator or product impact details.",
+      "包含使用者或產品影響說明 / Issue includes operator or product impact details.",
     );
   }
 
@@ -185,7 +185,7 @@ export function analyzeIssue(
   if (matchedSmallFixKeywords.length > 0) {
     effort -= 2;
     reasons.push(
-      `文本显示改动范围较可控（${
+      `文字顯示改動範圍較可控（${
         matchedSmallFixKeywords.slice(0, 3).join(", ")
       }） / Text suggests a bounded change (${
         matchedSmallFixKeywords.slice(0, 3).join(", ")
@@ -246,7 +246,7 @@ export function analyzeIssue(
 
   if (missingFields.length > 0) {
     reasons.push(
-      `缺少关键上下文（${
+      `缺少關鍵上下文（${
         missingFields.join(", ")
       }） / Issue is missing key context (${missingFields.join(", ")}).`,
     );
@@ -254,7 +254,7 @@ export function analyzeIssue(
 
   if (comments.length >= 3) {
     reasons.push(
-      "已有后续讨论，积压压力在上升 / Thread already has follow-up discussion, so backlog pressure is rising.",
+      "已有後續討論，積壓壓力在上升 / Thread already has follow-up discussion, so backlog pressure is rising.",
     );
   }
 
@@ -367,7 +367,7 @@ function buildRenderedLanguageBlock(
 ) {
   const isEnglish = language === "en";
   const lines = [
-    isEnglish ? "## Issue Triage" : "## 问题分流结果",
+    isEnglish ? "## Issue Triage" : "## 問題分流結果",
     "",
     isEnglish
       ? `- Route: \`${routeLabel(result.route)}\``
@@ -376,18 +376,18 @@ function buildRenderedLanguageBlock(
       ? `- Priority: \`${priorityLabel(result.priority)}\` (${
         result.priority.toFixed(1)
       }/5)`
-      : `- 优先级: \`${priorityLabel(result.priority)}\` (${
+      : `- 優先順序: \`${priorityLabel(result.priority)}\` (${
         result.priority.toFixed(1)
       }/5)`,
     isEnglish
       ? `- Effort: \`${effortLabel(result.effort)}\` (${result.effort}/5)`
-      : `- 修复投入: \`${effortLabel(result.effort)}\` (${result.effort}/5)`,
+      : `- 修復投入: \`${effortLabel(result.effort)}\` (${result.effort}/5)`,
     isEnglish
       ? `- Confidence: \`${result.confidence}/5\``
-      : `- 信息完整度: \`${result.confidence}/5\``,
+      : `- 資訊完整度: \`${result.confidence}/5\``,
     isEnglish
       ? `- Risk: \`${renderRiskLevel(language, result.riskLevel)}\``
-      : `- 风险: \`${renderRiskLevel(language, result.riskLevel)}\``,
+      : `- 風險: \`${renderRiskLevel(language, result.riskLevel)}\``,
     isEnglish
       ? `- Analysis Mode: \`${result.mode}\``
       : `- 分析模式: \`${result.mode}\``,
@@ -403,7 +403,7 @@ function buildRenderedLanguageBlock(
   if (result.highRiskReasons.length > 0) {
     lines.push(
       "",
-      isEnglish ? "### High-Risk Signals" : "### 高风险信号",
+      isEnglish ? "### High-Risk Signals" : "### 高風險訊號",
       ...result.highRiskReasons.map((reason) =>
         `- ${renderBilingualText(reason, language)}`
       ),
@@ -415,9 +415,9 @@ function buildRenderedLanguageBlock(
   if (result.missingFields.length > 0) {
     lines.push(
       "",
-      isEnglish ? "### Missing Info" : "### 缺失信息",
+      isEnglish ? "### Missing Info" : "### 缺失資訊",
       ...result.missingFields.map((field) =>
-        isEnglish ? `- Please add \`${field}\`.` : `- 请补充 \`${field}\`.`
+        isEnglish ? `- Please add \`${field}\`.` : `- 請補充 \`${field}\`.`
       ),
     );
   }
@@ -441,11 +441,11 @@ function appendLlmSection(
   }
 
   const isEnglish = language === "en";
-  lines.push("", isEnglish ? "### LLM Assist" : "### AI 辅助");
+  lines.push("", isEnglish ? "### LLM Assist" : "### AI 輔助");
   lines.push(
     isEnglish
       ? `- Provider: \`${result.llm.provider}\``
-      : `- 服务商: \`${result.llm.provider}\``,
+      : `- 服務商: \`${result.llm.provider}\``,
   );
   lines.push(
     isEnglish
@@ -464,7 +464,7 @@ function appendLlmSection(
         ? `- Status: fallback to rules-only (${
           result.llm.failureReason ?? "unknown error"
         })`
-        : `- 状态: 回退到规则 (${result.llm.failureReason ?? "unknown error"})`,
+        : `- 狀態: 回退到規則 (${result.llm.failureReason ?? "unknown error"})`,
     );
     return;
   }
@@ -474,7 +474,7 @@ function appendLlmSection(
       ? `- Status: ${
         result.llm.reused ? "reused cached assessment" : "fresh assessment"
       }`
-      : `- 状态: ${result.llm.reused ? "复用缓存评估" : "新鲜评估"}`,
+      : `- 狀態: ${result.llm.reused ? "複用快取評估" : "新鮮評估"}`,
   );
 
   const llmSummary = resolveLlmSummary(result, language);
@@ -489,7 +489,7 @@ function appendLlmSection(
       ...result.llm.suggestedQuestions.map((question) =>
         isEnglish
           ? `- Suggested question: ${renderBilingualText(question, language)}`
-          : `- 建议追问: ${renderBilingualText(question, language)}`
+          : `- 建議追問: ${renderBilingualText(question, language)}`
       ),
     );
   }
@@ -503,9 +503,9 @@ function appendLlmSection(
         ? `- LLM suggested \`${
           routeLabel(result.llm.recommendedRoute)
         }\`, but labels remain on the rule-only route.`
-        : `- LLM 建议路由为 \`${
+        : `- LLM 建議路由為 \`${
           routeLabel(result.llm.recommendedRoute)
-        }\`，但当前仍保持规则路由标签。`,
+        }\`，但當前仍保持規則路由標籤。`,
     );
   }
 
@@ -517,9 +517,9 @@ function appendLlmSection(
         }\`; final route after bounded LLM merge is \`${
           routeLabel(result.route)
         }\`.`
-        : `- 纯规则路由为 \`${
+        : `- 純規則路由為 \`${
           routeLabel(result.rule.route)
-        }\`；经过受限 LLM 合并后最终路由为 \`${routeLabel(result.route)}\`。`,
+        }\`；經過受限 LLM 合併後最終路由為 \`${routeLabel(result.route)}\`。`,
     );
   }
 }
@@ -535,7 +535,7 @@ function appendHandoffBriefSection(
   }
 
   const isEnglish = language === "en";
-  lines.push("", isEnglish ? "### Maintainer Brief" : "### 维护者交接摘要");
+  lines.push("", isEnglish ? "### Maintainer Brief" : "### 維護者交接摘要");
   lines.push(
     isEnglish
       ? `Summary: ${
@@ -543,33 +543,33 @@ function appendHandoffBriefSection(
       }`
       : `概要: ${resolveBriefSummary(result, handoffBrief.summary, language)}`,
   );
-  lines.push(isEnglish ? "Why core:" : "为何进入 core:");
+  lines.push(isEnglish ? "Why core:" : "為何進入 core:");
   lines.push(
     ...handoffBrief.whyCore.map((item) =>
       `- ${renderBilingualText(item, language)}`
     ),
   );
   lines.push(
-    isEnglish ? "Reproduction or operator path:" : "复现路径或操作路径:",
+    isEnglish ? "Reproduction or operator path:" : "復現路徑或操作路徑:",
   );
   lines.push(
     ...handoffBrief.reproduction.map((item) =>
       `- ${renderBilingualText(item, language)}`
     ),
   );
-  lines.push(isEnglish ? "Suspected areas:" : "怀疑影响区域:");
+  lines.push(isEnglish ? "Suspected areas:" : "懷疑影響區域:");
   lines.push(
     ...handoffBrief.suspectedAreas.map((item) =>
       `- ${renderBilingualText(item, language)}`
     ),
   );
-  lines.push(isEnglish ? "Risks to watch:" : "重点风险:");
+  lines.push(isEnglish ? "Risks to watch:" : "重點風險:");
   lines.push(
     ...handoffBrief.risks.map((item) =>
       `- ${renderBilingualText(item, language)}`
     ),
   );
-  lines.push(isEnglish ? "Validation checklist:" : "验证清单:");
+  lines.push(isEnglish ? "Validation checklist:" : "驗證清單:");
   lines.push(
     ...handoffBrief.validation.map((item) =>
       `- ${renderBilingualText(item, language)}`
@@ -720,7 +720,7 @@ function calculateAgePolicy(createdAt: string, now: Date) {
       ageBoost: 1.5,
       priorityFloor: 4.4,
       reason:
-        `已打开 ${safeOpenDays} 天，超过 14 天闭环 SLA，优先级强制提升到 P0 / Open for ${safeOpenDays} days; the 14-day closure SLA is breached, so priority is forced to P0.`,
+        `已開啟 ${safeOpenDays} 天，超過 14 天閉環 SLA，優先順序強制提升到 P0 / Open for ${safeOpenDays} days; the 14-day closure SLA is breached, so priority is forced to P0.`,
     };
   }
 
@@ -730,7 +730,7 @@ function calculateAgePolicy(createdAt: string, now: Date) {
       ageBoost: 1,
       priorityFloor: 3.6,
       reason:
-        `已打开 ${safeOpenDays} 天，为避免超过 14 天仍未闭环，强制进入 active lane / Open for ${safeOpenDays} days; forced into an active lane before the 14-day closure SLA is missed.`,
+        `已開啟 ${safeOpenDays} 天，為避免超過 14 天仍未閉環，強制進入 active lane / Open for ${safeOpenDays} days; forced into an active lane before the 14-day closure SLA is missed.`,
     };
   }
 
@@ -740,7 +740,7 @@ function calculateAgePolicy(createdAt: string, now: Date) {
       ageBoost: 0.6,
       priorityFloor: 2.6,
       reason:
-        `已打开 ${safeOpenDays} 天，开始进入 2 周闭环预热窗口 / Open for ${safeOpenDays} days; entering the 2-week closure warm-up window.`,
+        `已開啟 ${safeOpenDays} 天，開始進入 2 周閉環預熱視窗 / Open for ${safeOpenDays} days; entering the 2-week closure warm-up window.`,
     };
   }
 

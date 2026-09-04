@@ -1,144 +1,144 @@
-# skillhub 核心业务流
+# skillhub 核心業務流
 
-## 1 发布流程
+## 1 發布流程
 
-一期采用同步发布模型：上传、校验、存储、持久化在一次请求中同步完成。前端通过异步上传（带进度条）提升用户体验，但后端处理是同步的。
+一期採用同步發布模型：上傳、校驗、儲存、持久化在一次請求中同步完成。前端透過非同步上傳（帶進度條）提升使用者體驗，但後端處理是同步的。
 
-> **设计决策**：一期暂不考虑异步发布（uploadId、publishId、状态轮询、异步转正等）。一期技能包为文本资源包，体积有限（上限 10MB），同步处理足以满足需求。如后续引入大文件或复杂校验流程，再考虑异步模型。
+> **設計決策**：一期暫不考慮非同步發布（uploadId、publishId、狀態輪詢、非同步轉正等）。一期技能包為文字資源包，體積有限（上限 10MB），同步處理足以滿足需求。如後續引入大檔案或複雜校驗流程，再考慮非同步模型。
 
-### 1.1 当前发布流程基线
+### 1.1 當前發布流程基線
 
 ```
-用户提交发布
+使用者提交發布
     │
     ▼
-① 身份与权限校验（用户是否为该 namespace 的 MEMBER 以上）
+① 身份與許可權校驗（使用者是否為該 namespace 的 MEMBER 以上）
     │
     ▼
-② 技能包校验
+② 技能包校驗
    - SKILL.md 存在性、frontmatter 格式
-   - 文件类型白名单、单文件大小限制、总包大小限制
-   - 版本号 semver 合法性、不与已有版本冲突
-   - [扩展点] PrePublishValidator 链（一期空实现）
+   - 檔案型別白名單、單檔案大小限制、總包大小限制
+   - 版本號 semver 合法性、不與已有版本衝突
+   - [擴充套件點] PrePublishValidator 鏈（一期空實現）
     │
     ▼
-③ 同步写入对象存储
-   - 文件逐个上传到正式路径 `skills/{skillId}/{versionId}/{filePath}`，记录 SHA-256
-   - 生成预打包 zip 到 `packages/{skillId}/{versionId}/bundle.zip`
+③ 同步寫入物件儲存
+   - 檔案逐個上傳到正式路徑 `skills/{skillId}/{versionId}/{filePath}`，記錄 SHA-256
+   - 生成預打包 zip 到 `packages/{skillId}/{versionId}/bundle.zip`
     │
     ▼
-④ 持久化数据
-   - 创建或关联 skill 记录（首次发布时创建 skill）
-   - 创建 skill_version（普通用户进入 `PENDING_REVIEW`，`SUPER_ADMIN` 直达 `PUBLISHED`）
-   - 创建 skill_file 记录
+④ 持久化資料
+   - 建立或關聯 skill 記錄（首次發布時建立 skill）
+   - 建立 skill_version（普通使用者進入 `PENDING_REVIEW`，`SUPER_ADMIN` 直達 `PUBLISHED`）
+   - 建立 skill_file 記錄
    - 解析 SKILL.md frontmatter → parsed_metadata_json
    - 生成 manifest_json
-   - 直发场景更新 skill.latest_version_id
+   - 直髮場景更新 skill.latest_version_id
     │
     ▼
-⑤ 同步写入审计日志
+⑤ 同步寫入審計日誌
     │
     ▼
-⑥ 异步触发搜索索引写入
+⑥ 非同步觸發搜尋索引寫入
 ```
 
-当前版本采用审核流，不再区分“Phase 2 直发”与“Phase 3 恢复审核”两套现实实现：
+當前版本採用稽核流，不再區分“Phase 2 直髮”與“Phase 3 恢復稽核”兩套現實實現：
 
-- 普通用户发布请求创建 `skill_version(status=PENDING_REVIEW)`
-- 同步创建 `review_task(status=PENDING)`
-- 审核通过后转为 `PUBLISHED`
-- 审核拒绝后转为 `REJECTED`
-- 撤回审核时删除 `PENDING review_task`，并将 `skill_version` 回退到 `DRAFT`
-- 例外：提交人持有 `SUPER_ADMIN` 平台角色时，发布入口直接创建 `skill_version(status=PUBLISHED)`，跳过 `review_task` 创建，同时不再要求其必须是目标 namespace 成员
-- 上述例外必须对 Web、`/api/v1/publish`、`/api/v1/publish` 保持一致
-- 若重传新版本时发现旧的 `PENDING_REVIEW` 版本，旧版本会被自动降回 `DRAFT`，再创建新的待审版本
+- 普通使用者發布請求建立 `skill_version(status=PENDING_REVIEW)`
+- 同步建立 `review_task(status=PENDING)`
+- 稽核透過後轉為 `PUBLISHED`
+- 稽核拒絕後轉為 `REJECTED`
+- 撤回稽核時刪除 `PENDING review_task`，並將 `skill_version` 回退到 `DRAFT`
+- 例外：提交人持有 `SUPER_ADMIN` 平臺角色時，發布入口直接建立 `skill_version(status=PUBLISHED)`，跳過 `review_task` 建立，同時不再要求其必須是目標 namespace 成員
+- 上述例外必須對 Web、`/api/v1/publish`、`/api/v1/publish` 保持一致
+- 若重傳新版本時發現舊的 `PENDING_REVIEW` 版本，舊版本會被自動降回 `DRAFT`，再建立新的待審版本
 
-### 1.2 生命周期读模型
+### 1.2 生命週期讀模型
 
-当前代码中的 skill 生命周期展示与操作判断，不再依赖旧的 `latestVersionStatus`、`viewingVersionStatus` 一类拼装字段，而统一基于以下 projection：
+當前程式碼中的 skill 生命週期展示與操作判斷，不再依賴舊的 `latestVersionStatus`、`viewingVersionStatus` 一類拼裝欄位，而統一基於以下 projection：
 
-- `headlineVersion`：当前详情页/我的技能列表主展示版本
-- `publishedVersion`：当前最新可公开分发的已发布版本
-- `ownerPreviewVersion`：详情 projection 中仅暴露给 owner / namespace 管理者的 `PENDING_REVIEW` 版本
+- `headlineVersion`：當前詳情頁/我的技能列表主展示版本
+- `publishedVersion`：當前最新可公開分發的已發布版本
+- `ownerPreviewVersion`：詳情 projection 中僅暴露給 owner / namespace 管理者的 `PENDING_REVIEW` 版本
 - `resolutionMode`：`PUBLISHED` / `OWNER_PREVIEW` / `NONE`
 
-业务规则：
+業務規則：
 
-- 公开入口只认 `publishedVersion`
-- owner 进入详情页时，如果没有可用 `publishedVersion`，才允许 `headlineVersion = ownerPreviewVersion`
-- 推广到全局、安装命令、公开下载都只能绑定到 `publishedVersion`
-- `hidden` 是独立治理覆盖层，不属于 skill 生命周期状态机
+- 公開入口只認 `publishedVersion`
+- owner 進入詳情頁時，如果沒有可用 `publishedVersion`，才允許 `headlineVersion = ownerPreviewVersion`
+- 推廣到全域性、安裝命令、公開下載都只能繫結到 `publishedVersion`
+- `hidden` 是獨立治理覆蓋層，不屬於 skill 生命週期狀態機
 
-### 1.3 Skill 可见性与角色访问矩阵
+### 1.3 Skill 可見性與角色訪問矩陣
 
-以下矩阵以当前后端实现为准，综合了 `VisibilityChecker`、`SkillQueryService`、`SkillDownloadService`、`ReviewPermissionChecker` 的实际行为。
+以下矩陣以當前後端實現為準，綜合了 `VisibilityChecker`、`SkillQueryService`、`SkillDownloadService`、`ReviewPermissionChecker` 的實際行為。
 
-#### 1.3.1 Skill 容器读取
+#### 1.3.1 Skill 容器讀取
 
-| 角色 | PUBLIC | NAMESPACE_ONLY | PRIVATE | hidden 任意 visibility | 无 `publishedVersion`（`latest_version_id=null`） |
+| 角色 | PUBLIC | NAMESPACE_ONLY | PRIVATE | hidden 任意 visibility | 無 `publishedVersion`（`latest_version_id=null`） |
 |------|--------|----------------|---------|------------------------|-----------------------------------------------|
-| 匿名用户 | 可读 | 不可读 | 不可读 | 不可读 | 不可读 |
-| 登录非成员 | 可读 | 不可读 | 不可读 | 不可读 | 不可读 |
-| namespace MEMBER | 可读 | 可读 | 不可读 | 不可读 | 仅自己是 owner 时可读 |
-| skill owner | 可读 | 可读 | 可读 | 可读 | 可读 |
-| namespace ADMIN / OWNER | 可读 | 可读 | 可读 | 可读 | 不可读，除非本人也是 skill owner |
-| SKILL_ADMIN / SUPER_ADMIN（仅平台角色） | 与普通登录用户一致；普通读路径不会因为平台角色自动穿透 private / hidden / unpublished |
+| 匿名使用者 | 可讀 | 不可讀 | 不可讀 | 不可讀 | 不可讀 |
+| 登入非成員 | 可讀 | 不可讀 | 不可讀 | 不可讀 | 不可讀 |
+| namespace MEMBER | 可讀 | 可讀 | 不可讀 | 不可讀 | 僅自己是 owner 時可讀 |
+| skill owner | 可讀 | 可讀 | 可讀 | 可讀 | 可讀 |
+| namespace ADMIN / OWNER | 可讀 | 可讀 | 可讀 | 可讀 | 不可讀，除非本人也是 skill owner |
+| SKILL_ADMIN / SUPER_ADMIN（僅平臺角色） | 與普通登入使用者一致；普通讀路徑不會因為平臺角色自動穿透 private / hidden / unpublished |
 
-补充：
-- `hidden=true` 时，可读权限会收敛为“skill owner 或 namespace `ADMIN` / `OWNER`”
-- `visibility=PUBLIC` 也不意味着未发布 skill 可见；当 `latest_version_id` 为空时，只有 owner 能读
+補充：
+- `hidden=true` 時，可讀許可權會收斂為“skill owner 或 namespace `ADMIN` / `OWNER`”
+- `visibility=PUBLIC` 也不意味著未發布 skill 可見；當 `latest_version_id` 為空時，只有 owner 能讀
 
-#### 1.3.2 Version 状态读取
+#### 1.3.2 Version 狀態讀取
 
-| 场景 / 角色 | DRAFT | PENDING_REVIEW | PUBLISHED | REJECTED | YANKED |
+| 場景 / 角色 | DRAFT | PENDING_REVIEW | PUBLISHED | REJECTED | YANKED |
 |------------|-------|----------------|-----------|----------|--------|
-| 普通 skill 详情页主版本投影 | 不展示 | owner / namespace 管理者可作为 `ownerPreviewVersion` 展示 | 展示 | 不展示 | 不展示 |
-| 普通 `listVersions` 访客 | 不可见 | 不可见 | 可见 | 不可见 | 不可见 |
-| `listVersions` 的 owner / namespace ADMIN / OWNER | 可见 | 可见 | 可见 | 可见 | 可见 |
-| 常规 `getVersionDetail` | 不可读 | 仅 owner 可读 | 可读 | 不可读 | 不可读 |
-| 下载 / resolve / tag / 文件读取 | 不可用 | 不可用 | 可用 | 不可用 | 不可用 |
-| review 详情页 | 可见完整快照 | 可见完整快照 | 可见完整快照 | 可见完整快照 | 可见完整快照 |
+| 普通 skill 詳情頁主版本投影 | 不展示 | owner / namespace 管理者可作為 `ownerPreviewVersion` 展示 | 展示 | 不展示 | 不展示 |
+| 普通 `listVersions` 訪客 | 不可見 | 不可見 | 可見 | 不可見 | 不可見 |
+| `listVersions` 的 owner / namespace ADMIN / OWNER | 可見 | 可見 | 可見 | 可見 | 可見 |
+| 常規 `getVersionDetail` | 不可讀 | 僅 owner 可讀 | 可讀 | 不可讀 | 不可讀 |
+| 下載 / resolve / tag / 檔案讀取 | 不可用 | 不可用 | 可用 | 不可用 | 不可用 |
+| review 詳情頁 | 可見完整快照 | 可見完整快照 | 可見完整快照 | 可見完整快照 | 可見完整快照 |
 
-补充：
-- `YANKED` 版本仍出现在管理视角的版本列表中，但不可下载
-- `yank` 当前最新已发布版本时，会重算 `latest_version_id` 指向下一个最新的 `PUBLISHED` 版本；若没有，则置空
+補充：
+- `YANKED` 版本仍出現在管理視角的版本列表中，但不可下載
+- `yank` 當前最新已發布版本時，會重算 `latest_version_id` 指向下一個最新的 `PUBLISHED` 版本；若沒有，則置空
 
-#### 1.3.3 审核 / 推广 / 治理动作
+#### 1.3.3 稽核 / 推廣 / 治理動作
 
-| 角色 | 发布新版本 | 提交审核 | 审核团队空间 | 审核全局空间 | 提交推广 | 审核推广 | hide / unhide | yank 已发布版本 |
+| 角色 | 發布新版本 | 提交稽核 | 稽核團隊空間 | 稽核全域性空間 | 提交推廣 | 稽核推廣 | hide / unhide | yank 已發布版本 |
 |------|------------|----------|--------------|--------------|----------|----------|---------------|----------------|
-| 匿名用户 | 不可 | 不可 | 不可 | 不可 | 不可 | 不可 | 不可 | 不可 |
-| namespace MEMBER | 可发布到所属 namespace；新版本进入 `PENDING_REVIEW` | 自己作为 owner 时可；不能代别人提审 | 不可 | 不可 | 自己作为 owner 时可 | 不可 | 不可 | 不可 |
+| 匿名使用者 | 不可 | 不可 | 不可 | 不可 | 不可 | 不可 | 不可 | 不可 |
+| namespace MEMBER | 可發布到所屬 namespace；新版本進入 `PENDING_REVIEW` | 自己作為 owner 時可；不能代別人提審 | 不可 | 不可 | 自己作為 owner 時可 | 不可 | 不可 | 不可 |
 | skill owner | 可 | 可 | 不可 | 不可 | 可 | 不可 | 不可 | 不可 |
-| namespace ADMIN / OWNER | 可 | 可为本空间 skill 提交审核 | 可 | 不可 | 可 | 不可 | 不可 | 不可 |
-| SKILL_ADMIN | 可提交并可代提审；但普通发布仍非直发 | 可 | 可 | 可 | 可 | 可，但不能审自己的 promotion | 不可 | 可 |
-| SUPER_ADMIN | 可跨 namespace 发布且直接 `PUBLISHED`，跳过 membership 检查和 review task | 可 | 可 | 可 | 可 | 可；promotion 和 review 场景下还能审自己的提交 | 可 | 可 |
+| namespace ADMIN / OWNER | 可 | 可為本空間 skill 提交稽核 | 可 | 不可 | 可 | 不可 | 不可 | 不可 |
+| SKILL_ADMIN | 可提交併可代提審；但普通發布仍非直髮 | 可 | 可 | 可 | 可 | 可，但不能審自己的 promotion | 不可 | 可 |
+| SUPER_ADMIN | 可跨 namespace 發布且直接 `PUBLISHED`，跳過 membership 檢查和 review task | 可 | 可 | 可 | 可 | 可；promotion 和 review 場景下還能審自己的提交 | 可 | 可 |
 
-### 对象存储写入策略
+### 物件儲存寫入策略
 
-一期同步写入正式路径，不使用临时区：
-- 文件直接写入 `skills/{skillId}/{versionId}/{filePath}`
-- 如果数据库事务失败，对象存储中的文件成为孤儿对象
-- 定时 GC 任务：每天扫描对象存储中存在但数据库中无对应 `skill_file` 记录的文件，清理孤儿对象
-- 删除 DRAFT/REJECTED 版本时，同步清理对应的对象存储文件
+一期同步寫入正式路徑，不使用臨時區：
+- 檔案直接寫入 `skills/{skillId}/{versionId}/{filePath}`
+- 如果資料庫事務失敗，物件儲存中的檔案成為孤兒物件
+- 定時 GC 任務：每天掃描物件儲存中存在但資料庫中無對應 `skill_file` 記錄的檔案，清理孤兒物件
+- 刪除 DRAFT/REJECTED 版本時，同步清理對應的物件儲存檔案
 
-### CLI publish 请求规范
+### CLI publish 請求規範
 
 ```
 POST /api/v1/publish
 Content-Type: multipart/form-data
 Parts:
   - file: zip 包（必需）
-  - namespace: 目标命名空间 slug（必需）
+  - namespace: 目標名稱空間 slug（必需）
 ```
 
-一期同步响应：服务端同步完成上传、校验、存储、持久化，返回 `200 OK` + skill_version 信息。
+一期同步響應：服務端同步完成上傳、校驗、儲存、持久化，返回 `200 OK` + skill_version 資訊。
 
-当前 CLI 默认行为：上传 → 进入审核。
-如果调用方持有 `SUPER_ADMIN`，则直接发布为 `PUBLISHED`。
-Web 端与 CLI 保持同一发布语义，只是在交互上可提供更明确的审核提示。
+當前 CLI 預設行為：上傳 → 進入稽核。
+如果呼叫方持有 `SUPER_ADMIN`，則直接發布為 `PUBLISHED`。
+Web 端與 CLI 保持同一發布語義，只是在互動上可提供更明確的稽核提示。
 
-`/api/v1/publish` 响应：
+`/api/v1/publish` 響應：
 
 ```json
 {
@@ -153,166 +153,166 @@ Web 端与 CLI 保持同一发布语义，只是在交互上可提供更明确�
 }
 ```
 
-## 2 团队技能提升到全局空间（派生发布）
+## 2 團隊技能提升到全域性空間（派生髮布）
 
-不直接修改原 skill 的 `namespace_id`，而是在全局空间创建新的 skill，保留来源追溯。原团队 skill 继续存在，安装坐标 `@team/skill` 不受影响。
+不直接修改原 skill 的 `namespace_id`，而是在全域性空間建立新的 skill，保留來源追溯。原團隊 skill 繼續存在，安裝座標 `@team/skill` 不受影響。
 
 ```
-团队空间技能（已发布）
+團隊空間技能（已發布）
     │
     ▼
-① 技能 owner 或 namespace admin 发起"提升到全局"申请
+① 技能 owner 或 namespace admin 發起"提升到全域性"申請
     │
     ▼
-② 创建 promotion_request (source_skill_id, source_version_id, target_namespace_id, status=PENDING)
+② 建立 promotion_request (source_skill_id, source_version_id, target_namespace_id, status=PENDING)
     │
     ▼
-③ 平台管理员审核
-   ├── 通过 →
-   │   ① 在全局空间创建新 skill（source_skill_id = 原 skill ID）
-   │   ② 复制 source_version_id 对应版本的文件和元数据到新 skill（严格使用申请时指定的版本，不取最新）
+③ 平臺管理員稽核
+   ├── 透過 →
+   │   ① 在全域性空間建立新 skill（source_skill_id = 原 skill ID）
+   │   ② 複製 source_version_id 對應版本的檔案和後設資料到新 skill（嚴格使用申請時指定的版本，不取最新）
    │   ③ 新 skill.visibility = PUBLIC
    │   ④ promotion_request.target_skill_id = 新 skill ID，status → APPROVED
-   │   ⑤ 搜索索引写入新 skill，同步写入审计日志
-   │   （提升关系唯一事实来源是 promotion_request，UI 查询"是否已提升"通过该表判定）
+   │   ⑤ 搜尋索引寫入新 skill，同步寫入審計日誌
+   │   （提升關係唯一事實來源是 promotion_request，UI 查詢"是否已提升"透過該表判定）
    │
-   └── 拒绝 → 记录原因，原技能不受影响
+   └── 拒絕 → 記錄原因，原技能不受影響
 ```
 
-后续版本更新：
-- 全局空间的新 skill 由其 owner 独立管理版本
-- 原团队 skill 可继续独立迭代
-- 两者版本不自动同步，如需同步由 owner 手动操作
+後續版本更新：
+- 全域性空間的新 skill 由其 owner 獨立管理版本
+- 原團隊 skill 可繼續獨立迭代
+- 兩者版本不自動同步，如需同步由 owner 手動操作
 
-提升流程当前严格绑定已发布版本：
+提升流程當前嚴格繫結已發布版本：
 
-- promotion request 的 `source_version_id` 必须指向 `publishedVersion.id`
-- 不允许直接提升 `ownerPreviewVersion`
+- promotion request 的 `source_version_id` 必須指向 `publishedVersion.id`
+- 不允許直接提升 `ownerPreviewVersion`
 
-## 3 下载流程
-
-```
-下载请求
-    │
-    ▼
-① 校验技能状态（ACTIVE）、版本状态（PUBLISHED）
-    │
-    ▼
-② 可见性检查
-   - PUBLIC: 任何人（包括匿名用户）
-   - NAMESPACE_ONLY: 该 namespace 的成员（需登录）
-   - PRIVATE: owner 本人 + 该 namespace 的 ADMIN 以上（需登录）
-    │
-    ▼
-③ 返回预生成包或按文件清单打包
-    │
-    ▼
-④ 审计与统计
-   - audit_log 同步写入（记录下载人/IP/版本）
-   - download_count 异步更新（原子 SQL: download_count = download_count + 1）
-   - 匿名下载：审计记录 IP + User-Agent，不关联用户
-   - 已登录下载：审计记录用户 ID
-```
-
-### download_count 热点行优化预案
-
-一期使用原子 SQL 直接更新，可接受。如出现热点行瓶颈，切换为：
-1. Redis `INCR` 做实时计数（key: `skill:downloads:{skillId}`）
-2. 定时任务每 5 分钟批量回写 PostgreSQL
-3. 查询时合并 PostgreSQL 存量 + Redis 增量
-
-## 4 搜索流程
+## 3 下載流程
 
 ```
-搜索请求 (keyword, namespaceSlug?, sortBy)
+下載請求
     │
     ▼
-① 构建 SearchQuery
-   - 匿名用户：visibility 限定为 PUBLIC
-   - 已登录用户：根据命名空间成员关系计算可见范围
+① 校驗技能狀態（ACTIVE）、版本狀態（PUBLISHED）
+    │
+    ▼
+② 可見性檢查
+   - PUBLIC: 任何人（包括匿名使用者）
+   - NAMESPACE_ONLY: 該 namespace 的成員（需登入）
+   - PRIVATE: owner 本人 + 該 namespace 的 ADMIN 以上（需登入）
+    │
+    ▼
+③ 返回預生成包或按檔案清單打包
+    │
+    ▼
+④ 審計與統計
+   - audit_log 同步寫入（記錄下載人/IP/版本）
+   - download_count 非同步更新（原子 SQL: download_count = download_count + 1）
+   - 匿名下載：審計記錄 IP + User-Agent，不關聯使用者
+   - 已登入下載：審計記錄使用者 ID
+```
+
+### download_count 熱點行最佳化預案
+
+一期使用原子 SQL 直接更新，可接受。如出現熱點行瓶頸，切換為：
+1. Redis `INCR` 做實時計數（key: `skill:downloads:{skillId}`）
+2. 定時任務每 5 分鐘批次回寫 PostgreSQL
+3. 查詢時合併 PostgreSQL 存量 + Redis 增量
+
+## 4 搜尋流程
+
+```
+搜尋請求 (keyword, namespaceSlug?, sortBy)
+    │
+    ▼
+① 構建 SearchQuery
+   - 匿名使用者：visibility 限定為 PUBLIC
+   - 已登入使用者：根據名稱空間成員關係計算可見範圍
     │
     ▼
 ② SearchQueryService.search(query)
     │
     ▼
-③ 返回分页结果（技能摘要 + 命名空间信息 + 评分 + 下载量）
+③ 返回分頁結果（技能摘要 + 名稱空間資訊 + 評分 + 下載量）
 ```
 
 ## 5 收藏流程
 
 ```
-收藏/取消收藏（需登录）→ 校验权限 → 写入/删除 skill_star
-→ 异步更新 skill.star_count（原子 SQL）
+收藏/取消收藏（需登入）→ 校驗許可權 → 寫入/刪除 skill_star
+→ 非同步更新 skill.star_count（原子 SQL）
 ```
 
-## 6 评分流程
+## 6 評分流程
 
 ```
-提交评分 (score: 1-5)（需登录）→ 校验权限 → 写入/更新 skill_rating
-→ 异步重算 skill.rating_avg 和 rating_count（SELECT AVG + Redis 分布式锁防重复重算）
+提交評分 (score: 1-5)（需登入）→ 校驗許可權 → 寫入/更新 skill_rating
+→ 非同步重算 skill.rating_avg 和 rating_count（SELECT AVG + Redis 分散式鎖防重複重算）
 ```
 
-文字评价复用同一条 `skill_rating` 记录：用户提交 `score + review_text` 时同步更新评分并触发
-`SkillRatedEvent`；删除评价只清空文字，保留星级评分。公开列表仅返回 `VISIBLE` 评价；
-`SKILL_ADMIN` / `SUPER_ADMIN` 可隐藏或恢复评价，管理动作写入审计日志且不改变评分聚合。
+文字評價複用同一條 `skill_rating` 記錄：使用者提交 `score + review_text` 時同步更新評分並觸發
+`SkillRatedEvent`；刪除評價只清空文字，保留星級評分。公開列表僅返回 `VISIBLE` 評價；
+`SKILL_ADMIN` / `SUPER_ADMIN` 可隱藏或恢復評價，管理動作寫入審計日誌且不改變評分聚合。
 
-## 7 异步事件汇总
+## 7 非同步事件彙總
 
-| 事件 | 触发时机 | 消费方 |
+| 事件 | 觸發時機 | 消費方 |
 |------|---------|--------|
-| `SkillPublishedEvent` | 审核通过 | 搜索索引写入 |
-| `SkillYankedEvent` | 版本撤回 | 搜索索引移除 |
-| `SkillDownloadedEvent` | 下载完成 | 下载计数 |
-| `SkillStarredEvent` | 收藏/取消 | 收藏计数 |
-| `SkillRatedEvent` | 评分提交 | 评分重算 |
-| `ReviewCompletedEvent` | 审核完成 | 预留给后续通知能力（当前可不消费） |
-| `SkillPromotedEvent` | 提升到全局 | 搜索索引写入（新 skill） |
+| `SkillPublishedEvent` | 稽核透過 | 搜尋索引寫入 |
+| `SkillYankedEvent` | 版本撤回 | 搜尋索引移除 |
+| `SkillDownloadedEvent` | 下載完成 | 下載計數 |
+| `SkillStarredEvent` | 收藏/取消 | 收藏計數 |
+| `SkillRatedEvent` | 評分提交 | 評分重算 |
+| `ReviewCompletedEvent` | 稽核完成 | 預留給後續通知能力（當前可不消費） |
+| `SkillPromotedEvent` | 提升到全域性 | 搜尋索引寫入（新 skill） |
 
-一期用 Spring ApplicationEvent + `@Async` 实现，后续可替换为消息队列。
+一期用 Spring ApplicationEvent + `@Async` 實現，後續可替換為訊息佇列。
 
-### 审计日志写入策略
+### 審計日誌寫入策略
 
-审计日志统一同步落库，与业务操作在同一请求内同步写入，不走异步事件。审计是企业内部平台的刚性需求，不可容忍丢失。
+審計日誌統一同步落庫，與業務操作在同一請求內同步寫入，不走非同步事件。審計是企業內部平臺的剛性需求，不可容忍丟失。
 
-异步事件仅用于搜索索引、计数器等可容忍延迟的场景。如果后续需要更强一致性，引入 outbox 模式，不依赖 ApplicationEvent + @Async 承担可靠性。
+非同步事件僅用於搜尋索引、計數器等可容忍延遲的場景。如果後續需要更強一致性，引入 outbox 模式，不依賴 ApplicationEvent + @Async 承擔可靠性。
 
-### 异步事件可靠性保障
+### 非同步事件可靠性保障
 
-Spring ApplicationEvent + @Async 存在 Pod 被杀时事件丢失的风险。补充以下兜底机制：
+Spring ApplicationEvent + @Async 存在 Pod 被殺時事件丟失的風險。補充以下兜底機制：
 
-- 搜索索引：定时任务每小时检查 `skill_version.status = PUBLISHED` 但 `skill_search_document` 中无对应记录的版本，补建索引
-- 计数器：可接受少量丢失，定时任务每天凌晨从 `skill_star` / `skill_rating` 表重算修正
-- 优雅停机：`@Async` 线程池配置 `awaitTerminationSeconds=25`，配合 30s shutdown timeout
+- 搜尋索引：定時任務每小時檢查 `skill_version.status = PUBLISHED` 但 `skill_search_document` 中無對應記錄的版本，補建索引
+- 計數器：可接受少量丟失，定時任務每天凌晨從 `skill_star` / `skill_rating` 表重算修正
+- 優雅停機：`@Async` 執行緒池配置 `awaitTerminationSeconds=25`，配合 30s shutdown timeout
 
-## 8 分布式并发安全措施
+## 8 分散式併發安全措施
 
-| 操作 | 并发控制方式 |
+| 操作 | 併發控制方式 |
 |------|-------------|
-| 审核通过/拒绝 | 乐观锁：`UPDATE review_task SET status=? WHERE id=? AND version=?` |
-| 版本发布 | 唯一约束：`(skill_id, version)` |
-| 计数器更新 | 原子 SQL：`SET count = count + 1` |
-| 评分重算 | 异步 + Redis 分布式锁防重复重算 |
-| 写操作幂等 | Redis 存储 `X-Request-Id`，TTL 24h |
+| 稽核透過/拒絕 | 樂觀鎖：`UPDATE review_task SET status=? WHERE id=? AND version=?` |
+| 版本發布 | 唯一約束：`(skill_id, version)` |
+| 計數器更新 | 原子 SQL：`SET count = count + 1` |
+| 評分重算 | 非同步 + Redis 分散式鎖防重複重算 |
+| 寫操作冪等 | Redis 儲存 `X-Request-Id`，TTL 24h |
 
-### 幂等去重规范
+### 冪等去重規範
 
-基于 `idempotency_record` 表实现完整幂等：
+基於 `idempotency_record` 表實現完整冪等：
 
-- `X-Request-Id` 由客户端生成（UUID v4 格式）
-- 客户端不传时，服务端自动生成但不做幂等去重
+- `X-Request-Id` 由客戶端生成（UUID v4 格式）
+- 客戶端不傳時，服務端自動生成但不做冪等去重
 
 去重流程：
-1. Redis `SETNX` key=`idempotent:{requestId}`（快速去重缓存，TTL=24h）
-   - key 已存在：查询 `idempotency_record` 表返回原始结果
+1. Redis `SETNX` key=`idempotent:{requestId}`（快速去重快取，TTL=24h）
+   - key 已存在：查詢 `idempotency_record` 表返回原始結果
 2. key 不存在：插入 `idempotency_record`（status=`PROCESSING`）
-3. 执行业务逻辑
-4. 成功：更新 record 为 `COMPLETED`，填充 `resource_type` + `resource_id` + `response_status_code`
-5. 失败：更新 record 为 `FAILED`
-6. 重复请求时：查 record，COMPLETED 返回原始资源 ID，PROCESSING 返回 `409 Conflict`，FAILED 允许重试
+3. 執行業務邏輯
+4. 成功：更新 record 為 `COMPLETED`，填充 `resource_type` + `resource_id` + `response_status_code`
+5. 失敗：更新 record 為 `FAILED`
+6. 重複請求時：查 record，COMPLETED 返回原始資源 ID，PROCESSING 返回 `409 Conflict`，FAILED 允許重試
 
-适用范围：所有 POST/PUT/DELETE 写操作（发布、提审、创建 Token 等）
+適用範圍：所有 POST/PUT/DELETE 寫操作（發布、提審、建立 Token 等）
 
-异常恢复策略：
-- Redis key 存在但 `idempotency_record` 无记录（进程在两步之间崩溃）：视为脏状态，删除 Redis key，允许请求正常重入
-- `idempotency_record.status = FAILED`：删除对应 Redis key，允许客户端用相同 `request_id` 重试
-- `idempotency_record.status = PROCESSING` 超过 5 分钟未更新：视为僵死，标记为 FAILED，删除 Redis key，允许重试
+異常恢復策略：
+- Redis key 存在但 `idempotency_record` 無記錄（程式在兩步之間崩潰）：視為髒狀態，刪除 Redis key，允許請求正常重入
+- `idempotency_record.status = FAILED`：刪除對應 Redis key，允許客戶端用相同 `request_id` 重試
+- `idempotency_record.status = PROCESSING` 超過 5 分鐘未更新：視為僵死，標記為 FAILED，刪除 Redis key，允許重試

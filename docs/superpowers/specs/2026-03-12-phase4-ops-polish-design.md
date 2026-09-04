@@ -1,79 +1,79 @@
-# Phase 4: 运维增强 + 打磨 + 开源就绪 设计文档
+# Phase 4: 運維增強 + 打磨 + 開源就緒 設計檔案
 
-> **Goal:** 在 Phase 1-3 完成核心功能的基础上，扩展认证体系（用户名密码登录 + 多账号合并）、完善平台治理（技能隐藏/撤回 + 审计日志查询）、提升可观测性（Prometheus 指标）、优化性能（数据库索引 + 预签名 URL + 前端代码分割）、加固安全、实现 Docker 一键启动和 K8s 基础部署，并建立完整的开源项目基础设施。
+> **Goal:** 在 Phase 1-3 完成核心功能的基礎上，擴充套件認證體系（使用者名稱密碼登入 + 多賬號合併）、完善平臺治理（技能隱藏/撤回 + 審計日誌查詢）、提升可觀測性（Prometheus 指標）、最佳化效能（資料庫索引 + 預簽名 URL + 前端程式碼分割）、加固安全、實現 Docker 一鍵啟動和 K8s 基礎部署，並建立完整的開源專案基礎設施。
 
-> **前置条件:** Phase 1 完成（工程骨架 + 认证授权）+ Phase 2 完成（命名空间 + 技能核心链路）+ Phase 3 完成（审核流程 + CLI API + 评分收藏 + 兼容层）
+> **前置條件:** Phase 1 完成（工程骨架 + 認證授權）+ Phase 2 完成（名稱空間 + 技能核心鏈路）+ Phase 3 完成（稽核流程 + CLI API + 評分收藏 + 相容層）
 
-> **重要修订：身份主键约束**
-> 用户身份主键全链路统一使用 `string`。本文中出现的 `user_id`、`primary_user_id`、`secondary_user_id`、`hidden_by`、`yanked_by`、`actor_user_id` 等用户关联字段都应按字符串设计，任何整型用户主键描述都不再有效。
+> **重要修訂：身份主鍵約束**
+> 使用者身份主鍵全鏈路統一使用 `string`。本文中出現的 `user_id`、`primary_user_id`、`secondary_user_id`、`hidden_by`、`yanked_by`、`actor_user_id` 等使用者關聯欄位都應按字串設計，任何整型使用者主鍵描述都不再有效。
 
-## 关键设计决策
+## 關鍵設計決策
 
-| 决策点 | 选择 | 理由 |
+| 決策點 | 選擇 | 理由 |
 |--------|------|------|
-| 密码登录体系 | 独立注册体系，与 OAuth 完全独立 | 降低耦合，两种方式各自独立，通过多账号合并关联 |
-| 密码哈希 | BCrypt (strength=12) | 安全性与性能平衡，约 250ms/次 |
-| 多账号合并 | 用户主动发起 + 验证 secondary 身份 + 确认 | 安全可控，避免误合并 |
-| 版本撤回语义 | YANKED（借鉴 crates.io） | 精确版本仍可下载，兼容已有 lockfile |
-| 下载优化 | S3 预签名 URL + 302 重定向 | 减少后端带宽压力，LocalFile 降级代理 |
-| Docker 一键启动 | docker Profile + ApplicationRunner 种子数据 | 零配置体验，clone 即用 |
-| K8s 部署 | 基础版（Deployment + Service + Ingress） | 满足基本部署需求，不过度设计 |
-| 开源许可 | Apache 2.0 | 企业友好，允许商业使用 |
-| Chunk 策略 | 4 Chunk 渐进交付 | 每个 Chunk 范围清晰、风险可控 |
+| 密碼登入體系 | 獨立註冊體系，與 OAuth 完全獨立 | 降低耦合，兩種方式各自獨立，透過多賬號合併關聯 |
+| 密碼雜湊 | BCrypt (strength=12) | 安全性與效能平衡，約 250ms/次 |
+| 多賬號合併 | 使用者主動發起 + 驗證 secondary 身份 + 確認 | 安全可控，避免誤合併 |
+| 版本撤回語義 | YANKED（借鑑 crates.io） | 精確版本仍可下載，相容已有 lockfile |
+| 下載最佳化 | S3 預簽名 URL + 302 重定向 | 減少後端頻寬壓力，LocalFile 降級代理 |
+| Docker 一鍵啟動 | docker Profile + ApplicationRunner 種子資料 | 零配置體驗，clone 即用 |
+| K8s 部署 | 基礎版（Deployment + Service + Ingress） | 滿足基本部署需求，不過度設計 |
+| 開源許可 | Apache 2.0 | 企業友好，允許商業使用 |
+| Chunk 策略 | 4 Chunk 漸進交付 | 每個 Chunk 範圍清晰、風險可控 |
 
 ## Tech Stack（沿用 Phase 1-3 + 新增）
 
 - 沿用：Spring Boot 3.x + JDK 21 + PostgreSQL 16 + Redis 7 + Spring Security + Spring Data JPA + Flyway
 - 沿用前端：React 19 + TypeScript + Vite + TanStack Router + TanStack Query + shadcn/ui + Tailwind CSS
-- 新增后端：spring-security-crypto（BCrypt）、Micrometer Prometheus Registry
-- 新增前端：rehype-sanitize（XSS 防护）
+- 新增後端：spring-security-crypto（BCrypt）、Micrometer Prometheus Registry
+- 新增前端：rehype-sanitize（XSS 防護）
 
 ---
 
-## 1. 数据库迁移（V4__phase4_auth_governance.sql）
+## 1. 資料庫遷移（V4__phase4_auth_governance.sql）
 
 Phase 3 已有表：`user_account`, `identity_binding`, `api_token`, `role`, `permission`, `role_permission`, `user_role_binding`, `namespace`, `namespace_member`, `audit_log`, `skill`, `skill_version`, `skill_file`, `skill_tag`, `skill_search_document`, `review_task`, `promotion_request`, `skill_star`, `skill_rating`, `idempotency_record`
 
 ### 1.1 新增表
 
-#### local_credential（本地密码凭证）
+#### local_credential（本地密碼憑證）
 
-| 字段 | 类型 | 说明 |
+| 欄位 | 型別 | 說明 |
 |------|------|------|
 | id | BIGSERIAL PK | |
-| user_id | VARCHAR(128) NOT NULL FK → user_account | 关联用户 |
-| username | VARCHAR(64) NOT NULL UNIQUE | 登录用户名（字母数字下划线，3-64 字符） |
-| password_hash | VARCHAR(255) NOT NULL | BCrypt 哈希值 |
-| failed_attempts | INT NOT NULL DEFAULT 0 | 连续失败次数 |
-| locked_until | TIMESTAMP | 锁定截止时间（NULL 表示未锁定） |
+| user_id | VARCHAR(128) NOT NULL FK → user_account | 關聯使用者 |
+| username | VARCHAR(64) NOT NULL UNIQUE | 登入使用者名稱（字母數字下劃線，3-64 字元） |
+| password_hash | VARCHAR(255) NOT NULL | BCrypt 雜湊值 |
+| failed_attempts | INT NOT NULL DEFAULT 0 | 連續失敗次數 |
+| locked_until | TIMESTAMP | 鎖定截止時間（NULL 表示未鎖定） |
 | created_at | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | |
 | updated_at | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | |
 
 索引：
-- `(username)` UNIQUE — 用户名唯一
-- `(user_id)` UNIQUE — 每个用户最多一个本地凭证
+- `(username)` UNIQUE — 使用者名稱唯一
+- `(user_id)` UNIQUE — 每個使用者最多一個本地憑證
 
-#### account_merge_request（账号合并请求）
+#### account_merge_request（賬號合併請求）
 
-| 字段 | 类型 | 说明 |
+| 欄位 | 型別 | 說明 |
 |------|------|------|
 | id | BIGSERIAL PK | |
-| primary_user_id | VARCHAR(128) NOT NULL FK → user_account | 主账号（保留） |
-| secondary_user_id | VARCHAR(128) NOT NULL FK → user_account | 副账号（合并后停用） |
+| primary_user_id | VARCHAR(128) NOT NULL FK → user_account | 主賬號（保留） |
+| secondary_user_id | VARCHAR(128) NOT NULL FK → user_account | 副賬號（合併後停用） |
 | status | VARCHAR(32) NOT NULL DEFAULT 'PENDING' | PENDING / VERIFIED / COMPLETED / CANCELLED |
-| verification_token | VARCHAR(255) | 副账号验证令牌（BCrypt 哈希存储） |
-| token_expires_at | TIMESTAMP | 令牌过期时间（30 分钟） |
-| completed_at | TIMESTAMP | 合并完成时间 |
+| verification_token | VARCHAR(255) | 副賬號驗證令牌（BCrypt 雜湊儲存） |
+| token_expires_at | TIMESTAMP | 令牌過期時間（30 分鐘） |
+| completed_at | TIMESTAMP | 合併完成時間 |
 | created_at | TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP | |
 
 索引：
-- `(primary_user_id, status)` — 用户的合并请求列表
-- `(secondary_user_id) WHERE status = 'PENDING'` — partial unique index，防止重复合并
-- `(verification_token) WHERE status = 'PENDING'` — 令牌查找
+- `(primary_user_id, status)` — 使用者的合併請求列表
+- `(secondary_user_id) WHERE status = 'PENDING'` — partial unique index，防止重複合併
+- `(verification_token) WHERE status = 'PENDING'` — 令牌查詢
 
-### 1.2 Phase 3 表结构调整
+### 1.2 Phase 3 表結構調整
 
-#### skill 表新增字段
+#### skill 表新增欄位
 
 ```sql
 ALTER TABLE skill ADD COLUMN hidden BOOLEAN NOT NULL DEFAULT FALSE;
@@ -82,328 +82,328 @@ ALTER TABLE skill ADD COLUMN hidden_by VARCHAR(128) REFERENCES user_account(id);
 CREATE INDEX idx_skill_hidden ON skill(hidden) WHERE hidden = TRUE;
 ```
 
-#### skill_version 表调整
+#### skill_version 表調整
 
-`skill_version.status` 枚举已包含 YANKED（Phase 2 预留），Phase 4 启用：
+`skill_version.status` 列舉已包含 YANKED（Phase 2 預留），Phase 4 啟用：
 
 ```sql
--- YANKED 状态的版本：精确版本号仍可下载，但不出现在版本列表和搜索结果中
--- 借鉴 crates.io 语义：yank 不是删除，是标记"不推荐"
+-- YANKED 狀態的版本：精確版本號仍可下載，但不出現在版本列表和搜尋結果中
+-- 借鑑 crates.io 語義：yank 不是刪除，是標記"不推薦"
 ALTER TABLE skill_version ADD COLUMN yanked_at TIMESTAMP;
 ALTER TABLE skill_version ADD COLUMN yanked_by VARCHAR(128) REFERENCES user_account(id);
 ALTER TABLE skill_version ADD COLUMN yank_reason TEXT;
 ```
 
-### 1.3 性能优化索引
+### 1.3 效能最佳化索引
 
 ```sql
--- 搜索性能优化
+-- 搜尋效能最佳化
 CREATE INDEX idx_skill_search_doc_rank ON skill_search_document USING gin(search_vector);
 CREATE INDEX idx_skill_namespace_status ON skill(namespace_id, hidden) WHERE hidden = FALSE;
 
--- 审计日志查询优化
+-- 審計日誌查詢最佳化
 CREATE INDEX idx_audit_log_actor_time ON audit_log(actor_id, created_at DESC);
 CREATE INDEX idx_audit_log_target ON audit_log(target_type, target_id, created_at DESC);
 CREATE INDEX idx_audit_log_action_time ON audit_log(action, created_at DESC);
 
--- 下载统计优化
+-- 下載統計最佳化
 CREATE INDEX idx_skill_version_download ON skill_version(skill_id, status) WHERE status = 'PUBLISHED';
 ```
 
 ---
 
-## 2. 本地认证体系
+## 2. 本地認證體系
 
-### 2.1 注册流程
+### 2.1 註冊流程
 
 ```
-用户访问 /register
+使用者訪問 /register
     │
     ▼
-填写表单：username + password + email（可选）
+填寫表單：username + password + email（可選）
     │
     ▼
-前端校验：
-  - username: 3-64 字符，字母数字下划线
-  - password: 8-128 字符，至少包含 3 种字符类型（大写、小写、数字、特殊字符）
+前端校驗：
+  - username: 3-64 字元，字母數字下劃線
+  - password: 8-128 字元，至少包含 3 種字元型別（大寫、小寫、數字、特殊字元）
     │
     ▼
 POST /api/v1/auth/local/register
     │
     ▼
 LocalAuthService.register():
-  ① 检查 username 是否已存在（local_credential.username）
-  ② 检查 email 是否已被 OAuth 用户占用（user_account.email）
-  ③ 密码强度校验（后端二次校验）
-  ④ BCrypt 哈希密码（strength=12）
-  ⑤ 创建 user_account（status=ACTIVE）
-  — 认证方式通过 local_credential 表的存在性隐式判断，不在 user_account 新增字段
-  ⑥ 创建 local_credential
-  ⑦ 写入 audit_log（action=USER_REGISTERED）
+  ① 檢查 username 是否已存在（local_credential.username）
+  ② 檢查 email 是否已被 OAuth 使用者佔用（user_account.email）
+  ③ 密碼強度校驗（後端二次校驗）
+  ④ BCrypt 雜湊密碼（strength=12）
+  ⑤ 建立 user_account（status=ACTIVE）
+  — 認證方式透過 local_credential 表的存在性隱式判斷，不在 user_account 新增欄位
+  ⑥ 建立 local_credential
+  ⑦ 寫入 audit_log（action=USER_REGISTERED）
     │
     ▼
-自动登录：创建 Spring Session
+自動登入：建立 Spring Session
     │
     ▼
-重定向到首页
+重定向到首頁
 ```
 
-### 2.2 登录流程
+### 2.2 登入流程
 
 ```
-用户访问 /login
+使用者訪問 /login
     │
     ▼
-填写表单：username + password
+填寫表單：username + password
     │
     ▼
 POST /api/v1/auth/local/login
     │
     ▼
 LocalAuthService.login():
-  ① 查询 local_credential（by username）
-  ② 检查账号状态：
-     - user_account.status = DISABLED → 返回 403 "账号已被封禁"
-     - locked_until > now → 返回 423 "账号已锁定，请 X 分钟后重试"
-  ③ BCrypt 校验密码
+  ① 查詢 local_credential（by username）
+  ② 檢查賬號狀態：
+     - user_account.status = DISABLED → 返回 403 "賬號已被封禁"
+     - locked_until > now → 返回 423 "賬號已鎖定，請 X 分鐘後重試"
+  ③ BCrypt 校驗密碼
      - 成功 → 重置 failed_attempts = 0，清除 locked_until
-     - 失败 → failed_attempts++
-       - failed_attempts >= 5 → locked_until = now + 15 分钟
-       - 返回 401 "用户名或密码错误"
-  ④ 写入 audit_log（action=USER_LOGIN）
+     - 失敗 → failed_attempts++
+       - failed_attempts >= 5 → locked_until = now + 15 分鐘
+       - 返回 401 "使用者名稱或密碼錯誤"
+  ④ 寫入 audit_log（action=USER_LOGIN）
     │
     ▼
-创建 Spring Session
+建立 Spring Session
     │
     ▼
-返回 200 + 用户信息
+返回 200 + 使用者資訊
 ```
 
-### 2.3 密码策略
+### 2.3 密碼策略
 
 ```java
 public class PasswordPolicy {
     public static final int MIN_LENGTH = 8;
     public static final int MAX_LENGTH = 128;
-    public static final int MIN_CHAR_TYPES = 3; // 至少 3 种字符类型
+    public static final int MIN_CHAR_TYPES = 3; // 至少 3 種字元型別
 
-    // 字符类型：大写字母、小写字母、数字、特殊字符
+    // 字元型別：大寫字母、小寫字母、數字、特殊字元
     public ValidationResult validate(String password) {
-        // 1. 长度检查
-        // 2. 字符类型计数
-        // 3. 常见弱密码黑名单检查（top 1000）
+        // 1. 長度檢查
+        // 2. 字元型別計數
+        // 3. 常見弱密碼黑名單檢查（top 1000）
     }
 }
 ```
 
-### 2.4 登录锁定机制
+### 2.4 登入鎖定機制
 
-| 参数 | 值 | 说明 |
+| 引數 | 值 | 說明 |
 |------|------|------|
-| 最大失败次数 | 5 | 连续失败 5 次触发锁定 |
-| 锁定时长 | 15 分钟 | 锁定期间拒绝登录 |
-| 重置条件 | 成功登录 | 成功登录后 failed_attempts 归零 |
-| 锁定粒度 | 账号级 | 按 username 锁定，非 IP 级 |
+| 最大失敗次數 | 5 | 連續失敗 5 次觸發鎖定 |
+| 鎖定時長 | 15 分鐘 | 鎖定期間拒絕登入 |
+| 重置條件 | 成功登入 | 成功登入後 failed_attempts 歸零 |
+| 鎖定粒度 | 賬號級 | 按 username 鎖定，非 IP 級 |
 
-### 2.5 API 端点
+### 2.5 API 端點
 
-| 方法 | 路径 | 说明 |
+| 方法 | 路徑 | 說明 |
 |------|------|------|
-| POST | `/api/v1/auth/local/register` | 用户名密码注册 |
-| POST | `/api/v1/auth/local/login` | 用户名密码登录 |
-| POST | `/api/v1/auth/local/change-password` | 修改密码（需登录） |
+| POST | `/api/v1/auth/local/register` | 使用者名稱密碼註冊 |
+| POST | `/api/v1/auth/local/login` | 使用者名稱密碼登入 |
+| POST | `/api/v1/auth/local/change-password` | 修改密碼（需登入） |
 
-### 2.6 前端页面
+### 2.6 前端頁面
 
-- `/register` — 注册页（username + password + 密码强度指示器）
-- `/login` 页面扩展 — 增加用户名密码登录表单（与 OAuth 登录按钮并列）
-- `/settings/security` — 密码修改（已有本地凭证时显示）
+- `/register` — 註冊頁（username + password + 密碼強度指示器）
+- `/login` 頁面擴充套件 — 增加使用者名稱密碼登入表單（與 OAuth 登入按鈕並列）
+- `/settings/security` — 密碼修改（已有本地憑證時顯示）
 
-### 2.7 Spring Security 集成
+### 2.7 Spring Security 整合
 
-本地登录与 OAuth 登录并存，共享同一套 Session 和 RBAC 体系：
+本地登入與 OAuth 登入並存，共享同一套 Session 和 RBAC 體系：
 
 ```java
 @Bean
 public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
     http
-        // 现有 OAuth2 登录配置保持不变
+        // 現有 OAuth2 登入配置保持不變
         .oauth2Login(oauth2 -> oauth2
             .userInfoEndpoint(info -> info.userService(customOAuth2UserService))
             .successHandler(oAuth2SuccessHandler)
             .failureHandler(oAuth2FailureHandler))
-        // 新增：本地登录 API 不需要 CSRF 豁免（使用 JSON body，非 form）
-        // LocalAuthController 手动处理认证，不使用 Spring Security formLogin
+        // 新增：本地登入 API 不需要 CSRF 豁免（使用 JSON body，非 form）
+        // LocalAuthController 手動處理認證，不使用 Spring Security formLogin
         ;
 }
 ```
 
-本地登录不使用 Spring Security 的 `formLogin`，而是通过自定义 `LocalAuthController` + `LocalAuthService` 手动校验密码并创建 Session。原因：
-- 避免与 OAuth2 登录的 `successHandler` 冲突
-- JSON API 风格与现有 API 一致
-- 更灵活的错误响应控制
+本地登入不使用 Spring Security 的 `formLogin`，而是透過自定義 `LocalAuthController` + `LocalAuthService` 手動校驗密碼並建立 Session。原因：
+- 避免與 OAuth2 登入的 `successHandler` 衝突
+- JSON API 風格與現有 API 一致
+- 更靈活的錯誤響應控制
 
 ---
 
-## 3. 多账号合并
+## 3. 多賬號合併
 
-### 3.1 合并流程
+### 3.1 合併流程
 
 ```
-用户 A（主账号，已登录）发起合并
+使用者 A（主賬號，已登入）發起合併
     │
     ▼
 ① POST /api/v1/account/merge/initiate
    Body: { "secondaryIdentifier": "username 或 OAuth provider:externalId" }
     │
     ▼
-② 后端创建 account_merge_request（status=PENDING）
-   生成 verification_token（随机 32 字节 + BCrypt 哈希存储）
-   token_expires_at = now + 30 分钟
+② 後端建立 account_merge_request（status=PENDING）
+   生成 verification_token（隨機 32 位元組 + BCrypt 雜湊儲存）
+   token_expires_at = now + 30 分鐘
     │
     ▼
-③ 返回验证方式：
-   - 副账号是本地账号 → 要求输入副账号密码
-   - 副账号是 OAuth 账号 → 要求通过 OAuth 重新登录验证
+③ 返回驗證方式：
+   - 副賬號是本地賬號 → 要求輸入副賬號密碼
+   - 副賬號是 OAuth 賬號 → 要求透過 OAuth 重新登入驗證
     │
     ▼
 ④ POST /api/v1/account/merge/{id}/verify
-   - 本地账号：Body: { "password": "xxx" }
-   - OAuth 账号：通过 OAuth 回调验证（带 merge_request_id 参数）
+   - 本地賬號：Body: { "password": "xxx" }
+   - OAuth 賬號：透過 OAuth 回撥驗證（帶 merge_request_id 引數）
     │
     ▼
-⑤ 验证通过 → status = VERIFIED
+⑤ 驗證透過 → status = VERIFIED
     │
     ▼
 ⑥ POST /api/v1/account/merge/{id}/confirm
-   用户确认合并（显示将要合并的数据摘要）
+   使用者確認合併（顯示將要合併的資料摘要）
     │
     ▼
-⑦ 执行合并（事务内）：
-   a. 迁移 identity_binding：secondary → primary
-   b. 迁移 local_credential：secondary → primary（如果 primary 没有）
-   c. 迁移 skill ownership：UPDATE skill SET owner_id = primary WHERE owner_id = secondary
-   d. 迁移 namespace_member：合并角色取高权限
-   e. 迁移 api_token：secondary → primary
-   f. 迁移 skill_star、skill_rating：secondary → primary（冲突时保留 primary）
-   g. 合并 user_role_binding：取并集
-   h. 标记 secondary user_account.status = MERGED
-   i. 写入 audit_log（action=ACCOUNT_MERGED，detail 包含完整迁移清单）
+⑦ 執行合併（事務內）：
+   a. 遷移 identity_binding：secondary → primary
+   b. 遷移 local_credential：secondary → primary（如果 primary 沒有）
+   c. 遷移 skill ownership：UPDATE skill SET owner_id = primary WHERE owner_id = secondary
+   d. 遷移 namespace_member：合併角色取高許可權
+   e. 遷移 api_token：secondary → primary
+   f. 遷移 skill_star、skill_rating：secondary → primary（衝突時保留 primary）
+   g. 合併 user_role_binding：取並集
+   h. 標記 secondary user_account.status = MERGED
+   i. 寫入 audit_log（action=ACCOUNT_MERGED，detail 包含完整遷移清單）
     │
     ▼
-⑧ status = COMPLETED，返回合并结果摘要
+⑧ status = COMPLETED，返回合併結果摘要
 ```
 
-### 3.2 合并 API
+### 3.2 合併 API
 
-| 方法 | 路径 | 说明 |
+| 方法 | 路徑 | 說明 |
 |------|------|------|
-| POST | `/api/v1/auth/merge/initiate` | 发起合并请求 |
-| POST | `/api/v1/auth/merge/{id}/verify` | 验证副账号身份 |
-| POST | `/api/v1/auth/merge/{id}/confirm` | 确认执行合并 |
-| POST | `/api/v1/auth/merge/{id}/cancel` | 取消合并请求 |
-| GET | `/api/v1/auth/merge/history` | 合并历史记录 |
+| POST | `/api/v1/auth/merge/initiate` | 發起合併請求 |
+| POST | `/api/v1/auth/merge/{id}/verify` | 驗證副賬號身份 |
+| POST | `/api/v1/auth/merge/{id}/confirm` | 確認執行合併 |
+| POST | `/api/v1/auth/merge/{id}/cancel` | 取消合併請求 |
+| GET | `/api/v1/auth/merge/history` | 合併歷史記錄 |
 
-### 3.3 安全约束
+### 3.3 安全約束
 
-- 合并操作不可逆，确认前展示完整数据迁移摘要
-- verification_token 30 分钟过期，过期后需重新发起
-- 同一副账号同时只能有一个 PENDING 合并请求（partial unique index）
-- MERGED 状态的用户无法登录，无法被再次合并
-- 合并操作写入 audit_log，包含完整迁移清单
+- 合併操作不可逆，確認前展示完整資料遷移摘要
+- verification_token 30 分鐘過期，過期後需重新發起
+- 同一副賬號同時只能有一個 PENDING 合併請求（partial unique index）
+- MERGED 狀態的使用者無法登入，無法被再次合併
+- 合併操作寫入 audit_log，包含完整遷移清單
 
-### 3.4 前端页面
+### 3.4 前端頁面
 
-- `/settings/accounts` — 账号管理页
-  - 显示当前绑定的所有登录方式（OAuth + 本地）
-  - "合并其他账号"按钮 → 合并向导
-  - 合并历史记录
+- `/settings/accounts` — 賬號管理頁
+  - 顯示當前繫結的所有登入方式（OAuth + 本地）
+  - "合併其他賬號"按鈕 → 合併嚮導
+  - 合併歷史記錄
 
 ---
 
-## 4. 技能治理（隐藏/恢复/版本撤回）
+## 4. 技能治理（隱藏/恢復/版本撤回）
 
-### 4.1 技能隐藏/恢复
+### 4.1 技能隱藏/恢復
 
-隐藏技能后，技能不出现在搜索结果和公开列表中，但已有的直接链接仍可访问（显示"此技能已被管理员隐藏"提示）。
+隱藏技能後，技能不出現在搜尋結果和公開列表中，但已有的直接連結仍可訪問（顯示"此技能已被管理員隱藏"提示）。
 
 ```
 POST /api/v1/admin/skills/{id}/hide
-  权限：SKILL_ADMIN / SUPER_ADMIN
+  許可權：SKILL_ADMIN / SUPER_ADMIN
   效果：
     - skill.hidden = true
     - skill.hidden_at = now
     - skill.hidden_by = current_user_id
-    - 搜索索引中移除
-    - audit_log 记录
+    - 搜尋索引中移除
+    - audit_log 記錄
 
 POST /api/v1/admin/skills/{id}/unhide
-  权限：SKILL_ADMIN / SUPER_ADMIN
+  許可權：SKILL_ADMIN / SUPER_ADMIN
   效果：
     - skill.hidden = false
-    - 搜索索引中恢复
-    - audit_log 记录
+    - 搜尋索引中恢復
+    - audit_log 記錄
 ```
 
 ### 4.2 版本撤回（YANK）
 
-借鉴 crates.io 语义：YANKED 版本不出现在版本列表和搜索中，但通过精确版本号仍可下载（兼容已有 lockfile）。
+借鑑 crates.io 語義：YANKED 版本不出現在版本列表和搜尋中，但透過精確版本號仍可下載（相容已有 lockfile）。
 
 ```
 POST /api/v1/admin/skills/{id}/yank/{versionId}
-  权限：SKILL_ADMIN / SUPER_ADMIN
+  許可權：SKILL_ADMIN / SUPER_ADMIN
   Body: { "reason": "安全漏洞 CVE-2026-xxxx" }
   效果：
     - skill_version.status = YANKED
     - skill_version.yanked_at = now
     - skill_version.yanked_by = current_user_id
     - skill_version.yank_reason = reason
-    - 如果是 latest_version_id → 回退到上一个 PUBLISHED 版本
-    - 搜索索引更新
-    - audit_log 记录
+    - 如果是 latest_version_id → 回退到上一個 PUBLISHED 版本
+    - 搜尋索引更新
+    - audit_log 記錄
 
 POST /api/v1/admin/skills/{id}/unyank/{versionId}
-  权限：SKILL_ADMIN / SUPER_ADMIN
+  許可權：SKILL_ADMIN / SUPER_ADMIN
   效果：
     - skill_version.status = PUBLISHED
     - 清除 yanked_at/yanked_by/yank_reason
-    - audit_log 记录
+    - audit_log 記錄
 ```
 
-### 4.3 下载行为
+### 4.3 下載行為
 
-| 请求方式 | YANKED 版本行为 |
+| 請求方式 | YANKED 版本行為 |
 |----------|----------------|
-| `GET /download`（不带版本号） | 返回最新非 YANKED 的 PUBLISHED 版本 |
-| `GET /versions/{version}/download`（精确版本） | 正常下载，响应头附加 `X-Skillhub-Yanked: true` + `X-Skillhub-Yank-Reason: ...` |
-| `GET /resolve`（不带版本号） | 返回最新非 YANKED 的 PUBLISHED 版本 |
-| `GET /resolve?version=1.0.0`（精确版本） | 正常解析，响应中标记 `yanked: true` |
+| `GET /download`（不帶版本號） | 返回最新非 YANKED 的 PUBLISHED 版本 |
+| `GET /versions/{version}/download`（精確版本） | 正常下載，響應頭附加 `X-Skillhub-Yanked: true` + `X-Skillhub-Yank-Reason: ...` |
+| `GET /resolve`（不帶版本號） | 返回最新非 YANKED 的 PUBLISHED 版本 |
+| `GET /resolve?version=1.0.0`（精確版本） | 正常解析，響應中標記 `yanked: true` |
 
 ---
 
-## 5. 审计日志查询
+## 5. 審計日誌查詢
 
-### 5.1 查询 API
+### 5.1 查詢 API
 
 ```
 GET /api/v1/admin/audit-logs
-  权限：AUDITOR / SUPER_ADMIN
+  許可權：AUDITOR / SUPER_ADMIN
   Query Params:
     - actor_id: BIGINT — 操作人
-    - action: STRING — 操作类型（USER_LOGIN, SKILL_PUBLISHED, REVIEW_APPROVED, ...）
-    - target_type: STRING — 目标类型（USER, SKILL, SKILL_VERSION, NAMESPACE, ...）
-    - target_id: BIGINT — 目标 ID
-    - from: TIMESTAMP — 起始时间
-    - to: TIMESTAMP — 截止时间
-    - page: INT — 页码
-    - size: INT — 每页条数（默认 20，最大 100）
+    - action: STRING — 操作型別（USER_LOGIN, SKILL_PUBLISHED, REVIEW_APPROVED, ...）
+    - target_type: STRING — 目標型別（USER, SKILL, SKILL_VERSION, NAMESPACE, ...）
+    - target_id: BIGINT — 目標 ID
+    - from: TIMESTAMP — 起始時間
+    - to: TIMESTAMP — 截止時間
+    - page: INT — 頁碼
+    - size: INT — 每頁條數（預設 20，最大 100）
 ```
 
-响应：
+響應：
 ```json
 {
   "code": 0,
-  "msg": "获取成功",
+  "msg": "獲取成功",
   "data": {
     "items": [
       {
@@ -427,21 +427,21 @@ GET /api/v1/admin/audit-logs
 }
 ```
 
-### 5.2 前端审计日志页
+### 5.2 前端審計日誌頁
 
 - 路由：`/admin/audit-logs`
-- 权限：AUDITOR / SUPER_ADMIN
+- 許可權：AUDITOR / SUPER_ADMIN
 - 功能：
-  - 时间范围筛选（日期选择器）
-  - 操作类型下拉筛选
-  - 操作人搜索（模糊匹配）
-  - 目标类型 + 目标 ID 筛选
-  - 分页浏览
-  - 详情展开（JSON 格式化显示）
+  - 時間範圍篩選（日期選擇器）
+  - 操作型別下拉篩選
+  - 操作人搜尋（模糊匹配）
+  - 目標型別 + 目標 ID 篩選
+  - 分頁瀏覽
+  - 詳情展開（JSON 格式化顯示）
 
 ---
 
-## 6. 可观测性（Prometheus 指标）
+## 6. 可觀測性（Prometheus 指標）
 
 ### 6.1 Spring Boot Actuator + Micrometer
 
@@ -463,19 +463,19 @@ management:
         enabled: true
 ```
 
-### 6.2 自定义业务指标
+### 6.2 自定義業務指標
 
-| 指标名 | 类型 | 标签 | 说明 |
+| 指標名 | 型別 | 標籤 | 說明 |
 |--------|------|------|------|
-| `skillhub_skill_publish_total` | Counter | namespace, status | 技能发布计数 |
-| `skillhub_skill_download_total` | Counter | namespace, slug | 技能下载计数 |
-| `skillhub_review_total` | Counter | action(approve/reject), namespace | 审核操作计数 |
-| `skillhub_auth_login_total` | Counter | method(oauth/local), result(success/fail) | 登录计数 |
-| `skillhub_auth_lockout_total` | Counter | — | 账号锁定计数 |
-| `skillhub_search_duration_seconds` | Histogram | — | 搜索耗时分布 |
-| `skillhub_active_sessions` | Gauge | — | 活跃 Session 数 |
+| `skillhub_skill_publish_total` | Counter | namespace, status | 技能發布計數 |
+| `skillhub_skill_download_total` | Counter | namespace, slug | 技能下載計數 |
+| `skillhub_review_total` | Counter | action(approve/reject), namespace | 稽核操作計數 |
+| `skillhub_auth_login_total` | Counter | method(oauth/local), result(success/fail) | 登入計數 |
+| `skillhub_auth_lockout_total` | Counter | — | 賬號鎖定計數 |
+| `skillhub_search_duration_seconds` | Histogram | — | 搜尋耗時分佈 |
+| `skillhub_active_sessions` | Gauge | — | 活躍 Session 數 |
 
-### 6.3 实现方式
+### 6.3 實現方式
 
 ```java
 @Component
@@ -500,64 +500,64 @@ public class SkillhubMetrics {
 }
 ```
 
-端点：`GET /actuator/prometheus` — Prometheus 拉取指标（仅内网可访问，通过 Spring Security 配置限制）
+端點：`GET /actuator/prometheus` — Prometheus 拉取指標（僅內網可訪問，透過 Spring Security 配置限制）
 
 ---
 
-## 7. 性能优化
+## 7. 效能最佳化
 
-### 7.1 数据库查询优化
+### 7.1 資料庫查詢最佳化
 
-除 1.3 节的索引外，还需：
+除 1.3 節的索引外，還需：
 
-- 慢查询日志：PostgreSQL `log_min_duration_statement = 500`（记录 >500ms 的查询）
-- 连接池调优：HikariCP `maximum-pool-size` 根据部署环境调整（开发 5，生产 20）
-- 搜索查询优化：确保 `skill_search_document` 的 GIN 索引被正确使用
+- 慢查詢日誌：PostgreSQL `log_min_duration_statement = 500`（記錄 >500ms 的查詢）
+- 連線池調優：HikariCP `maximum-pool-size` 根據部署環境調整（開發 5，生產 20）
+- 搜尋查詢最佳化：確保 `skill_search_document` 的 GIN 索引被正確使用
 
-### 7.2 对象存储优化（S3 预签名 URL）
+### 7.2 物件儲存最佳化（S3 預簽名 URL）
 
 ```java
 @Service
 public class StorageService {
-    // 现有方法：直接代理下载
+    // 現有方法：直接代理下載
     public StreamingResponseBody download(String key) { ... }
 
-    // 新增：预签名 URL 下载（S3 实现）
+    // 新增：預簽名 URL 下載（S3 實現）
     public String generatePresignedUrl(String key, Duration expiry) {
-        // S3 实现：生成预签名 URL（默认 10 分钟有效）
-        // LocalFile 实现：返回 null（降级为代理下载）
+        // S3 實現：生成預簽名 URL（預設 10 分鐘有效）
+        // LocalFile 實現：返回 null（降級為代理下載）
     }
 }
 ```
 
-下载 Controller 改造：
+下載 Controller 改造：
 
 ```java
 @GetMapping("/download")
 public ResponseEntity<?> download(...) {
     String presignedUrl = storageService.generatePresignedUrl(key, Duration.ofMinutes(10));
     if (presignedUrl != null) {
-        // S3 模式：302 重定向到预签名 URL
+        // S3 模式：302 重定向到預簽名 URL
         return ResponseEntity.status(302)
             .header("Location", presignedUrl)
             .build();
     }
-    // LocalFile 模式：直接代理下载（保持现有行为）
+    // LocalFile 模式：直接代理下載（保持現有行為）
     return ResponseEntity.ok()
         .contentType(MediaType.APPLICATION_OCTET_STREAM)
         .body(storageService.download(key));
 }
 ```
 
-### 7.3 前端性能优化
+### 7.3 前端效能最佳化
 
-#### 代码分割（TanStack Router lazy routes）
+#### 程式碼分割（TanStack Router lazy routes）
 
 ```typescript
-// 改造前：所有页面同步导入
+// 改造前：所有頁面同步匯入
 import { SkillDetailPage } from './pages/skill-detail'
 
-// 改造后：按路由懒加载
+// 改造後：按路由懶載入
 const SkillDetailPage = lazy(() => import('./pages/skill-detail'))
 
 // TanStack Router 配置
@@ -570,18 +570,18 @@ const skillDetailRoute = createRoute({
 
 #### 分割策略
 
-| 路由组 | 分割方式 | 说明 |
+| 路由組 | 分割方式 | 說明 |
 |--------|----------|------|
-| 公开页面（首页、搜索、详情） | 主 bundle | 首屏必需 |
-| 认证页面（登录、注册） | lazy | 非首屏 |
-| Dashboard 页面 | lazy | 需登录 |
-| Admin 页面 | lazy | 仅管理员 |
-| 审核中心 | lazy | 仅审核人 |
+| 公開頁面（首頁、搜尋、詳情） | 主 bundle | 首屏必需 |
+| 認證頁面（登入、註冊） | lazy | 非首屏 |
+| Dashboard 頁面 | lazy | 需登入 |
+| Admin 頁面 | lazy | 僅管理員 |
+| 稽核中心 | lazy | 僅稽核人 |
 
-#### 其他优化
+#### 其他最佳化
 
-- 图片懒加载：用户头像、技能图标使用 `loading="lazy"`
-- API 响应缓存：TanStack Query `staleTime` 合理设置（搜索 30s，详情 60s，用户信息 300s）
+- 圖片懶載入：使用者頭像、技能圖示使用 `loading="lazy"`
+- API 響應快取：TanStack Query `staleTime` 合理設定（搜尋 30s，詳情 60s，使用者資訊 300s）
 
 ---
 
@@ -594,15 +594,15 @@ server:
   servlet:
     session:
       cookie:
-        http-only: true      # 防止 JS 读取 Session Cookie
-        secure: true          # 仅 HTTPS 传输（生产环境）
-        same-site: lax        # 防止 CSRF（允许顶级导航）
-        max-age: 28800        # 8 小时
+        http-only: true      # 防止 JS 讀取 Session Cookie
+        secure: true          # 僅 HTTPS 傳輸（生產環境）
+        same-site: lax        # 防止 CSRF（允許頂級導航）
+        max-age: 28800        # 8 小時
 ```
 
-### 8.2 XSS 防护
+### 8.2 XSS 防護
 
-SKILL.md 内容渲染使用 `rehype-sanitize` 过滤危险 HTML：
+SKILL.md 內容渲染使用 `rehype-sanitize` 過濾危險 HTML：
 
 ```typescript
 import rehypeSanitize from 'rehype-sanitize'
@@ -617,7 +617,7 @@ import ReactMarkdown from 'react-markdown'
 </ReactMarkdown>
 ```
 
-### 8.3 安全响应头
+### 8.3 安全響應頭
 
 ```java
 @Bean
@@ -634,23 +634,23 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 }
 ```
 
-### 8.4 密码安全
+### 8.4 密碼安全
 
-- BCrypt strength=12（约 250ms/次，防暴力破解）
-- 密码不在日志中输出（LoggingFilter 排除 password 字段）
-- 密码修改后使该用户所有其他 Session 失效
-- API 响应中永远不返回 password_hash
+- BCrypt strength=12（約 250ms/次，防暴力破解）
+- 密碼不在日誌中輸出（LoggingFilter 排除 password 欄位）
+- 密碼修改後使該使用者所有其他 Session 失效
+- API 響應中永遠不返回 password_hash
 
 ---
 
-## 9. Docker 一键启动
+## 9. Docker 一鍵啟動
 
-### 9.1 docker-compose.yml（开发环境）
+### 9.1 docker-compose.yml（開發環境）
 
-现有 `docker-compose.yml` 已包含 PostgreSQL、Redis、MinIO。Phase 4 扩展为完整的一键启动方案：
+現有 `docker-compose.yml` 已包含 PostgreSQL、Redis、MinIO。Phase 4 擴充套件為完整的一鍵啟動方案：
 
 ```yaml
-# docker-compose.yml — 开发环境完整启动
+# docker-compose.yml — 開發環境完整啟動
 services:
   postgres:
     image: postgres:16-alpine
@@ -717,7 +717,7 @@ volumes:
   minio_data:
 ```
 
-### 9.2 Dockerfile（多阶段构建）
+### 9.2 Dockerfile（多階段構建）
 
 ```dockerfile
 # === Backend Build ===
@@ -725,7 +725,7 @@ FROM eclipse-temurin:21-jdk-alpine AS backend-build
 WORKDIR /app
 COPY pom.xml .
 COPY skillhub-*/pom.xml ./
-# Maven 依赖缓存层
+# Maven 依賴快取層
 RUN mvn dependency:go-offline -B
 COPY . .
 RUN mvn package -DskipTests -B
@@ -750,7 +750,7 @@ COPY deploy/nginx/default.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 ```
 
-### 9.3 种子数据（ApplicationRunner）
+### 9.3 種子資料（ApplicationRunner）
 
 ```java
 @Component
@@ -767,16 +767,16 @@ public class SeedDataRunner implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        if (userRepo.count() > 0) return; // 幂等：已有数据则跳过
+        if (userRepo.count() > 0) return; // 冪等：已有資料則跳過
 
-        // 创建管理员账号（密码已 BCrypt 哈希）
+        // 建立管理員賬號（密碼已 BCrypt 雜湊）
         var admin = new UserAccount();
         admin.setDisplayName("Admin");
         admin.setEmail("admin@skillhub.dev");
         admin.setStatus(UserStatus.ACTIVE);
         userRepo.save(admin);
 
-        // 创建本地凭证
+        // 建立本地憑證
         var credential = new LocalCredential();
         credential.setUserId(admin.getId());
         credential.setUsername("admin");
@@ -790,11 +790,11 @@ public class SeedDataRunner implements ApplicationRunner {
         binding.setRoleId(superAdminRole.getId());
         userRoleBindingRepo.save(binding);
 
-        // 创建全局命名空间
+        // 建立全域性名稱空間
         var globalNs = new Namespace();
         globalNs.setSlug("global");
         globalNs.setDisplayName("Global");
-        globalNs.setDescription("全局公共命名空间");
+        globalNs.setDescription("全域性公共名稱空間");
         namespaceRepo.save(globalNs);
     }
 }
@@ -809,7 +809,7 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # SPA 路由：所有非文件请求回退到 index.html
+    # SPA 路由：所有非檔案請求回退到 index.html
     location / {
         try_files $uri $uri/ /index.html;
     }
@@ -823,7 +823,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # OAuth 回调代理
+    # OAuth 回撥代理
     location /oauth2/ {
         proxy_pass http://backend:8080;
         proxy_set_header Host $host;
@@ -836,14 +836,14 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
     }
 
-    # ClawHub CLI 兼容层服务发现
+    # ClawHub CLI 相容層服務發現
     location /.well-known/ {
         proxy_pass http://backend:8080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
     }
 
-    # Actuator 端点（仅内网）
+    # Actuator 端點（僅內網）
     location /actuator/ {
         proxy_pass http://backend:8080;
         allow 10.0.0.0/8;
@@ -852,7 +852,7 @@ server {
         deny all;
     }
 
-    # 静态资源缓存
+    # 靜態資源快取
     location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
         expires 30d;
         add_header Cache-Control "public, immutable";
@@ -862,9 +862,9 @@ server {
 
 ---
 
-## 10. K8s 基础部署
+## 10. K8s 基礎部署
 
-### 10.1 Deployment（后端）
+### 10.1 Deployment（後端）
 
 ```yaml
 # deploy/k8s/backend-deployment.yaml
@@ -1096,36 +1096,36 @@ stringData:
 
 ---
 
-## 11. 开源项目基础设施
+## 11. 開源專案基礎設施
 
 ### 11.1 README.md
 
 ```markdown
 # skillhub
 
-企业级技能注册中心，支持技能发布、版本管理、审核流程和 CLI 工具链。
+企業級技能註冊中心，支援技能發布、版本管理、稽核流程和 CLI 工具鏈。
 
 ## 功能特性
 
-- 技能发布与版本管理（语义化版本、标签、草稿/审核/发布流程）
-- 命名空间隔离（团队空间 + 全局空间）
-- 多种认证方式（GitHub OAuth + 用户名密码）
-- 完整的 RBAC 权限体系
-- CLI 工具支持（OAuth Device Flow 认证）
-- ClawHub CLI 兼容层
-- 全文搜索（PostgreSQL Full-Text Search）
-- 评分与收藏
-- 审计日志
-- Prometheus 可观测性指标
+- 技能發布與版本管理（語義化版本、標籤、草稿/稽核/發布流程）
+- 名稱空間隔離（團隊空間 + 全域性空間）
+- 多種認證方式（GitHub OAuth + 使用者名稱密碼）
+- 完整的 RBAC 許可權體系
+- CLI 工具支援（OAuth Device Flow 認證）
+- ClawHub CLI 相容層
+- 全文搜尋（PostgreSQL Full-Text Search）
+- 評分與收藏
+- 審計日誌
+- Prometheus 可觀測性指標
 
-## 快速开始
+## 快速開始
 
-### 前置条件
+### 前置條件
 
 - Docker & Docker Compose
 - Git
 
-### 一键启动
+### 一鍵啟動
 
 \```bash
 git clone https://github.com/your-org/skillhub.git
@@ -1133,20 +1133,20 @@ cd skillhub
 docker compose up -d
 \```
 
-服务启动后访问：
+服務啟動後訪問：
 - 前端：http://localhost:3000
-- 后端 API：http://localhost:8080
-- MinIO 控制台：http://localhost:9001（minioadmin / minioadmin）
+- 後端 API：http://localhost:8080
+- MinIO 控制檯：http://localhost:9001（minioadmin / minioadmin）
 
-默认管理员账号：`admin` / `Admin@2026`
+預設管理員賬號：`admin` / `Admin@2026`
 
-### 本地开发
+### 本地開發
 
 \```bash
-# 启动基础设施
+# 啟動基礎設施
 docker compose up -d postgres redis minio
 
-# 后端（需要 JDK 21 + Maven）
+# 後端（需要 JDK 21 + Maven）
 cd skillhub-app
 mvn spring-boot:run -Dspring-boot.run.profiles=local
 
@@ -1156,45 +1156,45 @@ npm install
 npm run dev
 \```
 
-## 技术栈
+## 技術棧
 
-| 层级 | 技术 |
+| 層級 | 技術 |
 |------|------|
-| 后端 | Spring Boot 3.x, JDK 21, Spring Security, Spring Data JPA |
+| 後端 | Spring Boot 3.x, JDK 21, Spring Security, Spring Data JPA |
 | 前端 | React 19, TypeScript, Vite, TanStack Router/Query, shadcn/ui |
-| 数据库 | PostgreSQL 16, Redis 7 |
-| 对象存储 | MinIO (S3 兼容) |
+| 資料庫 | PostgreSQL 16, Redis 7 |
+| 物件儲存 | MinIO (S3 相容) |
 | 部署 | Docker Compose, Kubernetes |
 
-## 项目结构
+## 專案結構
 
 \```
 skillhub/
-├── skillhub-app/          # Spring Boot 启动模块
-├── skillhub-core/         # 领域模型 + 服务
-├── skillhub-infra/        # 基础设施（存储、缓存）
-├── skillhub-security/     # 认证授权
+├── skillhub-app/          # Spring Boot 啟動模組
+├── skillhub-core/         # 領域模型 + 服務
+├── skillhub-infra/        # 基礎設施（儲存、快取）
+├── skillhub-security/     # 認證授權
 ├── skillhub-api/          # REST Controller
 ├── skillhub-common/       # 公共工具
 ├── web/                   # React 前端
 ├── deploy/                # 部署配置（Nginx、K8s）
-└── docs/                  # 设计文档
+└── docs/                  # 設計檔案
 \```
 
-## 文档
+## 檔案
 
-- [产品方向](docs/00-product-direction.md)
-- [系统架构](docs/01-system-architecture.md)
-- [领域模型](docs/02-domain-model.md)
-- [认证设计](docs/03-authentication-design.md)
-- [API 设计](docs/06-api-design.md)
-- [交付路线](docs/10-delivery-roadmap.md)
+- [產品方向](docs/00-product-direction.md)
+- [系統架構](docs/01-system-architecture.md)
+- [領域模型](docs/02-domain-model.md)
+- [認證設計](docs/03-authentication-design.md)
+- [API 設計](docs/06-api-design.md)
+- [交付路線](docs/10-delivery-roadmap.md)
 
-## 贡献
+## 貢獻
 
-请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 了解贡献流程。
+請閱讀 [CONTRIBUTING.md](CONTRIBUTING.md) 瞭解貢獻流程。
 
-## 许可证
+## 許可證
 
 [Apache License 2.0](LICENSE)
 ```
@@ -1202,51 +1202,51 @@ skillhub/
 ### 11.2 CONTRIBUTING.md
 
 ```markdown
-# 贡献指南
+# 貢獻指南
 
-感谢你对 skillhub 的关注！以下是参与贡献的流程。
+感謝你對 skillhub 的關注！以下是參與貢獻的流程。
 
-## 开发环境
+## 開發環境
 
-1. Fork 并 clone 仓库
-2. 安装依赖：JDK 21、Maven 3.9+、Node.js 20+、Docker
-3. 启动基础设施：`docker compose up -d postgres redis minio`
-4. 后端：`mvn spring-boot:run -Dspring-boot.run.profiles=local`
+1. Fork 並 clone 倉庫
+2. 安裝依賴：JDK 21、Maven 3.9+、Node.js 20+、Docker
+3. 啟動基礎設施：`docker compose up -d postgres redis minio`
+4. 後端：`mvn spring-boot:run -Dspring-boot.run.profiles=local`
 5. 前端：`cd web && npm install && npm run dev`
 
-## 提交规范
+## 提交規範
 
 使用 [Conventional Commits](https://www.conventionalcommits.org/)：
 
 - `feat(scope): 描述` — 新功能
-- `fix(scope): 描述` — Bug 修复
-- `docs(scope): 描述` — 文档更新
-- `refactor(scope): 描述` — 重构
-- `test(scope): 描述` — 测试
-- `chore(scope): 描述` — 构建/工具
+- `fix(scope): 描述` — Bug 修復
+- `docs(scope): 描述` — 檔案更新
+- `refactor(scope): 描述` — 重構
+- `test(scope): 描述` — 測試
+- `chore(scope): 描述` — 構建/工具
 
 scope 示例：`auth`, `skill`, `web`, `deploy`, `api`
 
 ## Pull Request 流程
 
-1. 从 `main` 创建 feature 分支：`git checkout -b feat/your-feature`
-2. 编写代码和测试
-3. 确保所有测试通过：`mvn verify` + `cd web && npm test`
-4. 提交 PR，填写模板中的信息
+1. 從 `main` 建立 feature 分支：`git checkout -b feat/your-feature`
+2. 編寫程式碼和測試
+3. 確保所有測試透過：`mvn verify` + `cd web && npm test`
+4. 提交 PR，填寫模板中的資訊
 5. 等待 Code Review
 
-## 代码规范
+## 程式碼規範
 
-- 后端：遵循项目现有的 Spring Boot 代码风格
-- 前端：ESLint + Prettier 自动格式化
-- 所有 API 变更需同步更新 OpenAPI spec
-- 新功能需附带单元测试
+- 後端：遵循專案現有的 Spring Boot 程式碼風格
+- 前端：ESLint + Prettier 自動格式化
+- 所有 API 變更需同步更新 OpenAPI spec
+- 新功能需附帶單元測試
 
-## Issue 反馈
+## Issue 反饋
 
-- Bug 报告请使用 Bug Report 模板
-- 功能建议请使用 Feature Request 模板
-- 提问请使用 Discussions
+- Bug 報告請使用 Bug Report 模板
+- 功能建議請使用 Feature Request 模板
+- 提問請使用 Discussions
 ```
 
 ### 11.3 GitHub Issue / PR 模板
@@ -1256,33 +1256,33 @@ scope 示例：`auth`, `skill`, `web`, `deploy`, `api`
 ```markdown
 ---
 name: Bug Report
-about: 报告一个 Bug
+about: 報告一個 Bug
 title: '[Bug] '
 labels: bug
 ---
 
 **描述**
-简要描述 Bug 现象。
+簡要描述 Bug 現象。
 
-**复现步骤**
+**復現步驟**
 1. ...
 2. ...
 3. ...
 
-**期望行为**
-描述你期望的正确行为。
+**期望行為**
+描述你期望的正確行為。
 
-**实际行为**
-描述实际发生的错误行为。
+**實際行為**
+描述實際發生的錯誤行為。
 
-**环境信息**
+**環境資訊**
 - OS:
 - Browser:
 - skillhub 版本:
-- 部署方式（Docker / K8s / 本地开发）:
+- 部署方式（Docker / K8s / 本地開發）:
 
-**截图/日志**
-如有相关截图或错误日志，请附上。
+**截圖/日誌**
+如有相關截圖或錯誤日誌，請附上。
 ```
 
 #### `.github/ISSUE_TEMPLATE/feature_request.md`
@@ -1290,73 +1290,73 @@ labels: bug
 ```markdown
 ---
 name: Feature Request
-about: 提出功能建议
+about: 提出功能建議
 title: '[Feature] '
 labels: enhancement
 ---
 
 **需求描述**
-简要描述你希望实现的功能。
+簡要描述你希望實現的功能。
 
-**使用场景**
-描述这个功能的使用场景和动机。
+**使用場景**
+描述這個功能的使用場景和動機。
 
 **期望方案**
-描述你期望的实现方式。
+描述你期望的實現方式。
 
-**备选方案**
+**備選方案**
 是否有其他替代方案？
 
-**补充信息**
-其他相关信息。
+**補充資訊**
+其他相關資訊。
 ```
 
 #### `.github/pull_request_template.md`
 
 ```markdown
-## 变更说明
+## 變更說明
 
-简要描述本次变更的内容和目的。
+簡要描述本次變更的內容和目的。
 
-## 变更类型
+## 變更型別
 
 - [ ] 新功能（feat）
-- [ ] Bug 修复（fix）
-- [ ] 重构（refactor）
-- [ ] 文档（docs）
-- [ ] 测试（test）
+- [ ] Bug 修復（fix）
+- [ ] 重構（refactor）
+- [ ] 檔案（docs）
+- [ ] 測試（test）
 - [ ] 其他
 
-## 关联 Issue
+## 關聯 Issue
 
 Closes #
 
-## 检查清单
+## 檢查清單
 
-- [ ] 代码已自测通过
-- [ ] 单元测试已添加/更新
-- [ ] API 变更已更新 OpenAPI spec
-- [ ] 文档已更新（如适用）
-- [ ] 无安全风险引入
+- [ ] 程式碼已自測透過
+- [ ] 單元測試已新增/更新
+- [ ] API 變更已更新 OpenAPI spec
+- [ ] 檔案已更新（如適用）
+- [ ] 無安全風險引入
 ```
 
-### 11.4 其他开源文件
+### 11.4 其他開原始檔
 
 #### LICENSE
 
-Apache License 2.0 标准文本。
+Apache License 2.0 標準文字。
 
 #### CODE_OF_CONDUCT.md
 
-采用 [Contributor Covenant v2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)。
+採用 [Contributor Covenant v2.1](https://www.contributor-covenant.org/version/2/1/code_of_conduct/)。
 
-#### .github/FUNDING.yml（可选）
+#### .github/FUNDING.yml（可選）
 
 ```yaml
 github: [your-username]
 ```
 
-#### .gitignore 补充
+#### .gitignore 補充
 
 ```gitignore
 # Phase 4 新增
@@ -1366,189 +1366,189 @@ deploy/k8s/secret.yaml
 
 ---
 
-## 12. Chunk 划分与验收标准
+## 12. Chunk 劃分與驗收標準
 
-### Chunk 1：本地认证 + 多账号合并
+### Chunk 1：本地認證 + 多賬號合併
 
-**范围：** 用户名密码注册/登录 + 密码策略 + 账号锁定 + 多账号合并流程
+**範圍：** 使用者名稱密碼註冊/登入 + 密碼策略 + 賬號鎖定 + 多賬號合併流程
 
-**后端任务：**
-1. Flyway 迁移：`local_credential` 表、`account_merge_request` 表
-2. `LocalAuthService`：注册、登录、密码修改、密码策略校验
-3. `LocalAuthController`：`/api/v1/auth/local/*` 端点
-4. `AccountMergeService`：发起合并、验证、确认、取消
-5. `AccountMergeController`：`/api/v1/auth/merge/*` 端点
-6. Spring Security 配置扩展：本地认证 + OAuth 并存
-7. 种子数据 `SeedDataRunner`（docker profile）
+**後端任務：**
+1. Flyway 遷移：`local_credential` 表、`account_merge_request` 表
+2. `LocalAuthService`：註冊、登入、密碼修改、密碼策略校驗
+3. `LocalAuthController`：`/api/v1/auth/local/*` 端點
+4. `AccountMergeService`：發起合併、驗證、確認、取消
+5. `AccountMergeController`：`/api/v1/auth/merge/*` 端點
+6. Spring Security 配置擴充套件：本地認證 + OAuth 並存
+7. 種子資料 `SeedDataRunner`（docker profile）
 
-**前端任务：**
-1. 注册页 `/register`
-2. 登录页扩展（用户名密码 Tab + OAuth Tab）
-3. 密码修改页 `/settings/security`
-4. 账号合并页 `/settings/accounts`
+**前端任務：**
+1. 註冊頁 `/register`
+2. 登入頁擴充套件（使用者名稱密碼 Tab + OAuth Tab）
+3. 密碼修改頁 `/settings/security`
+4. 賬號合併頁 `/settings/accounts`
 
-**验收标准：**
-1. 用户可通过用户名密码注册，密码强度校验生效
-2. 用户可通过用户名密码登录，登录失败 5 次后锁定 15 分钟
-3. 用户可修改密码，修改后其他 Session 失效
-4. 用户可发起账号合并，验证副账号身份后完成合并
-5. 合并后副账号状态为 MERGED，无法登录
-6. 合并后数据（技能、收藏、角色等）正确迁移到主账号
-7. Docker 启动后种子数据正确初始化（admin 账号可登录）
-8. 所有测试通过
+**驗收標準：**
+1. 使用者可透過使用者名稱密碼註冊，密碼強度校驗生效
+2. 使用者可透過使用者名稱密碼登入，登入失敗 5 次後鎖定 15 分鐘
+3. 使用者可修改密碼，修改後其他 Session 失效
+4. 使用者可發起賬號合併，驗證副賬號身份後完成合並
+5. 合併後副賬號狀態為 MERGED，無法登入
+6. 合併後資料（技能、收藏、角色等）正確遷移到主賬號
+7. Docker 啟動後種子資料正確初始化（admin 賬號可登入）
+8. 所有測試透過
 
-### Chunk 2：技能治理 + 审计日志查询 + 可观测性
+### Chunk 2：技能治理 + 審計日誌查詢 + 可觀測性
 
-**范围：** 技能隐藏/恢复 + 版本撤回 + 审计日志查询 API 和前端 + Prometheus 指标
+**範圍：** 技能隱藏/恢復 + 版本撤回 + 審計日誌查詢 API 和前端 + Prometheus 指標
 
-**后端任务：**
-1. Flyway 迁移：skill 表新增 hidden 字段、skill_version 表新增 yank 字段、性能索引
-2. `SkillGovernanceService`：隐藏/恢复/撤回
+**後端任務：**
+1. Flyway 遷移：skill 表新增 hidden 欄位、skill_version 表新增 yank 欄位、效能索引
+2. `SkillGovernanceService`：隱藏/恢復/撤回
 3. `AdminSkillController`：`/api/v1/admin/skills/{id}/hide|unhide|yank`
-4. `AuditLogQueryService`：多条件查询
+4. `AuditLogQueryService`：多條件查詢
 5. `AuditLogController`：`GET /api/v1/admin/audit-logs`
-6. `SkillhubMetrics`：Prometheus 自定义指标
+6. `SkillhubMetrics`：Prometheus 自定義指標
 7. Actuator + Micrometer 配置
 
-**前端任务：**
-1. 审计日志查询页 `/admin/audit-logs`
-2. 技能详情页增加隐藏/恢复操作（管理员可见）
-3. 版本列表增加撤回操作（管理员可见）
+**前端任務：**
+1. 審計日誌查詢頁 `/admin/audit-logs`
+2. 技能詳情頁增加隱藏/恢復操作（管理員可見）
+3. 版本列表增加撤回操作（管理員可見）
 
-**验收标准：**
-1. SKILL_ADMIN 可隐藏技能，隐藏后搜索不可见，直接链接显示隐藏提示
-2. SKILL_ADMIN 可恢复隐藏的技能
-3. SKILL_ADMIN 可撤回已发布版本，YANKED 版本精确版本号仍可下载
-4. 撤回 latest 版本后，latest_version_id 回退到上一个 PUBLISHED 版本
-5. AUDITOR 可查询审计日志，支持多条件筛选和分页
-6. `/actuator/prometheus` 返回自定义业务指标
-7. 所有测试通过
+**驗收標準：**
+1. SKILL_ADMIN 可隱藏技能，隱藏後搜尋不可見，直接連結顯示隱藏提示
+2. SKILL_ADMIN 可恢復隱藏的技能
+3. SKILL_ADMIN 可撤回已發布版本，YANKED 版本精確版本號仍可下載
+4. 撤回 latest 版本後，latest_version_id 回退到上一個 PUBLISHED 版本
+5. AUDITOR 可查詢審計日誌，支援多條件篩選和分頁
+6. `/actuator/prometheus` 返回自定義業務指標
+7. 所有測試透過
 
-### Chunk 3：性能优化 + 安全加固
+### Chunk 3：效能最佳化 + 安全加固
 
-**范围：** 数据库索引优化 + S3 预签名 URL + 前端代码分割 + 安全响应头 + Session 安全
+**範圍：** 資料庫索引最佳化 + S3 預簽名 URL + 前端程式碼分割 + 安全響應頭 + Session 安全
 
-**后端任务：**
-1. `StorageService` 扩展：`generatePresignedUrl()` 方法
-2. 下载 Controller 改造：S3 模式 302 重定向
+**後端任務：**
+1. `StorageService` 擴充套件：`generatePresignedUrl()` 方法
+2. 下載 Controller 改造：S3 模式 302 重定向
 3. Session Cookie 安全配置
-4. 安全响应头配置（SecurityFilterChain）
-5. 密码安全措施（日志排除、Session 失效）
+4. 安全響應頭配置（SecurityFilterChain）
+5. 密碼安全措施（日誌排除、Session 失效）
 
-**前端任务：**
+**前端任務：**
 1. TanStack Router lazy routes 改造
-2. `rehype-sanitize` 集成
-3. 图片懒加载
-4. TanStack Query staleTime 调优
+2. `rehype-sanitize` 整合
+3. 圖片懶載入
+4. TanStack Query staleTime 調優
 
-**验收标准：**
-1. S3 模式下载返回 302 + 预签名 URL
-2. LocalFile 模式下载保持直接代理（向后兼容）
-3. 前端 bundle 分析：Admin/Dashboard/Auth 页面独立 chunk
-4. 安全响应头正确设置（X-Content-Type-Options、X-Frame-Options、HSTS）
-5. Session Cookie 设置 HttpOnly + SameSite
-6. SKILL.md 渲染经过 XSS 过滤
-7. 所有测试通过
+**驗收標準：**
+1. S3 模式下載返回 302 + 預簽名 URL
+2. LocalFile 模式下載保持直接代理（向後相容）
+3. 前端 bundle 分析：Admin/Dashboard/Auth 頁面獨立 chunk
+4. 安全響應頭正確設定（X-Content-Type-Options、X-Frame-Options、HSTS）
+5. Session Cookie 設定 HttpOnly + SameSite
+6. SKILL.md 渲染經過 XSS 過濾
+7. 所有測試透過
 
-### Chunk 4：Docker 一键启动 + K8s 部署 + 开源基础设施
+### Chunk 4：Docker 一鍵啟動 + K8s 部署 + 開源基礎設施
 
-**范围：** Dockerfile + docker-compose + K8s 清单 + README + CONTRIBUTING + GitHub 模板
+**範圍：** Dockerfile + docker-compose + K8s 清單 + README + CONTRIBUTING + GitHub 模板
 
-**任务：**
-1. 多阶段 Dockerfile（backend + frontend）
-2. docker-compose.yml 完善（5 个服务 + 健康检查）
+**任務：**
+1. 多階段 Dockerfile（backend + frontend）
+2. docker-compose.yml 完善（5 個服務 + 健康檢查）
 3. Nginx 配置（SPA 路由 + API 代理）
-4. K8s 清单（Deployment + Service + Ingress + ConfigMap）
-5. README.md（快速开始 + 技术栈 + 项目结构）
-6. CONTRIBUTING.md（开发环境 + 提交规范 + PR 流程）
+4. K8s 清單（Deployment + Service + Ingress + ConfigMap）
+5. README.md（快速開始 + 技術棧 + 專案結構）
+6. CONTRIBUTING.md（開發環境 + 提交規範 + PR 流程）
 7. GitHub Issue/PR 模板
 8. LICENSE（Apache 2.0）
 9. CODE_OF_CONDUCT.md
 
-**验收标准：**
-1. `git clone && docker compose up -d` 后所有服务正常启动
-2. 前端可访问，后端 API 可调用
-3. 默认管理员账号可登录
-4. K8s 清单可通过 `kubectl apply -f deploy/k8s/` 部署
-5. README 包含完整的快速开始指南
-6. GitHub 模板文件齐全
-7. 所有测试通过
+**驗收標準：**
+1. `git clone && docker compose up -d` 後所有服務正常啟動
+2. 前端可訪問，後端 API 可呼叫
+3. 預設管理員賬號可登入
+4. K8s 清單可透過 `kubectl apply -f deploy/k8s/` 部署
+5. README 包含完整的快速開始指南
+6. GitHub 模板檔案齊全
+7. 所有測試透過
 
 ---
 
-## 13. 测试策略
+## 13. 測試策略
 
-### 13.1 后端测试
+### 13.1 後端測試
 
-| 层级 | 范围 | 工具 | 覆盖重点 |
+| 層級 | 範圍 | 工具 | 覆蓋重點 |
 |------|------|------|----------|
-| 单元测试 | 领域服务 | JUnit 5 + Mockito | LocalAuthService（密码策略、锁定逻辑）、AccountMergeService（状态机、数据迁移）、SkillGovernanceService（隐藏/撤回逻辑） |
-| 集成测试 | Repository + DB | @DataJpaTest + Testcontainers | local_credential 唯一约束、account_merge_request partial unique index、性能索引验证 |
-| API 测试 | Controller | @WebMvcTest + MockMvc | 本地认证端点、合并端点、治理端点、审计日志查询 |
-| 端到端测试 | 全链路 | @SpringBootTest + Testcontainers | 注册 → 登录 → 合并 → 验证数据迁移 |
+| 單元測試 | 領域服務 | JUnit 5 + Mockito | LocalAuthService（密碼策略、鎖定邏輯）、AccountMergeService（狀態機、資料遷移）、SkillGovernanceService（隱藏/撤回邏輯） |
+| 整合測試 | Repository + DB | @DataJpaTest + Testcontainers | local_credential 唯一約束、account_merge_request partial unique index、效能索引驗證 |
+| API 測試 | Controller | @WebMvcTest + MockMvc | 本地認證端點、合併端點、治理端點、審計日誌查詢 |
+| 端到端測試 | 全鏈路 | @SpringBootTest + Testcontainers | 註冊 → 登入 → 合併 → 驗證資料遷移 |
 
-### 13.2 关键测试用例
+### 13.2 關鍵測試用例
 
-**本地认证：**
-- 注册成功 → user_account + local_credential 创建，自动登录
-- 注册失败 → 用户名已存在、密码强度不足、邮箱已占用
-- 登录成功 → Session 创建，failed_attempts 重置
-- 登录失败 → failed_attempts 递增，5 次后锁定
-- 锁定期间登录 → 返回 423
-- 密码修改 → 旧密码校验、新密码哈希、其他 Session 失效
+**本地認證：**
+- 註冊成功 → user_account + local_credential 建立，自動登入
+- 註冊失敗 → 使用者名稱已存在、密碼強度不足、郵箱已佔用
+- 登入成功 → Session 建立，failed_attempts 重置
+- 登入失敗 → failed_attempts 遞增，5 次後鎖定
+- 鎖定期間登入 → 返回 423
+- 密碼修改 → 舊密碼校驗、新密碼雜湊、其他 Session 失效
 
-**多账号合并：**
-- 发起合并 → 创建 PENDING 请求，生成验证令牌
-- 验证副账号 → 本地密码验证 / OAuth 重新授权
-- 确认合并 → 数据迁移事务（技能、收藏、角色、Token）
-- 合并冲突 → 收藏去重、评分保留最新、角色取并集
-- 副账号已 MERGED → 无法登录
+**多賬號合併：**
+- 發起合併 → 建立 PENDING 請求，生成驗證令牌
+- 驗證副賬號 → 本地密碼驗證 / OAuth 重新授權
+- 確認合併 → 資料遷移事務（技能、收藏、角色、Token）
+- 合併衝突 → 收藏去重、評分保留最新、角色取並集
+- 副賬號已 MERGED → 無法登入
 
 **技能治理：**
-- 隐藏技能 → 搜索不可见，直接链接可访问
-- 恢复技能 → 搜索重新可见
-- 撤回版本 → YANKED 状态，精确版本可下载
+- 隱藏技能 → 搜尋不可見，直接連結可訪問
+- 恢復技能 → 搜尋重新可見
+- 撤回版本 → YANKED 狀態，精確版本可下載
 - 撤回 latest → latest_version_id 回退
 
-### 13.3 前端测试
+### 13.3 前端測試
 
-| 类型 | 工具 | 覆盖重点 |
+| 型別 | 工具 | 覆蓋重點 |
 |------|------|----------|
-| 组件测试 | Vitest + React Testing Library | 注册表单校验、登录表单、合并向导、审计日志筛选器 |
-| Hook 测试 | renderHook | useLocalAuth、useAccountMerge、useAuditLogs |
-| 页面测试 | Vitest + MSW | 注册/登录交互、合并流程、审计日志查询 |
+| 元件測試 | Vitest + React Testing Library | 登入檔單校驗、登入表單、合併嚮導、審計日誌篩選器 |
+| Hook 測試 | renderHook | useLocalAuth、useAccountMerge、useAuditLogs |
+| 頁面測試 | Vitest + MSW | 註冊/登入互動、合併流程、審計日誌查詢 |
 
 ---
 
-## 14. 风险与应对
+## 14. 風險與應對
 
-| 风险 | 应对 |
+| 風險 | 應對 |
 |------|------|
-| 本地认证与 OAuth Session 冲突 | 两种认证方式共享 Spring Session，通过 `local_credential` 表存在性判断认证来源，无需额外字段 |
-| 多账号合并数据不一致 | 合并操作在单个事务中执行，失败自动回滚；合并前生成数据摘要供用户确认 |
-| BCrypt 性能影响 | strength=12 约 250ms/次，登录接口限流 30 次/分钟/IP 防暴力破解 |
-| Docker 构建缓存失效 | 多阶段构建 + 依赖层分离，Maven/npm 依赖变更才触发重新下载 |
-| K8s 配置与实际环境差异 | 提供 ConfigMap/Secret 模板，文档说明必须修改的配置项 |
-| 前端代码分割导致首屏闪烁 | 公开页面保留在主 bundle，仅非首屏页面 lazy load |
-| YANKED 版本语义理解偏差 | 文档明确说明 YANKED ≠ 删除，精确版本仍可下载 |
+| 本地認證與 OAuth Session 衝突 | 兩種認證方式共享 Spring Session，透過 `local_credential` 表存在性判斷認證來源，無需額外欄位 |
+| 多賬號合併資料不一致 | 合併操作在單個事務中執行，失敗自動回滾；合併前生成資料摘要供使用者確認 |
+| BCrypt 效能影響 | strength=12 約 250ms/次，登入介面限流 30 次/分鐘/IP 防暴力破解 |
+| Docker 構建快取失效 | 多階段構建 + 依賴層分離，Maven/npm 依賴變更才觸發重新下載 |
+| K8s 配置與實際環境差異 | 提供 ConfigMap/Secret 模板，檔案說明必須修改的配置項 |
+| 前端程式碼分割導致首屏閃爍 | 公開頁面保留在主 bundle，僅非首屏頁面 lazy load |
+| YANKED 版本語義理解偏差 | 檔案明確說明 YANKED ≠ 刪除，精確版本仍可下載 |
 
 ---
 
-## 15. 总结
+## 15. 總結
 
-Phase 4 在 Phase 1-3 的基础上，完成运维增强、安全加固和开源就绪：
+Phase 4 在 Phase 1-3 的基礎上，完成運維增強、安全加固和開源就緒：
 
-**核心价值：**
-1. **本地认证** — 独立的用户名密码登录体系，降低 OAuth 依赖
-2. **多账号合并** — 安全的账号关联机制，支持用户统一身份
-3. **技能治理** — 隐藏/恢复/撤回能力，完善平台治理闭环
-4. **可观测性** — Prometheus 指标暴露，支持生产环境监控
-5. **性能优化** — 数据库索引、预签名 URL、前端代码分割
-6. **安全加固** — Session 安全、XSS 防护、安全响应头
-7. **一键启动** — Docker Compose 零配置体验，clone 即用
-8. **开源就绪** — 完整的开源项目基础设施
+**核心價值：**
+1. **本地認證** — 獨立的使用者名稱密碼登入體系，降低 OAuth 依賴
+2. **多賬號合併** — 安全的賬號關聯機制，支援使用者統一身份
+3. **技能治理** — 隱藏/恢復/撤回能力，完善平臺治理閉環
+4. **可觀測性** — Prometheus 指標暴露，支援生產環境監控
+5. **效能最佳化** — 資料庫索引、預簽名 URL、前端程式碼分割
+6. **安全加固** — Session 安全、XSS 防護、安全響應頭
+7. **一鍵啟動** — Docker Compose 零配置體驗，clone 即用
+8. **開源就緒** — 完整的開源專案基礎設施
 
 **交付策略：**
-- 4 个 Chunk 渐进式交付
-- Chunk 1（认证）→ Chunk 2（治理）→ Chunk 3（性能安全）→ Chunk 4（部署开源）
-- 每个 Chunk 独立可验收，风险可控
+- 4 個 Chunk 漸進式交付
+- Chunk 1（認證）→ Chunk 2（治理）→ Chunk 3（效能安全）→ Chunk 4（部署開源）
+- 每個 Chunk 獨立可驗收，風險可控

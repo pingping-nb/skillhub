@@ -1,10 +1,10 @@
-# Phase 1: 工程骨架 + 认证打通 Implementation Plan
+# Phase 1: 工程骨架 + 認證打通 Implementation Plan
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** 建立可运行的前后端工程骨架，完成 GitHub OAuth 登录和 API Token 认证，满足 Phase 1 验收标准
+**Goal:** 建立可執行的前後端工程骨架，完成 GitHub OAuth 登入和 API Token 認證，滿足 Phase 1 驗收標準
 
-**Architecture:** Maven 多模块后端（6 模块）+ React 前端 + Docker Compose 本地开发环境 + Spring Security OAuth2 + RBAC
+**Architecture:** Maven 多模組後端（6 模組）+ React 前端 + Docker Compose 本地開發環境 + Spring Security OAuth2 + RBAC
 
 **Tech Stack:**
 - Backend: Spring Boot 3.x + JDK 21 + PostgreSQL 16 + Redis 7 + Spring Security OAuth2 Client + Spring Data JPA + Flyway
@@ -13,11 +13,11 @@
 
 ---
 
-## Chunk 1: 后端工程骨架 + 基础设施
+## Chunk 1: 後端工程骨架 + 基礎設施
 
-本块建立 Maven 多模块项目结构、数据库迁移、基础配置、健康检查和 OpenAPI 文档，产出可启动的后端应用。
+本塊建立 Maven 多模組專案結構、資料庫遷移、基礎配置、健康檢查和 OpenAPI 檔案，產出可啟動的後端應用。
 
-### 文件结构映射
+### 檔案結構對映
 
 ```
 skillhub/
@@ -62,7 +62,7 @@ skillhub/
 └── Makefile
 ```
 
-### Task 1: 初始化 Monorepo 和 Maven 多模块项目
+### Task 1: 初始化 Monorepo 和 Maven 多模組專案
 
 **Files:**
 - Create: `server/pom.xml`
@@ -74,7 +74,7 @@ skillhub/
 - Create: `server/skillhub-infra/pom.xml`
 - Create: `.gitignore`
 
-- [ ] **Step 1: 创建根 .gitignore**
+- [ ] **Step 1: 建立根 .gitignore**
 
 ```bash
 cat > .gitignore << 'EOF'
@@ -107,7 +107,7 @@ dist/
 EOF
 ```
 
-- [ ] **Step 2: 创建父 POM (server/pom.xml)**
+- [ ] **Step 2: 建立父 POM (server/pom.xml)**
 
 ```bash
 mkdir -p server && cat > server/pom.xml << 'EOF'
@@ -180,7 +180,7 @@ mkdir -p server && cat > server/pom.xml << 'EOF'
 EOF
 ```
 
-- [ ] **Step 3: 创建 skillhub-app 模块 POM**
+- [ ] **Step 3: 建立 skillhub-app 模組 POM**
 
 ```bash
 mkdir -p server/skillhub-app && cat > server/skillhub-app/pom.xml << 'EOF'
@@ -244,7 +244,7 @@ mkdir -p server/skillhub-app && cat > server/skillhub-app/pom.xml << 'EOF'
 EOF
 ```
 
-- [ ] **Step 4: 创建其他模块的 POM（domain, auth, search, storage, infra）**
+- [ ] **Step 4: 建立其他模組的 POM（domain, auth, search, storage, infra）**
 
 ```bash
 # skillhub-domain
@@ -356,17 +356,17 @@ cat > server/skillhub-infra/pom.xml << 'EOF'
 EOF
 ```
 
-- [ ] **Step 5: 安装 Maven Wrapper**
+- [ ] **Step 5: 安裝 Maven Wrapper**
 
 Run: `cd server && mvn wrapper:wrapper`
 
-Expected: Maven Wrapper 文件生成在 `server/.mvn/wrapper/`
+Expected: Maven Wrapper 檔案生成在 `server/.mvn/wrapper/`
 
-- [ ] **Step 6: 验证项目结构**
+- [ ] **Step 6: 驗證專案結構**
 
 Run: `cd server && ./mvnw clean compile`
 
-Expected: `BUILD SUCCESS`，所有模块编译通过
+Expected: `BUILD SUCCESS`，所有模組編譯透過
 
 - [ ] **Step 7: Commit**
 
@@ -380,7 +380,7 @@ git commit -m "feat: initialize Maven multi-module project structure
 - Set up module dependency graph (app depends on all, infra/auth/search depend on domain)"
 ```
 
-### Task 2: 创建 Spring Boot 应用入口和基础配置
+### Task 2: 建立 Spring Boot 應用入口和基礎配置
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/skillhub/SkillhubApplication.java`
@@ -388,7 +388,7 @@ git commit -m "feat: initialize Maven multi-module project structure
 - Create: `server/skillhub-app/src/main/resources/application-local.yml`
 - Create: `server/skillhub-app/src/test/java/com/skillhub/ApplicationContextStartsTest.java`
 
-- [ ] **Step 1: 编写失败的 ApplicationContext 启动测试**
+- [ ] **Step 1: 編寫失敗的 ApplicationContext 啟動測試**
 
 ```bash
 mkdir -p server/skillhub-app/src/test/java/com/skillhub
@@ -409,13 +409,13 @@ class ApplicationContextStartsTest {
 EOF
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [ ] **Step 2: 執行測試確認失敗**
 
 Run: `cd server && ./mvnw test -Dtest=ApplicationContextStartsTest`
 
 Expected: FAIL - "Unable to find a @SpringBootConfiguration"
 
-- [ ] **Step 3: 创建 SkillhubApplication 主类**
+- [ ] **Step 3: 建立 SkillhubApplication 主類**
 
 ```bash
 mkdir -p server/skillhub-app/src/main/java/com/skillhub
@@ -435,7 +435,7 @@ public class SkillhubApplication {
 EOF
 ```
 
-- [ ] **Step 4: 创建基础配置文件**
+- [ ] **Step 4: 建立基礎配置檔案**
 
 ```bash
 mkdir -p server/skillhub-app/src/main/resources
@@ -488,11 +488,11 @@ logging:
 EOF
 ```
 
-- [ ] **Step 5: 运行测试确认通过**
+- [ ] **Step 5: 執行測試確認透過**
 
 Run: `cd server && ./mvnw test -Dtest=ApplicationContextStartsTest`
 
-Expected: FAIL - "Failed to configure a DataSource" (预期，因为还没有数据库)
+Expected: FAIL - "Failed to configure a DataSource" (預期，因為還沒有資料庫)
 
 - [ ] **Step 6: Commit**
 
@@ -506,12 +506,12 @@ git commit -m "feat: add Spring Boot application entry point and base configurat
 - Add ApplicationContextStartsTest (will pass after DB setup)"
 ```
 
-### Task 3: 添加 Docker Compose 本地开发环境
+### Task 3: 新增 Docker Compose 本地開發環境
 
 **Files:**
 - Create: `docker-compose.yml`
 
-- [ ] **Step 1: 创建 docker-compose.yml**
+- [ ] **Step 1: 建立 docker-compose.yml**
 
 ```bash
 cat > docker-compose.yml << 'EOF'
@@ -565,17 +565,17 @@ volumes:
 EOF
 ```
 
-- [ ] **Step 2: 启动依赖服务**
+- [ ] **Step 2: 啟動依賴服務**
 
 Run: `docker compose up -d`
 
-Expected: PostgreSQL, Redis, MinIO 启动成功，健康检查通过
+Expected: PostgreSQL, Redis, MinIO 啟動成功，健康檢查透過
 
-- [ ] **Step 3: 验证服务可访问**
+- [ ] **Step 3: 驗證服務可訪問**
 
 Run: `docker compose ps`
 
-Expected: 所有服务状态为 `healthy`
+Expected: 所有服務狀態為 `healthy`
 
 - [ ] **Step 4: Commit**
 
@@ -588,16 +588,16 @@ git commit -m "feat: add Docker Compose for local development dependencies
 - Use named volumes for data persistence"
 ```
 
-### Task 4: 添加 Flyway 数据库迁移和 Phase 1 核心表
+### Task 4: 新增 Flyway 資料庫遷移和 Phase 1 核心表
 
 **Files:**
 - Create: `server/skillhub-app/src/main/resources/db/migration/V1__init_schema.sql`
-- Update: `server/skillhub-app/pom.xml` (添加 Flyway 和 PostgreSQL 驱动依赖)
+- Update: `server/skillhub-app/pom.xml` (新增 Flyway 和 PostgreSQL 驅動依賴)
 
-- [ ] **Step 1: 更新 skillhub-app POM 添加数据库依赖**
+- [ ] **Step 1: 更新 skillhub-app POM 新增資料庫依賴**
 
 ```bash
-# 在 skillhub-app/pom.xml 的 <dependencies> 中添加：
+# 在 skillhub-app/pom.xml 的 <dependencies> 中新增：
 cat >> server/skillhub-app/pom.xml.tmp << 'EOF'
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -621,17 +621,17 @@ cat >> server/skillhub-app/pom.xml.tmp << 'EOF'
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 EOF
-# 手动编辑 server/skillhub-app/pom.xml，在 </dependencies> 前插入上述依赖
+# 手動編輯 server/skillhub-app/pom.xml，在 </dependencies> 前插入上述依賴
 ```
 
-- [ ] **Step 2: 创建 Flyway 迁移脚本 V1__init_schema.sql**
+- [ ] **Step 2: 建立 Flyway 遷移指令碼 V1__init_schema.sql**
 
 ```bash
 mkdir -p server/skillhub-app/src/main/resources/db/migration
 cat > server/skillhub-app/src/main/resources/db/migration/V1__init_schema.sql << 'EOF'
--- Phase 1 核心表：认证与授权
+-- Phase 1 核心表：認證與授權
 
--- 用户账号表
+-- 使用者賬號表
 CREATE TABLE user_account (
     id BIGSERIAL PRIMARY KEY,
     display_name VARCHAR(128) NOT NULL,
@@ -646,7 +646,7 @@ CREATE TABLE user_account (
 CREATE INDEX idx_user_account_email ON user_account(email);
 CREATE INDEX idx_user_account_status ON user_account(status);
 
--- OAuth 身份绑定表
+-- OAuth 身份繫結表
 CREATE TABLE identity_binding (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(128) NOT NULL REFERENCES user_account(id),
@@ -690,7 +690,7 @@ CREATE TABLE role (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 权限表
+-- 許可權表
 CREATE TABLE permission (
     id BIGSERIAL PRIMARY KEY,
     code VARCHAR(128) NOT NULL UNIQUE,
@@ -698,14 +698,14 @@ CREATE TABLE permission (
     group_code VARCHAR(64)
 );
 
--- 角色权限关联表
+-- 角色許可權關聯表
 CREATE TABLE role_permission (
     role_id BIGINT NOT NULL REFERENCES role(id),
     permission_id BIGINT NOT NULL REFERENCES permission(id),
     PRIMARY KEY (role_id, permission_id)
 );
 
--- 用户角色绑定表
+-- 使用者角色繫結表
 CREATE TABLE user_role_binding (
     id BIGSERIAL PRIMARY KEY,
     user_id VARCHAR(128) NOT NULL REFERENCES user_account(id),
@@ -716,7 +716,7 @@ CREATE TABLE user_role_binding (
 
 CREATE INDEX idx_user_role_binding_user_id ON user_role_binding(user_id);
 
--- 命名空间表
+-- 名稱空間表
 CREATE TABLE namespace (
     id BIGSERIAL PRIMARY KEY,
     slug VARCHAR(64) NOT NULL UNIQUE,
@@ -730,7 +730,7 @@ CREATE TABLE namespace (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- 命名空间成员表
+-- 名稱空間成員表
 CREATE TABLE namespace_member (
     id BIGSERIAL PRIMARY KEY,
     namespace_id BIGINT NOT NULL REFERENCES namespace(id),
@@ -744,7 +744,7 @@ CREATE TABLE namespace_member (
 CREATE INDEX idx_namespace_member_user_id ON namespace_member(user_id);
 CREATE INDEX idx_namespace_member_namespace_id ON namespace_member(namespace_id);
 
--- 审计日志表
+-- 審計日誌表
 CREATE TABLE audit_log (
     id BIGSERIAL PRIMARY KEY,
     actor_user_id VARCHAR(128) REFERENCES user_account(id),
@@ -762,25 +762,25 @@ CREATE INDEX idx_audit_log_actor ON audit_log(actor_user_id);
 CREATE INDEX idx_audit_log_created_at ON audit_log(created_at);
 CREATE INDEX idx_audit_log_request_id ON audit_log(request_id);
 
--- 插入系统内置角色
+-- 插入系統內建角色
 INSERT INTO role (code, name, description, is_system) VALUES
-('SUPER_ADMIN', '超级管理员', '拥有所有权限', TRUE),
-('SKILL_ADMIN', '技能管理员', '全局空间审核、提升审核、隐藏/撤回', TRUE),
-('USER_ADMIN', '用户管理员', '准入审批、封禁/解封、角色分配', TRUE),
-('AUDITOR', '审计员', '查看审计日志', TRUE);
+('SUPER_ADMIN', '超級管理員', '擁有所有許可權', TRUE),
+('SKILL_ADMIN', '技能管理員', '全域性空間稽核、提升稽核、隱藏/撤回', TRUE),
+('USER_ADMIN', '使用者管理員', '准入審批、封禁/解封、角色分配', TRUE),
+('AUDITOR', '審計員', '檢視審計日誌', TRUE);
 
--- 插入系统权限
+-- 插入系統許可權
 INSERT INTO permission (code, name, group_code) VALUES
-('skill:publish', '发布技能', 'skill'),
+('skill:publish', '發布技能', 'skill'),
 ('skill:manage', '管理技能', 'skill'),
-('skill:promote', '提升到全局', 'skill'),
-('review:approve', '审核技能', 'review'),
-('promotion:approve', '审核提升申请', 'promotion'),
-('user:manage', '管理用户', 'user'),
-('user:approve', '审批用户准入', 'user'),
-('audit:read', '查看审计日志', 'audit');
+('skill:promote', '提升到全域性', 'skill'),
+('review:approve', '稽核技能', 'review'),
+('promotion:approve', '稽核提升申請', 'promotion'),
+('user:manage', '管理使用者', 'user'),
+('user:approve', '審批使用者准入', 'user'),
+('audit:read', '檢視審計日誌', 'audit');
 
--- 绑定角色权限
+-- 繫結角色許可權
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM role r, permission p WHERE r.code = 'SKILL_ADMIN' AND p.code IN ('review:approve', 'skill:manage', 'promotion:approve');
 
@@ -790,29 +790,29 @@ SELECT r.id, p.id FROM role r, permission p WHERE r.code = 'USER_ADMIN' AND p.co
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM role r, permission p WHERE r.code = 'AUDITOR' AND p.code = 'audit:read';
 
--- 插入系统内置 @global 命名空间
+-- 插入系統內建 @global 名稱空間
 INSERT INTO namespace (slug, display_name, type, description, status)
 VALUES ('global', 'Global', 'GLOBAL', 'Platform-level public namespace', 'ACTIVE');
 EOF
 ```
 
-- [ ] **Step 3: 运行 Flyway 迁移**
+- [ ] **Step 3: 執行 Flyway 遷移**
 
 Run: `cd server && ./mvnw flyway:migrate -Dflyway.url=jdbc:postgresql://localhost:5432/skillhub -Dflyway.user=skillhub -Dflyway.password=skillhub_dev`
 
 Expected: `Successfully applied 1 migration to schema "public"`
 
-- [ ] **Step 4: 验证表创建成功**
+- [ ] **Step 4: 驗證表建立成功**
 
 Run: `docker compose exec postgres psql -U skillhub -d skillhub -c "\dt"`
 
 Expected: 列出所有表（user_account, identity_binding, api_token, role, permission, role_permission, user_role_binding, namespace, namespace_member, audit_log, flyway_schema_history）
 
-- [ ] **Step 5: 运行 ApplicationContextStartsTest 确认通过**
+- [ ] **Step 5: 執行 ApplicationContextStartsTest 確認透過**
 
 Run: `cd server && ./mvnw test -Dtest=ApplicationContextStartsTest -Dspring.profiles.active=local`
 
-Expected: PASS - ApplicationContext 启动成功
+Expected: PASS - ApplicationContext 啟動成功
 
 - [ ] **Step 6: Commit**
 
@@ -829,7 +829,7 @@ git commit -m "feat: add Flyway migration with Phase 1 core schema
 - Insert @global namespace"
 ```
 
-### Task 5: 添加 RequestId Filter 和全局异常处理
+### Task 5: 新增 RequestId Filter 和全域性異常處理
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/skillhub/filter/RequestIdFilter.java`
@@ -837,7 +837,7 @@ git commit -m "feat: add Flyway migration with Phase 1 core schema
 - Create: `server/skillhub-app/src/main/java/com/skillhub/dto/ErrorResponse.java`
 - Test: `server/skillhub-app/src/test/java/com/skillhub/filter/RequestIdFilterTest.java`
 
-- [ ] **Step 1: 编写 RequestIdFilter 测试**
+- [ ] **Step 1: 編寫 RequestIdFilter 測試**
 
 ```bash
 mkdir -p server/skillhub-app/src/test/java/com/skillhub/filter
@@ -880,13 +880,13 @@ class RequestIdFilterTest {
 EOF
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [ ] **Step 2: 執行測試確認失敗**
 
 Run: `cd server && ./mvnw test -Dtest=RequestIdFilterTest -Dspring.profiles.active=local`
 
 Expected: FAIL - "Expected header X-Request-Id does not exist"
 
-- [ ] **Step 3: 实现 RequestIdFilter**
+- [ ] **Step 3: 實現 RequestIdFilter**
 
 ```bash
 mkdir -p server/skillhub-app/src/main/java/com/skillhub/filter
@@ -934,13 +934,13 @@ public class RequestIdFilter extends OncePerRequestFilter {
 EOF
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [ ] **Step 4: 執行測試確認透過**
 
 Run: `cd server && ./mvnw test -Dtest=RequestIdFilterTest -Dspring.profiles.active=local`
 
 Expected: PASS
 
-- [ ] **Step 5: 创建全局异常处理器和 DTO**
+- [ ] **Step 5: 建立全域性異常處理器和 DTO**
 
 ```bash
 mkdir -p server/skillhub-app/src/main/java/com/skillhub/exception
@@ -1002,14 +1002,14 @@ git commit -m "feat: add RequestId filter and global exception handler
 - Add RequestIdFilterTest with MockMvc"
 ```
 
-### Task 6: 添加 OpenAPI 配置和健康检查端点
+### Task 6: 新增 OpenAPI 配置和健康檢查端點
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/skillhub/config/OpenApiConfig.java`
 - Create: `server/skillhub-app/src/main/java/com/skillhub/controller/HealthController.java`
 - Test: `server/skillhub-app/src/test/java/com/skillhub/controller/HealthControllerTest.java`
 
-- [ ] **Step 1: 编写健康检查端点测试**
+- [ ] **Step 1: 編寫健康檢查端點測試**
 
 ```bash
 mkdir -p server/skillhub-app/src/test/java/com/skillhub/controller
@@ -1043,13 +1043,13 @@ class HealthControllerTest {
 EOF
 ```
 
-- [ ] **Step 2: 运行测试确认失败**
+- [ ] **Step 2: 執行測試確認失敗**
 
 Run: `cd server && ./mvnw test -Dtest=HealthControllerTest -Dspring.profiles.active=local`
 
 Expected: FAIL - 404 Not Found
 
-- [ ] **Step 3: 实现 HealthController**
+- [ ] **Step 3: 實現 HealthController**
 
 ```bash
 mkdir -p server/skillhub-app/src/main/java/com/skillhub/controller
@@ -1074,13 +1074,13 @@ public class HealthController {
 EOF
 ```
 
-- [ ] **Step 4: 运行测试确认通过**
+- [ ] **Step 4: 執行測試確認透過**
 
 Run: `cd server && ./mvnw test -Dtest=HealthControllerTest -Dspring.profiles.active=local`
 
 Expected: PASS
 
-- [ ] **Step 5: 创建 OpenAPI 配置**
+- [ ] **Step 5: 建立 OpenAPI 配置**
 
 ```bash
 mkdir -p server/skillhub-app/src/main/java/com/skillhub/config
@@ -1113,18 +1113,18 @@ public class OpenApiConfig {
 EOF
 ```
 
-- [ ] **Step 6: 验证 OpenAPI 文档可访问**
+- [ ] **Step 6: 驗證 OpenAPI 檔案可訪問**
 
-Run: `cd server && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local` (在另一个终端)
+Run: `cd server && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local` (在另一個終端)
 
 Run: `curl -s http://localhost:8080/v3/api-docs | jq '.info.title'`
 
 Expected: `"SkillHub API"`
 
-- [ ] **Step 7: 停止应用并 Commit**
+- [ ] **Step 7: 停止應用並 Commit**
 
 ```bash
-# Ctrl+C 停止应用
+# Ctrl+C 停止應用
 git add server/skillhub-app/src/main/java/com/skillhub/config/ \
         server/skillhub-app/src/main/java/com/skillhub/controller/ \
         server/skillhub-app/src/test/java/com/skillhub/controller/
@@ -1136,60 +1136,60 @@ git commit -m "feat: add OpenAPI configuration and health check endpoint
 - OpenAPI docs available at /v3/api-docs and /swagger-ui.html"
 ```
 
-### Task 7: 添加 Makefile 顶层编排
+### Task 7: 新增 Makefile 頂層編排
 
 **Files:**
 - Create: `Makefile`
 
-- [ ] **Step 1: 创建 Makefile**
+- [ ] **Step 1: 建立 Makefile**
 
 ```bash
 cat > Makefile << 'EOF'
 .PHONY: dev dev-down build test clean
 
-# 启动本地开发环境（仅依赖服务）
+# 啟動本地開發環境（僅依賴服務）
 dev:
 	docker compose up -d
 	@echo "Waiting for services to be healthy..."
 	@sleep 5
 	@echo "Services ready. Start backend with: cd server && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local"
 
-# 停止本地开发环境
+# 停止本地開發環境
 dev-down:
 	docker compose down
 
-# 构建后端
+# 構建後端
 build:
 	cd server && ./mvnw clean package -DskipTests
 
-# 运行测试
+# 執行測試
 test:
 	cd server && ./mvnw test
 
-# 清理构建产物
+# 清理構建產物
 clean:
 	cd server && ./mvnw clean
 	docker compose down -v
 
-# 生成 OpenAPI 类型（前端用，Phase 1 暂不实现）
+# 生成 OpenAPI 型別（前端用，Phase 1 暫不實現）
 generate-api:
 	@echo "Frontend not yet implemented"
 EOF
 ```
 
-- [ ] **Step 2: 测试 Makefile 命令**
+- [ ] **Step 2: 測試 Makefile 命令**
 
 Run: `make dev`
 
-Expected: Docker Compose 服务启动，提示信息显示
+Expected: Docker Compose 服務啟動，提示資訊顯示
 
 Run: `make test`
 
-Expected: 所有测试通过
+Expected: 所有測試透過
 
 Run: `make dev-down`
 
-Expected: Docker Compose 服务停止
+Expected: Docker Compose 服務停止
 
 - [ ] **Step 3: Commit**
 
@@ -1206,65 +1206,65 @@ git commit -m "feat: add Makefile for top-level orchestration
 
 ---
 
-## Chunk 1 验收标准
+## Chunk 1 驗收標準
 
-运行以下命令验证 Chunk 1 完成：
+執行以下命令驗證 Chunk 1 完成：
 
 ```bash
-# 1. 启动依赖服务
+# 1. 啟動依賴服務
 make dev
 
-# 2. 运行所有测试
+# 2. 執行所有測試
 make test
 # Expected: BUILD SUCCESS, all tests pass
 
-# 3. 启动后端应用
+# 3. 啟動後端應用
 cd server && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 
-# 4. 验证健康检查
+# 4. 驗證健康檢查
 curl http://localhost:8080/api/v1/health
 # Expected: {"status":"UP"}
 
-# 5. 验证 Actuator
+# 5. 驗證 Actuator
 curl http://localhost:8080/actuator/health
 # Expected: {"status":"UP"}
 
-# 6. 验证 OpenAPI 文档
+# 6. 驗證 OpenAPI 檔案
 curl http://localhost:8080/v3/api-docs | jq '.info.title'
 # Expected: "SkillHub API"
 
-# 7. 验证 RequestId
+# 7. 驗證 RequestId
 curl -v http://localhost:8080/api/v1/health 2>&1 | grep X-Request-Id
 # Expected: X-Request-Id header present
 
-# 8. 验证数据库表
+# 8. 驗證資料庫表
 docker compose exec postgres psql -U skillhub -d skillhub -c "\dt"
 # Expected: 列出所有 Phase 1 表
 
-# 9. 停止服务
+# 9. 停止服務
 make dev-down
 ```
 
-Chunk 1 产出：可启动的后端应用 + 数据库 schema + Docker Compose 本地环境 + Makefile 编排。
+Chunk 1 產出：可啟動的後端應用 + 資料庫 schema + Docker Compose 本地環境 + Makefile 編排。
 
-## Chunk 2: 后端认证与授权体系
+## Chunk 2: 後端認證與授權體系
 
-本块实现完整的认证链路：Spring Security OAuth2 GitHub 登录、AccessPolicy 准入策略、身份绑定、Spring Session Redis、API Token 认证、RBAC 授权、MockAuthFilter 本地开发、CSRF 防护。
+本塊實現完整的認證鏈路：Spring Security OAuth2 GitHub 登入、AccessPolicy 准入策略、身份繫結、Spring Session Redis、API Token 認證、RBAC 授權、MockAuthFilter 本地開發、CSRF 防護。
 
-### 文件结构映射
+### 檔案結構對映
 
 ```
 server/
 ├── skillhub-domain/src/main/java/com/skillhub/domain/
 │   ├── user/
-│   │   ├── UserAccount.java              # 用户实体
-│   │   ├── UserStatus.java               # 用户状态枚举
-│   │   └── UserAccountRepository.java    # Repository 接口
+│   │   ├── UserAccount.java              # 使用者實體
+│   │   ├── UserStatus.java               # 使用者狀態列舉
+│   │   └── UserAccountRepository.java    # Repository 介面
 │   └── namespace/
-│       ├── Namespace.java                # 命名空间实体
-│       ├── NamespaceStatus.java          # 命名空间状态枚举
-│       ├── NamespaceMember.java          # 成员实体
-│       ├── NamespaceRole.java            # 命名空间角色枚举
+│       ├── Namespace.java                # 名稱空間實體
+│       ├── NamespaceStatus.java          # 名稱空間狀態列舉
+│       ├── NamespaceMember.java          # 成員實體
+│       ├── NamespaceRole.java            # 名稱空間角色列舉
 │       ├── NamespaceRepository.java
 │       └── NamespaceMemberRepository.java
 ├── skillhub-auth/src/main/java/com/skillhub/auth/
@@ -1318,7 +1318,7 @@ server/
         └── NamespaceMemberJpaRepository.java
 ```
 
-### Task 8: Domain 层用户与命名空间实体
+### Task 8: Domain 層使用者與名稱空間實體
 
 **Files:**
 - Create: `server/skillhub-domain/src/main/java/com/skillhub/domain/user/UserAccount.java`
@@ -1331,7 +1331,7 @@ server/
 - Create: `server/skillhub-domain/src/main/java/com/skillhub/domain/namespace/NamespaceRepository.java`
 - Create: `server/skillhub-domain/src/main/java/com/skillhub/domain/namespace/NamespaceMemberRepository.java`
 
-- [ ] **Step 1: 创建 UserStatus 枚举**
+- [ ] **Step 1: 建立 UserStatus 列舉**
 
 ```java
 // server/skillhub-domain/src/main/java/com/skillhub/domain/user/UserStatus.java
@@ -1345,7 +1345,7 @@ public enum UserStatus {
 }
 ```
 
-- [ ] **Step 2: 创建 UserAccount 实体**
+- [ ] **Step 2: 建立 UserAccount 實體**
 
 ```java
 // server/skillhub-domain/src/main/java/com/skillhub/domain/user/UserAccount.java
@@ -1423,7 +1423,7 @@ public class UserAccount {
 }
 ```
 
-- [ ] **Step 3: 创建 UserAccountRepository 接口**
+- [ ] **Step 3: 建立 UserAccountRepository 介面**
 
 ```java
 // server/skillhub-domain/src/main/java/com/skillhub/domain/user/UserAccountRepository.java
@@ -1437,7 +1437,7 @@ public interface UserAccountRepository {
 }
 ```
 
-- [ ] **Step 4: 创建命名空间相关实体**
+- [ ] **Step 4: 建立名稱空間相關實體**
 
 ```java
 // NamespaceStatus.java
@@ -1568,7 +1568,7 @@ public class NamespaceMember {
 }
 ```
 
-- [ ] **Step 5: 创建 Repository 接口**
+- [ ] **Step 5: 建立 Repository 介面**
 
 ```java
 // NamespaceRepository.java
@@ -1606,14 +1606,14 @@ git commit -m "feat(domain): add UserAccount and Namespace entities with reposit
 - Repository interfaces (implementation in infra module)"
 ```
 
-### Task 9: Infra 层 JPA Repository 实现
+### Task 9: Infra 層 JPA Repository 實現
 
 **Files:**
 - Create: `server/skillhub-infra/src/main/java/com/skillhub/infra/jpa/UserAccountJpaRepository.java`
 - Create: `server/skillhub-infra/src/main/java/com/skillhub/infra/jpa/NamespaceJpaRepository.java`
 - Create: `server/skillhub-infra/src/main/java/com/skillhub/infra/jpa/NamespaceMemberJpaRepository.java`
 
-- [ ] **Step 1: 创建 UserAccountJpaRepository**
+- [ ] **Step 1: 建立 UserAccountJpaRepository**
 
 ```java
 // server/skillhub-infra/src/main/java/com/skillhub/infra/jpa/UserAccountJpaRepository.java
@@ -1630,7 +1630,7 @@ public interface UserAccountJpaRepository
 }
 ```
 
-- [ ] **Step 2: 创建 NamespaceJpaRepository 和 NamespaceMemberJpaRepository**
+- [ ] **Step 2: 建立 NamespaceJpaRepository 和 NamespaceMemberJpaRepository**
 
 ```java
 // NamespaceJpaRepository.java
@@ -1675,7 +1675,7 @@ git add server/skillhub-infra/
 git commit -m "feat(infra): add JPA repository implementations for UserAccount and Namespace"
 ```
 
-### Task 10: Auth 模块实体与 Repository
+### Task 10: Auth 模組實體與 Repository
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/entity/IdentityBinding.java`
@@ -1686,7 +1686,7 @@ git commit -m "feat(infra): add JPA repository implementations for UserAccount a
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/entity/UserRoleBinding.java`
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/repository/*.java`
 
-- [ ] **Step 1: 创建 IdentityBinding 实体**
+- [ ] **Step 1: 建立 IdentityBinding 實體**
 
 ```java
 package com.skillhub.auth.entity;
@@ -1755,7 +1755,7 @@ public class IdentityBinding {
 }
 ```
 
-- [ ] **Step 2: 创建 ApiToken 实体**
+- [ ] **Step 2: 建立 ApiToken 實體**
 
 ```java
 package com.skillhub.auth.entity;
@@ -1841,7 +1841,7 @@ public class ApiToken {
 }
 ```
 
-- [ ] **Step 3: 创建 RBAC 实体（Role, Permission, RolePermission, UserRoleBinding）**
+- [ ] **Step 3: 建立 RBAC 實體（Role, Permission, RolePermission, UserRoleBinding）**
 
 ```java
 // Role.java
@@ -1974,7 +1974,7 @@ public class UserRoleBinding {
 }
 ```
 
-- [ ] **Step 4: 创建 Auth Repository 接口**
+- [ ] **Step 4: 建立 Auth Repository 介面**
 
 ```java
 // IdentityBindingRepository.java
@@ -2042,7 +2042,7 @@ git commit -m "feat(auth): add auth entities and JPA repositories
 - JPA repositories for all auth entities"
 ```
 
-### Task 10: OAuth2 Claims 提取与准入策略
+### Task 10: OAuth2 Claims 提取與准入策略
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/oauth/OAuthClaims.java`
@@ -2055,7 +2055,7 @@ git commit -m "feat(auth): add auth entities and JPA repositories
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/policy/AccessPolicyFactory.java`
 - Test: `server/skillhub-auth/src/test/java/com/skillhub/auth/policy/AccessPolicyTest.java`
 
-- [ ] **Step 1: 创建 OAuthClaims record**
+- [ ] **Step 1: 建立 OAuthClaims record**
 
 ```java
 // server/skillhub-auth/src/main/java/com/skillhub/auth/oauth/OAuthClaims.java
@@ -2073,7 +2073,7 @@ public record OAuthClaims(
 ) {}
 ```
 
-- [ ] **Step 2: 创建 OAuthClaimsExtractor 接口和 GitHub 实现**
+- [ ] **Step 2: 建立 OAuthClaimsExtractor 介面和 GitHub 實現**
 
 ```java
 // OAuthClaimsExtractor.java
@@ -2116,7 +2116,7 @@ public class GitHubClaimsExtractor implements OAuthClaimsExtractor {
 }
 ```
 
-- [ ] **Step 3: 创建 AccessDecision 和 AccessPolicy**
+- [ ] **Step 3: 建立 AccessDecision 和 AccessPolicy**
 
 ```java
 // AccessDecision.java
@@ -2140,7 +2140,7 @@ public interface AccessPolicy {
 }
 ```
 
-- [ ] **Step 4: 创建 OpenAccessPolicy 和 EmailDomainAccessPolicy**
+- [ ] **Step 4: 建立 OpenAccessPolicy 和 EmailDomainAccessPolicy**
 
 ```java
 // OpenAccessPolicy.java
@@ -2225,7 +2225,7 @@ public class SubjectWhitelistAccessPolicy implements AccessPolicy {
 }
 ```
 
-- [ ] **Step 5: 创建 AccessPolicyFactory**
+- [ ] **Step 5: 建立 AccessPolicyFactory**
 
 ```java
 // AccessPolicyFactory.java
@@ -2262,7 +2262,7 @@ public class AccessPolicyFactory {
 }
 ```
 
-- [ ] **Step 6: 编写 AccessPolicy 单元测试**
+- [ ] **Step 6: 編寫 AccessPolicy 單元測試**
 
 ```java
 // server/skillhub-auth/src/test/java/com/skillhub/auth/policy/AccessPolicyTest.java
@@ -2334,7 +2334,7 @@ class AccessPolicyTest {
 }
 ```
 
-- [ ] **Step 7: 运行测试验证**
+- [ ] **Step 7: 執行測試驗證**
 
 Run: `cd server && ./mvnw test -pl skillhub-auth -Dtest=AccessPolicyTest -am`
 
@@ -2360,7 +2360,7 @@ git commit -m "feat(auth): add OAuth claims extraction and access policy
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/oauth/OAuth2LoginSuccessHandler.java`
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/rbac/PlatformPrincipal.java`
 
-- [ ] **Step 1: 创建 PlatformPrincipal**
+- [ ] **Step 1: 建立 PlatformPrincipal**
 
 ```java
 // server/skillhub-auth/src/main/java/com/skillhub/auth/rbac/PlatformPrincipal.java
@@ -2379,7 +2379,7 @@ public record PlatformPrincipal(
 ) implements Serializable {}
 ```
 
-- [ ] **Step 2: 创建 IdentityBindingService**
+- [ ] **Step 2: 建立 IdentityBindingService**
 
 ```java
 // server/skillhub-auth/src/main/java/com/skillhub/auth/identity/IdentityBindingService.java
@@ -2424,7 +2424,7 @@ public class IdentityBindingService {
         if (binding != null) {
             user = userRepo.findById(binding.getUserId())
                 .orElseThrow(() -> new IllegalStateException("User not found for binding"));
-            // 同步最新信息
+            // 同步最新資訊
             user.setDisplayName(claims.providerLogin());
             if (claims.email() != null) user.setEmail(claims.email());
             if (claims.extra().get("avatar_url") != null) {
@@ -2460,7 +2460,7 @@ public class IdentityBindingService {
 }
 ```
 
-- [ ] **Step 3: 创建 CustomOAuth2UserService**
+- [ ] **Step 3: 建立 CustomOAuth2UserService**
 
 ```java
 // server/skillhub-auth/src/main/java/com/skillhub/auth/oauth/CustomOAuth2UserService.java
@@ -2523,7 +2523,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         PlatformPrincipal principal = identityBindingService.bindOrCreate(claims, initialStatus);
 
-        // 将 principal 存入 OAuth2User attributes 供后续使用
+        // 將 principal 存入 OAuth2User attributes 供後續使用
         var attrs = new java.util.HashMap<>(oAuth2User.getAttributes());
         attrs.put("platformPrincipal", principal);
 
@@ -2534,7 +2534,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 }
 ```
 
-- [ ] **Step 4: 创建 OAuth2LoginSuccessHandler**
+- [ ] **Step 4: 建立 OAuth2LoginSuccessHandler**
 
 ```java
 // server/skillhub-auth/src/main/java/com/skillhub/auth/oauth/OAuth2LoginSuccessHandler.java
@@ -2582,14 +2582,14 @@ git commit -m "feat(auth): add identity binding and OAuth2 user service
 - OAuth2LoginSuccessHandler: store principal in session"
 ```
 
-### Task 12: API Token 签发与认证 Filter
+### Task 12: API Token 簽發與認證 Filter
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/token/ApiTokenService.java`
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/token/ApiTokenAuthenticationFilter.java`
 - Test: `server/skillhub-auth/src/test/java/com/skillhub/auth/token/ApiTokenServiceTest.java`
 
-- [ ] **Step 1: 创建 ApiTokenService**
+- [ ] **Step 1: 建立 ApiTokenService**
 
 ```java
 // server/skillhub-auth/src/main/java/com/skillhub/auth/token/ApiTokenService.java
@@ -2632,7 +2632,7 @@ public class ApiTokenService {
         this.roleBindingRepo = roleBindingRepo;
     }
 
-    /** 创建 Token，返回明文（仅此一次） */
+    /** 建立 Token，返回明文（僅此一次） */
     @Transactional
     public String createToken(String userId, String name, List<String> scopes,
                               LocalDateTime expiresAt) {
@@ -2656,7 +2656,7 @@ public class ApiTokenService {
         return rawToken;
     }
 
-    /** 通过明文 Token 认证，返回 PlatformPrincipal */
+    /** 透過明文 Token 認證，返回 PlatformPrincipal */
     public Optional<PlatformPrincipal> authenticate(String rawToken) {
         if (rawToken == null || !rawToken.startsWith(TOKEN_PREFIX)) {
             return Optional.empty();
@@ -2708,7 +2708,7 @@ public class ApiTokenService {
 }
 ```
 
-- [ ] **Step 2: 创建 ApiTokenAuthenticationFilter**
+- [ ] **Step 2: 建立 ApiTokenAuthenticationFilter**
 
 ```java
 // server/skillhub-auth/src/main/java/com/skillhub/auth/token/ApiTokenAuthenticationFilter.java
@@ -2753,7 +2753,7 @@ public class ApiTokenAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // 仅对 CLI 和 Token API 路径生效
+        // 僅對 CLI 和 Token API 路徑生效
         String path = request.getRequestURI();
         return !(path.startsWith("/api/v1/cli/") || path.startsWith("/api/v1/tokens")
                  || path.startsWith("/api/"));
@@ -2761,7 +2761,7 @@ public class ApiTokenAuthenticationFilter extends OncePerRequestFilter {
 }
 ```
 
-- [ ] **Step 3: 编写 ApiTokenService 单元测试**
+- [ ] **Step 3: 編寫 ApiTokenService 單元測試**
 
 ```java
 // server/skillhub-auth/src/test/java/com/skillhub/auth/token/ApiTokenServiceTest.java
@@ -2789,7 +2789,7 @@ class ApiTokenServiceTest {
 }
 ```
 
-- [ ] **Step 4: 运行测试**
+- [ ] **Step 4: 執行測試**
 
 Run: `cd server && ./mvnw test -pl skillhub-auth -Dtest=ApiTokenServiceTest -am`
 
@@ -2807,13 +2807,13 @@ git commit -m "feat(auth): add API Token service and authentication filter
 - Unit tests for SHA-256 hashing"
 ```
 
-### Task 13: RBAC 授权服务
+### Task 13: RBAC 授權服務
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/rbac/RbacService.java`
 - Test: `server/skillhub-auth/src/test/java/com/skillhub/auth/rbac/RbacServiceTest.java`
 
-- [ ] **Step 1: 创建 RbacService**
+- [ ] **Step 1: 建立 RbacService**
 
 ```java
 // server/skillhub-auth/src/main/java/com/skillhub/auth/rbac/RbacService.java
@@ -2840,26 +2840,26 @@ public class RbacService {
         this.namespaceMemberRepo = namespaceMemberRepo;
     }
 
-    /** 检查用户是否拥有指定平台权限 */
+    /** 檢查使用者是否擁有指定平臺許可權 */
     public boolean hasPlatformRole(PlatformPrincipal principal, String roleCode) {
         if (principal.platformRoles().contains("SUPER_ADMIN")) return true;
         return principal.platformRoles().contains(roleCode);
     }
 
-    /** 检查用户在指定命名空间的角色是否 >= 要求的最低角色 */
+    /** 檢查使用者在指定名稱空間的角色是否 >= 要求的最低角色 */
     public boolean hasNamespaceRole(String userId, Long namespaceId, NamespaceRole minRole) {
         Optional<NamespaceMember> member = namespaceMemberRepo
             .findByNamespaceIdAndUserId(namespaceId, userId);
         return member.map(m -> m.getRole().ordinal() <= minRole.ordinal()).orElse(false);
     }
 
-    /** 获取用户在指定命名空间的角色 */
+    /** 獲取使用者在指定名稱空間的角色 */
     public Optional<NamespaceRole> getNamespaceRole(String userId, Long namespaceId) {
         return namespaceMemberRepo.findByNamespaceIdAndUserId(namespaceId, userId)
             .map(NamespaceMember::getRole);
     }
 
-    /** 获取用户所有平台角色码 */
+    /** 獲取使用者所有平臺角色碼 */
     public Set<String> getPlatformRoleCodes(String userId) {
         return roleBindingRepo.findByUserId(userId).stream()
             .map(rb -> rb.getRole().getCode())
@@ -2868,7 +2868,7 @@ public class RbacService {
 }
 ```
 
-- [ ] **Step 2: 编写 RbacService 单元测试**
+- [ ] **Step 2: 編寫 RbacService 單元測試**
 
 ```java
 // server/skillhub-auth/src/test/java/com/skillhub/auth/rbac/RbacServiceTest.java
@@ -2899,13 +2899,13 @@ class RbacServiceTest {
     void platformPrincipal_isSerializable() {
         var principal = new PlatformPrincipal(1L, "test", "t@t.com", null, "github",
             Set.of("AUDITOR"));
-        // record 自动实现 Serializable
+        // record 自動實現 Serializable
         assertThat(principal).isInstanceOf(java.io.Serializable.class);
     }
 }
 ```
 
-- [ ] **Step 3: 运行测试**
+- [ ] **Step 3: 執行測試**
 
 Run: `cd server && ./mvnw test -pl skillhub-auth -Dtest=RbacServiceTest -am`
 
@@ -2926,10 +2926,10 @@ git commit -m "feat(auth): add RBAC authorization service
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/config/SecurityConfig.java`
-- Modify: `server/skillhub-app/src/main/resources/application.yml` (添加 OAuth2 和 Session 配置)
-- Modify: `server/skillhub-app/src/main/resources/application-local.yml` (添加 OAuth2 占位配置)
+- Modify: `server/skillhub-app/src/main/resources/application.yml` (新增 OAuth2 和 Session 配置)
+- Modify: `server/skillhub-app/src/main/resources/application-local.yml` (新增 OAuth2 佔位配置)
 
-- [ ] **Step 1: 创建 SecurityConfig**
+- [ ] **Step 1: 建立 SecurityConfig**
 
 ```java
 // server/skillhub-auth/src/main/java/com/skillhub/auth/config/SecurityConfig.java
@@ -2977,7 +2977,7 @@ public class SecurityConfig {
                 .ignoringRequestMatchers("/api/v1/cli/**", "/api/**")
             )
             .authorizeHttpRequests(auth -> auth
-                // 公开端点
+                // 公開端點
                 .requestMatchers(
                     "/api/v1/health",
                     "/api/v1/auth/providers",
@@ -2990,7 +2990,7 @@ public class SecurityConfig {
                 ).permitAll()
                 // Admin API
                 .requestMatchers("/api/v1/admin/**").hasAnyRole("SUPER_ADMIN", "SKILL_ADMIN", "USER_ADMIN", "AUDITOR")
-                // 其余需认证
+                // 其餘需認證
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth2 -> oauth2
@@ -3013,7 +3013,7 @@ public class SecurityConfig {
 }
 ```
 
-- [ ] **Step 2: 更新 application.yml 添加 OAuth2 和 Session 配置**
+- [ ] **Step 2: 更新 application.yml 新增 OAuth2 和 Session 配置**
 
 在 `server/skillhub-app/src/main/resources/application.yml` 追加：
 
@@ -3071,12 +3071,12 @@ git commit -m "feat(auth): add Spring Security config with OAuth2 + CSRF + Sessi
 - Public endpoints permit all, admin requires roles"
 ```
 
-### Task 15: MockAuthFilter 本地开发
+### Task 15: MockAuthFilter 本地開發
 
 **Files:**
 - Create: `server/skillhub-auth/src/main/java/com/skillhub/auth/mock/MockAuthFilter.java`
 
-- [ ] **Step 1: 创建 MockAuthFilter**
+- [ ] **Step 1: 建立 MockAuthFilter**
 
 ```java
 // server/skillhub-auth/src/main/java/com/skillhub/auth/mock/MockAuthFilter.java
@@ -3162,7 +3162,7 @@ git commit -m "feat(auth): add MockAuthFilter for local development
 - Create: `server/skillhub-app/src/main/java/com/skillhub/controller/AuthController.java`
 - Create: `server/skillhub-app/src/main/java/com/skillhub/controller/TokenController.java`
 
-- [ ] **Step 1: 创建 AuthController**
+- [ ] **Step 1: 建立 AuthController**
 
 ```java
 // server/skillhub-app/src/main/java/com/skillhub/controller/AuthController.java
@@ -3207,7 +3207,7 @@ public class AuthController {
 
     @GetMapping("/providers")
     public ResponseEntity<Map<String, Object>> providers() {
-        // 一期只有 GitHub，后续可动态读取 ClientRegistrationRepository
+        // 一期只有 GitHub，後續可動態讀取 ClientRegistrationRepository
         var github = Map.of(
             "id", "github",
             "name", "GitHub",
@@ -3218,7 +3218,7 @@ public class AuthController {
 }
 ```
 
-- [ ] **Step 2: 创建 TokenController**
+- [ ] **Step 2: 建立 TokenController**
 
 ```java
 // server/skillhub-app/src/main/java/com/skillhub/controller/TokenController.java
@@ -3296,13 +3296,13 @@ git commit -m "feat: add AuthController and TokenController
 - POST/GET/DELETE /api/v1/tokens: create, list, revoke API tokens"
 ```
 
-### Task 17: 全局异常处理
+### Task 17: 全域性異常處理
 
 **Files:**
 - Create: `server/skillhub-app/src/main/java/com/skillhub/exception/ErrorResponse.java`
 - Create: `server/skillhub-app/src/main/java/com/skillhub/exception/GlobalExceptionHandler.java`
 
-- [ ] **Step 1: 创建 ErrorResponse**
+- [ ] **Step 1: 建立 ErrorResponse**
 
 ```java
 // server/skillhub-app/src/main/java/com/skillhub/exception/ErrorResponse.java
@@ -3323,7 +3323,7 @@ public record ErrorResponse(
 }
 ```
 
-- [ ] **Step 2: 创建 GlobalExceptionHandler**
+- [ ] **Step 2: 建立 GlobalExceptionHandler**
 
 ```java
 // server/skillhub-app/src/main/java/com/skillhub/exception/GlobalExceptionHandler.java
@@ -3373,36 +3373,36 @@ git commit -m "feat: add global exception handler
 - Logs unhandled exceptions with requestId"
 ```
 
-### Task 18: Flyway 种子数据（RBAC 预置角色和权限）
+### Task 18: Flyway 種子資料（RBAC 預置角色和許可權）
 
 **Files:**
 - Create: `server/skillhub-app/src/main/resources/db/migration/V2__seed_rbac.sql`
 
-- [ ] **Step 1: 创建种子数据迁移脚本**
+- [ ] **Step 1: 建立種子資料遷移指令碼**
 
 ```sql
 -- server/skillhub-app/src/main/resources/db/migration/V2__seed_rbac.sql
 
--- 预置平台角色
+-- 預置平臺角色
 INSERT INTO role (code, name, description, is_system) VALUES
-('SUPER_ADMIN', '平台超管', '拥有所有权限', TRUE),
-('SKILL_ADMIN', '技能治理', '全局空间审核、提升审核、隐藏/撤回', TRUE),
-('USER_ADMIN', '用户治理', '准入审批、封禁/解封、角色分配', TRUE),
-('AUDITOR', '审计员', '查看审计日志', TRUE);
+('SUPER_ADMIN', '平臺超管', '擁有所有許可權', TRUE),
+('SKILL_ADMIN', '技能治理', '全域性空間稽核、提升稽核、隱藏/撤回', TRUE),
+('USER_ADMIN', '使用者治理', '准入審批、封禁/解封、角色分配', TRUE),
+('AUDITOR', '審計員', '檢視審計日誌', TRUE);
 
--- 预置权限
+-- 預置許可權
 INSERT INTO permission (code, name, group_code) VALUES
-('review:approve', '审核通过', 'review'),
-('review:reject', '审核拒绝', 'review'),
+('review:approve', '稽核透過', 'review'),
+('review:reject', '稽核拒絕', 'review'),
 ('skill:manage', '技能管理', 'skill'),
-('skill:publish', '技能发布', 'skill'),
-('skill:delete', '技能删除', 'skill'),
-('promotion:approve', '提升审核', 'promotion'),
-('user:manage', '用户管理', 'user'),
-('user:approve', '用户审批', 'user'),
-('audit:read', '审计查看', 'audit');
+('skill:publish', '技能發布', 'skill'),
+('skill:delete', '技能刪除', 'skill'),
+('promotion:approve', '提升稽核', 'promotion'),
+('user:manage', '使用者管理', 'user'),
+('user:approve', '使用者審批', 'user'),
+('audit:read', '審計檢視', 'audit');
 
--- 角色-权限绑定
+-- 角色-許可權繫結
 -- SKILL_ADMIN
 INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM role r, permission p
@@ -3418,11 +3418,11 @@ INSERT INTO role_permission (role_id, permission_id)
 SELECT r.id, p.id FROM role r, permission p
 WHERE r.code = 'AUDITOR' AND p.code = 'audit:read';
 
--- 预置 @global 命名空间
+-- 預置 @global 名稱空間
 INSERT INTO namespace (slug, display_name, description, visibility, status)
-VALUES ('global', 'Global', '平台级公共空间', 'PUBLIC', 'ACTIVE');
+VALUES ('global', 'Global', '平臺級公共空間', 'PUBLIC', 'ACTIVE');
 
--- 预置种子用户（本地开发用，SUPER_ADMIN）
+-- 預置種子使用者（本地開發用，SUPER_ADMIN）
 INSERT INTO user_account (display_name, email, status)
 VALUES ('Admin', 'admin@skillhub.dev', 'ACTIVE');
 
@@ -3443,59 +3443,59 @@ git commit -m "feat: add RBAC seed data migration
 - Create seed admin user for local development"
 ```
 
-### Chunk 2 验收检查
+### Chunk 2 驗收檢查
 
-运行以下命令验证 Chunk 2 完成：
+執行以下命令驗證 Chunk 2 完成：
 
 ```bash
-# 1. 确保依赖服务运行
+# 1. 確保依賴服務執行
 make dev
 
-# 2. 运行所有测试
+# 2. 執行所有測試
 cd server && ./mvnw test
 # Expected: BUILD SUCCESS, AccessPolicyTest + ApiTokenServiceTest + RbacServiceTest 全部 PASS
 
-# 3. 启动应用
+# 3. 啟動應用
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 
-# 4. 验证 MockAuth + /api/v1/auth/me
+# 4. 驗證 MockAuth + /api/v1/auth/me
 curl -H "X-Mock-User-Id: 1" http://localhost:8080/api/v1/auth/me
 # Expected: {"userId":1,"displayName":"Admin","email":"admin@skillhub.dev",...}
 
-# 5. 验证未登录返回 401
+# 5. 驗證未登入返回 401
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/v1/auth/me
 # Expected: 401
 
-# 6. 验证 /api/v1/auth/providers
+# 6. 驗證 /api/v1/auth/providers
 curl http://localhost:8080/api/v1/auth/providers
 # Expected: {"data":[{"id":"github","name":"GitHub","authorizationUrl":"/oauth2/authorization/github"}]}
 
-# 7. 验证 Token 创建
+# 7. 驗證 Token 建立
 curl -X POST -H "X-Mock-User-Id: 1" -H "Content-Type: application/json" \
   -d '{"name":"test-token","scopes":["skill:read"]}' \
   http://localhost:8080/api/v1/tokens
 # Expected: {"token":"ask_..."}
 
-# 8. 验证 Token 列表
+# 8. 驗證 Token 列表
 curl -H "X-Mock-User-Id: 1" http://localhost:8080/api/v1/tokens
 # Expected: {"data":[...]}
 
-# 9. 验证 RBAC 种子数据
+# 9. 驗證 RBAC 種子資料
 docker compose exec postgres psql -U skillhub -d skillhub \
   -c "SELECT r.code, array_agg(p.code) FROM role r JOIN role_permission rp ON r.id=rp.role_id JOIN permission p ON p.id=rp.permission_id GROUP BY r.code;"
 # Expected: 4 roles with their permissions
 
-# 10. 停止应用和服务
+# 10. 停止應用和服務
 make dev-down
 ```
 
-Chunk 2 产出：完整认证链路（OAuth2 + AccessPolicy + IdentityBinding + Session + Token + RBAC + MockAuth + CSRF）。
+Chunk 2 產出：完整認證鏈路（OAuth2 + AccessPolicy + IdentityBinding + Session + Token + RBAC + MockAuth + CSRF）。
 
-## Chunk 3: 前端骨架 + 登录集成
+## Chunk 3: 前端骨架 + 登入整合
 
-本块建立 React 前端工程，集成 TanStack Router/Query、shadcn/ui、openapi-fetch 类型生成管线，实现 OAuth 登录流程和路由守卫。
+本塊建立 React 前端工程，整合 TanStack Router/Query、shadcn/ui、openapi-fetch 型別生成管線，實現 OAuth 登入流程和路由守衛。
 
-### 文件结构映射
+### 檔案結構對映
 
 ```
 web/
@@ -3511,21 +3511,21 @@ web/
 │   ├── app/
 │   │   ├── router.tsx                 # TanStack Router 配置
 │   │   ├── providers.tsx              # QueryClient + Router Provider
-│   │   └── layout.tsx                 # 全局布局（Header + Main）
+│   │   └── layout.tsx                 # 全域性佈局（Header + Main）
 │   ├── pages/
-│   │   ├── home.tsx                   # 首页
-│   │   ├── login.tsx                  # 登录页
-│   │   └── dashboard.tsx              # Dashboard（需登录）
+│   │   ├── home.tsx                   # 首頁
+│   │   ├── login.tsx                  # 登入頁
+│   │   └── dashboard.tsx              # Dashboard（需登入）
 │   ├── features/
 │   │   └── auth/
-│   │       ├── use-auth.ts            # 登录态 hook
-│   │       ├── auth-guard.tsx         # 路由守卫
-│   │       └── login-button.tsx       # OAuth 登录按钮
+│   │       ├── use-auth.ts            # 登入態 hook
+│   │       ├── auth-guard.tsx         # 路由守衛
+│   │       └── login-button.tsx       # OAuth 登入按鈕
 │   ├── shared/
-│   │   └── ui/                        # shadcn/ui 组件
+│   │   └── ui/                        # shadcn/ui 元件
 │   └── api/
-│       ├── client.ts                  # openapi-fetch 客户端
-│       └── generated/                 # openapi-typescript 生成的类型
+│       ├── client.ts                  # openapi-fetch 客戶端
+│       └── generated/                 # openapi-typescript 生成的型別
 │           └── schema.d.ts
 ├── Dockerfile
 └── nginx.conf
@@ -3540,14 +3540,14 @@ web/
 - Create: `web/index.html`
 - Create: `web/src/main.tsx`
 
-- [ ] **Step 1: 初始化 Vite + React + TypeScript 项目**
+- [ ] **Step 1: 初始化 Vite + React + TypeScript 專案**
 
 ```bash
-cd web  # 如果 web/ 不存在则先 mkdir web && cd web
+cd web  # 如果 web/ 不存在則先 mkdir web && cd web
 pnpm create vite . --template react-ts
 ```
 
-或手动创建 `package.json`：
+或手動建立 `package.json`：
 
 ```json
 {
@@ -3582,13 +3582,13 @@ pnpm create vite . --template react-ts
 }
 ```
 
-- [ ] **Step 2: 安装依赖**
+- [ ] **Step 2: 安裝依賴**
 
 Run: `cd web && pnpm install`
 
-Expected: 依赖安装成功
+Expected: 依賴安裝成功
 
-- [ ] **Step 3: 创建 tsconfig.json**
+- [ ] **Step 3: 建立 tsconfig.json**
 
 ```json
 // web/tsconfig.json
@@ -3617,7 +3617,7 @@ Expected: 依赖安装成功
 }
 ```
 
-- [ ] **Step 4: 创建 vite.config.ts**
+- [ ] **Step 4: 建立 vite.config.ts**
 
 ```typescript
 // web/vite.config.ts
@@ -3652,7 +3652,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 4: 创建 index.html 和 main.tsx**
+- [ ] **Step 4: 建立 index.html 和 main.tsx**
 
 ```html
 <!-- web/index.html -->
@@ -3741,7 +3741,7 @@ export default {
 
 Run: `cd web && pnpm dlx shadcn@latest init`
 
-选择默认配置，或手动创建 `components.json`：
+選擇預設配置，或手動建立 `components.json`：
 
 ```json
 {
@@ -3762,7 +3762,7 @@ Run: `cd web && pnpm dlx shadcn@latest init`
 }
 ```
 
-- [ ] **Step 3: 添加 Button 组件（验证 shadcn/ui 工作）**
+- [ ] **Step 3: 新增 Button 元件（驗證 shadcn/ui 工作）**
 
 Run: `cd web && pnpm dlx shadcn@latest add button`
 
@@ -3789,7 +3789,7 @@ git commit -m "feat(web): add Tailwind CSS and shadcn/ui configuration
 - Create: `web/src/pages/login.tsx`
 - Create: `web/src/pages/dashboard.tsx`
 
-- [ ] **Step 1: 创建路由配置**
+- [ ] **Step 1: 建立路由配置**
 
 ```tsx
 // web/src/app/router.tsx
@@ -3832,7 +3832,7 @@ declare module '@tanstack/react-router' {
 }
 ```
 
-- [ ] **Step 2: 创建 Providers**
+- [ ] **Step 2: 建立 Providers**
 
 ```tsx
 // web/src/app/providers.tsx
@@ -3858,7 +3858,7 @@ export function App() {
 }
 ```
 
-- [ ] **Step 3: 创建 Layout**
+- [ ] **Step 3: 建立 Layout**
 
 ```tsx
 // web/src/app/layout.tsx
@@ -3880,7 +3880,7 @@ export function Layout() {
                 <span className="text-sm text-muted-foreground">{user.displayName}</span>
               </>
             ) : (
-              <Link to="/login" className="text-sm">登录</Link>
+              <Link to="/login" className="text-sm">登入</Link>
             )}
           </nav>
         </div>
@@ -3893,7 +3893,7 @@ export function Layout() {
 }
 ```
 
-- [ ] **Step 4: 创建页面组件**
+- [ ] **Step 4: 建立頁面元件**
 
 ```tsx
 // web/src/pages/home.tsx
@@ -3901,7 +3901,7 @@ export function HomePage() {
   return (
     <div>
       <h1 className="text-2xl font-bold">SkillHub</h1>
-      <p className="mt-2 text-muted-foreground">技能注册中心</p>
+      <p className="mt-2 text-muted-foreground">技能註冊中心</p>
     </div>
   )
 }
@@ -3915,7 +3915,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="w-full max-w-sm space-y-6 text-center">
-        <h1 className="text-2xl font-bold">登录 SkillHub</h1>
+        <h1 className="text-2xl font-bold">登入 SkillHub</h1>
         <LoginButton />
       </div>
     </div>
@@ -3935,7 +3935,7 @@ export function DashboardPage() {
     <AuthGuard>
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="mt-2">欢迎, {user?.displayName}</p>
+        <p className="mt-2">歡迎, {user?.displayName}</p>
       </div>
     </AuthGuard>
   )
@@ -3953,14 +3953,14 @@ git commit -m "feat(web): add TanStack Router with page skeleton
 - Router config with type-safe routes"
 ```
 
-### Task 22: Auth Hook + 登录按钮 + 路由守卫
+### Task 22: Auth Hook + 登入按鈕 + 路由守衛
 
 **Files:**
 - Create: `web/src/features/auth/use-auth.ts`
 - Create: `web/src/features/auth/login-button.tsx`
 - Create: `web/src/features/auth/auth-guard.tsx`
 
-- [ ] **Step 1: 创建 useAuth hook**
+- [ ] **Step 1: 建立 useAuth hook**
 
 ```tsx
 // web/src/features/auth/use-auth.ts
@@ -3997,7 +3997,7 @@ export function useAuth() {
 }
 ```
 
-- [ ] **Step 2: 创建 LoginButton**
+- [ ] **Step 2: 建立 LoginButton**
 
 ```tsx
 // web/src/features/auth/login-button.tsx
@@ -4030,7 +4030,7 @@ export function LoginButton() {
           className="w-full"
           onClick={() => { window.location.href = p.authorizationUrl }}
         >
-          使用 {p.name} 登录
+          使用 {p.name} 登入
         </Button>
       ))}
     </div>
@@ -4038,7 +4038,7 @@ export function LoginButton() {
 }
 ```
 
-- [ ] **Step 3: 创建 AuthGuard**
+- [ ] **Step 3: 建立 AuthGuard**
 
 ```tsx
 // web/src/features/auth/auth-guard.tsx
@@ -4057,7 +4057,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }, [isLoading, isAuthenticated, navigate])
 
   if (isLoading) {
-    return <div className="flex justify-center py-8">加载中...</div>
+    return <div className="flex justify-center py-8">載入中...</div>
   }
 
   if (!isAuthenticated) return null
@@ -4077,18 +4077,18 @@ git commit -m "feat(web): add auth hook, login button, and route guard
 - AuthGuard: redirect to /login if not authenticated"
 ```
 
-### Task 23: openapi-fetch 客户端生成管线
+### Task 23: openapi-fetch 客戶端生成管線
 
 **Files:**
 - Create: `web/src/api/client.ts`
 
-- [ ] **Step 1: 创建 API 客户端**
+- [ ] **Step 1: 建立 API 客戶端**
 
 ```typescript
 // web/src/api/client.ts
 import createClient from 'openapi-fetch'
 
-// 一期先用手动类型，后续通过 openapi-typescript 自动生成
+// 一期先用手動型別，後續透過 openapi-typescript 自動生成
 export const api = createClient({ baseUrl: '/' })
 
 // 便捷方法
@@ -4107,13 +4107,13 @@ export async function fetchJson<T>(url: string, options?: RequestInit): Promise<
 }
 ```
 
-- [ ] **Step 2: 验证 generate-api 脚本可用**
+- [ ] **Step 2: 驗證 generate-api 指令碼可用**
 
-在后端运行时执行：
+在後端執行時執行：
 
 Run: `cd web && pnpm run generate-api`
 
-Expected: 如果后端运行中，生成 `src/api/generated/schema.d.ts`；如果后端未运行，报连接错误（预期行为）
+Expected: 如果後端執行中，生成 `src/api/generated/schema.d.ts`；如果後端未執行，報連線錯誤（預期行為）
 
 - [ ] **Step 3: Commit**
 
@@ -4131,7 +4131,7 @@ git commit -m "feat(web): add openapi-fetch API client
 - Create: `web/Dockerfile`
 - Create: `web/nginx.conf`
 
-- [ ] **Step 1: 创建 nginx.conf**
+- [ ] **Step 1: 建立 nginx.conf**
 
 ```nginx
 # web/nginx.conf
@@ -4141,12 +4141,12 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
-    # Gzip 压缩
+    # Gzip 壓縮
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml;
     gzip_min_length 1000;
 
-    # SPA 路由：所有非文件请求回退到 index.html
+    # SPA 路由：所有非檔案請求回退到 index.html
     location / {
         try_files $uri $uri/ /index.html;
     }
@@ -4178,13 +4178,13 @@ server {
         proxy_pass http://server:8080;
     }
 
-    # 静态资源缓存
+    # 靜態資源快取
     location /assets/ {
         expires 1y;
         add_header Cache-Control "public, immutable";
     }
 
-    # 健康检查
+    # 健康檢查
     location /nginx-health {
         return 200 'ok';
         add_header Content-Type text/plain;
@@ -4192,7 +4192,7 @@ server {
 }
 ```
 
-- [ ] **Step 2: 创建 Dockerfile**
+- [ ] **Step 2: 建立 Dockerfile**
 
 ```dockerfile
 # web/Dockerfile
@@ -4223,12 +4223,12 @@ git commit -m "feat(web): add Dockerfile and nginx config
 - Static asset caching, health check endpoint"
 ```
 
-### Task 25: 更新 Makefile 添加前端命令
+### Task 25: 更新 Makefile 新增前端命令
 
 **Files:**
 - Modify: `Makefile`
 
-- [ ] **Step 1: 追加前端相关 target**
+- [ ] **Step 1: 追加前端相關 target**
 
 在 Makefile 末尾追加：
 
@@ -4264,7 +4264,7 @@ git commit -m "feat: add frontend targets to Makefile
 **Files:**
 - Create: `docker-compose.prod.yml`
 
-- [ ] **Step 1: 创建生产部署 compose 文件**
+- [ ] **Step 1: 建立生產部署 compose 檔案**
 
 ```yaml
 # docker-compose.prod.yml
@@ -4344,7 +4344,7 @@ volumes:
   minio_data:
 ```
 
-- [ ] **Step 2: 创建后端 Dockerfile**
+- [ ] **Step 2: 建立後端 Dockerfile**
 
 ```dockerfile
 # server/Dockerfile
@@ -4364,7 +4364,7 @@ HEALTHCHECK --interval=10s --timeout=3s \
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
 ```
 
-- [ ] **Step 3: 更新 Makefile 添加 deploy 命令**
+- [ ] **Step 3: 更新 Makefile 新增 deploy 命令**
 
 在 Makefile 追加：
 
@@ -4390,89 +4390,89 @@ git commit -m "feat: add production Docker Compose and backend Dockerfile
 - Makefile deploy/deploy-down targets"
 ```
 
-### Chunk 3 验收检查
+### Chunk 3 驗收檢查
 
-运行以下命令验证 Chunk 3 完成：
+執行以下命令驗證 Chunk 3 完成：
 
 ```bash
-# 1. 确保后端依赖运行
+# 1. 確保後端依賴執行
 make dev
 
-# 2. 安装前端依赖
+# 2. 安裝前端依賴
 make web-install
-# Expected: 依赖安装成功
+# Expected: 依賴安裝成功
 
-# 3. 构建前端
+# 3. 構建前端
 make web-build
-# Expected: dist/ 目录生成
+# Expected: dist/ 目錄生成
 
-# 4. 启动后端
+# 4. 啟動後端
 cd server && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local &
 
-# 5. 启动前端开发服务器（手动）
+# 5. 啟動前端開發伺服器（手動）
 cd web && pnpm dev
-# Expected: http://localhost:3000 可访问
+# Expected: http://localhost:3000 可訪問
 
-# 6. 验证首页
-# 浏览器打开 http://localhost:3000
-# Expected: 显示 "SkillHub" 标题和 "登录" 链接
+# 6. 驗證首頁
+# 瀏覽器開啟 http://localhost:3000
+# Expected: 顯示 "SkillHub" 標題和 "登入" 連結
 
-# 7. 验证登录页
-# 浏览器打开 http://localhost:3000/login
-# Expected: 显示 "使用 GitHub 登录" 按钮
+# 7. 驗證登入頁
+# 瀏覽器開啟 http://localhost:3000/login
+# Expected: 顯示 "使用 GitHub 登入" 按鈕
 
-# 8. 验证 Dashboard 路由守卫
-# 浏览器打开 http://localhost:3000/dashboard
-# Expected: 未登录时重定向到 /login
+# 8. 驗證 Dashboard 路由守衛
+# 瀏覽器開啟 http://localhost:3000/dashboard
+# Expected: 未登入時重定向到 /login
 
-# 9. 验证 MockAuth + Dashboard
+# 9. 驗證 MockAuth + Dashboard
 curl -H "X-Mock-User-Id: 1" http://localhost:8080/api/v1/auth/me
-# Expected: 返回用户信息（前端通过 proxy 也可访问）
+# Expected: 返回使用者資訊（前端透過 proxy 也可訪問）
 
-# 10. 验证 OpenAPI 类型生成
+# 10. 驗證 OpenAPI 型別生成
 make generate-api
-# Expected: web/src/api/generated/schema.d.ts 生成（需后端运行中）
+# Expected: web/src/api/generated/schema.d.ts 生成（需後端執行中）
 
-# 11. 停止所有服务
+# 11. 停止所有服務
 make dev-down
 ```
 
-Chunk 3 产出：可运行的前端应用 + OAuth 登录流程 + 路由守卫 + API 类型生成管线 + 生产部署配置。
+Chunk 3 產出：可執行的前端應用 + OAuth 登入流程 + 路由守衛 + API 型別生成管線 + 生產部署配置。
 
 ---
 
-## Phase 1 整体验收检查
+## Phase 1 整體驗收檢查
 
-对照 `10-delivery-roadmap.md` Phase 1 验收标准：
+對照 `10-delivery-roadmap.md` Phase 1 驗收標準：
 
-| 验收项 | 验证方式 | 对应 Task |
+| 驗收項 | 驗證方式 | 對應 Task |
 |--------|---------|-----------|
-| 前后端能跑 | `make dev` + 后端启动 + `pnpm dev` 前端启动 | Task 1-7, 19-24 |
-| GitHub OAuth 登录可用 | 配置真实 GitHub OAuth App 后完整登录流程 | Task 10-11, 14, 22 |
-| AccessPolicy 准入策略生效 | 切换 `skillhub.access-policy.mode` 验证不同策略 | Task 10 |
-| `/api/v1/auth/me` 可用 | `curl` 验证已登录/未登录响应 | Task 16 |
-| Token 可用 | 创建 Token → Bearer 认证 → `/api/v1/cli/whoami` | Task 12, 16 |
-| OpenAPI spec 可访问 | `curl http://localhost:8080/v3/api-docs` | Task 6 |
-| CSRF 防护 | Cookie-to-Header 模式，CLI API 豁免 | Task 14 |
-| MockAuthFilter | `X-Mock-User-Id` Header 模拟登录 | Task 15 |
-| RBAC 基础 | 种子数据 4 角色 + 9 权限 + 角色判定 | Task 13, 18 |
-| 全局异常处理 + requestId | 错误响应包含 requestId | Task 5, 17 |
-| 前端登录流程 | 登录页 → GitHub 按钮 → 回调 → Dashboard | Task 21, 22 |
-| 路由守卫 | 未登录访问 Dashboard 重定向到 /login | Task 22 |
-| openapi-fetch 管线 | `make generate-api` 生成类型文件 | Task 23 |
-| Docker 完整部署 | `make deploy` 构建并启动全栈 | Task 24, 26 |
+| 前後端能跑 | `make dev` + 後端啟動 + `pnpm dev` 前端啟動 | Task 1-7, 19-24 |
+| GitHub OAuth 登入可用 | 配置真實 GitHub OAuth App 後完整登入流程 | Task 10-11, 14, 22 |
+| AccessPolicy 准入策略生效 | 切換 `skillhub.access-policy.mode` 驗證不同策略 | Task 10 |
+| `/api/v1/auth/me` 可用 | `curl` 驗證已登入/未登入響應 | Task 16 |
+| Token 可用 | 建立 Token → Bearer 認證 → `/api/v1/cli/whoami` | Task 12, 16 |
+| OpenAPI spec 可訪問 | `curl http://localhost:8080/v3/api-docs` | Task 6 |
+| CSRF 防護 | Cookie-to-Header 模式，CLI API 豁免 | Task 14 |
+| MockAuthFilter | `X-Mock-User-Id` Header 模擬登入 | Task 15 |
+| RBAC 基礎 | 種子資料 4 角色 + 9 許可權 + 角色判定 | Task 13, 18 |
+| 全域性異常處理 + requestId | 錯誤響應包含 requestId | Task 5, 17 |
+| 前端登入流程 | 登入頁 → GitHub 按鈕 → 回撥 → Dashboard | Task 21, 22 |
+| 路由守衛 | 未登入訪問 Dashboard 重定向到 /login | Task 22 |
+| openapi-fetch 管線 | `make generate-api` 生成型別檔案 | Task 23 |
+| Docker 完整部署 | `make deploy` 構建並啟動全棧 | Task 24, 26 |
 
-### 完整端到端验证流程
+### 完整端到端驗證流程
 
 ```bash
-# 1. 启动本地开发环境
+# 1. 啟動本地開發環境
 make dev
 cd server && ./mvnw spring-boot:run -Dspring-boot.run.profiles=local &
 cd web && pnpm dev &
 
-# 2. MockAuth 验证
+# 2. MockAuth 驗證
 curl -H "X-Mock-User-Id: 1" http://localhost:8080/api/v1/auth/me
-# → 200, 返回 Admin 用户信息
+# → 200, 返回 Admin 使用者資訊
 
 # 3. Token 全流程
 TOKEN=$(curl -s -X POST -H "X-Mock-User-Id: 1" \
@@ -4483,9 +4483,9 @@ echo $TOKEN
 # → ask_...
 
 curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/v1/auth/me
-# → 200, 返回用户信息
+# → 200, 返回使用者資訊
 
-# 4. 未认证访问
+# 4. 未認證訪問
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/v1/auth/me
 # → 401
 
@@ -4493,10 +4493,10 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/v1/auth/me
 curl -s http://localhost:8080/v3/api-docs | jq '.info.title'
 # → "SkillHub API"
 
-# 6. 前端页面
-# 浏览器 http://localhost:3000 → 首页
-# 浏览器 http://localhost:3000/login → 登录页
-# 浏览器 http://localhost:3000/dashboard → 重定向到 /login
+# 6. 前端頁面
+# 瀏覽器 http://localhost:3000 → 首頁
+# 瀏覽器 http://localhost:3000/login → 登入頁
+# 瀏覽器 http://localhost:3000/dashboard → 重定向到 /login
 
 # 7. 清理
 make dev-down
@@ -4504,4 +4504,4 @@ make dev-down
 
 ---
 
-**Plan complete.** 共 26 个 Task，3 个 Chunk，覆盖 Phase 1 全部验收标准。
+**Plan complete.** 共 26 個 Task，3 個 Chunk，覆蓋 Phase 1 全部驗收標準。

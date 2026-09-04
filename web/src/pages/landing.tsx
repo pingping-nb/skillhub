@@ -146,7 +146,7 @@ export function LandingPage() {
               color: 'hsl(var(--muted-foreground))',
             }}
           >
-            {t('landing.hero.publishSkill', { defaultValue: '开始构建' })}
+            {t('landing.hero.publishSkill', { defaultValue: '開始構建' })}
           </Link>
         </div>
 
@@ -170,10 +170,10 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3" style={{ color: 'hsl(var(--foreground))' }}>
-              {t('landing.whySkillHub.title', { defaultValue: '为什么选择 SkillHub' })}
+              {t('landing.whySkillHub.title', { defaultValue: '為什麼選擇 SkillHub' })}
             </h2>
             <p className="text-base md:text-lg max-w-2xl mx-auto leading-relaxed" style={{ color: 'hsl(var(--text-secondary))' }}>
-              {t('landing.whySkillHub.subtitle', { defaultValue: '专为企业打造的私有化 Agent 技能管理平台' })}
+              {t('landing.whySkillHub.subtitle', { defaultValue: '專為企業打造的私有化 Agent 技能管理平臺' })}
             </p>
           </div>
 

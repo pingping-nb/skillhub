@@ -1,4 +1,4 @@
-# 完整部署（包含内置 PostgreSQL + Redis）
+# 完整部署（包含內建 PostgreSQL + Redis）
 # 使用方式：kubectl apply -k overlays/with-infra/
 
 apiVersion: kustomize.config.k8s.io/v1beta1

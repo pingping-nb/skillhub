@@ -24,11 +24,11 @@ function formatRelativeTime(dateString: string): string {
   const diffMonths = Math.floor(diffDays / 30)
   const diffYears = Math.floor(diffDays / 365)
 
-  if (diffSeconds < 60) return '刚刚'
-  if (diffMinutes < 60) return `${diffMinutes}分钟前`
-  if (diffHours < 24) return `${diffHours}小时前`
+  if (diffSeconds < 60) return '剛剛'
+  if (diffMinutes < 60) return `${diffMinutes}分鐘前`
+  if (diffHours < 24) return `${diffHours}小時前`
   if (diffDays < 30) return `${diffDays}天前`
-  if (diffMonths < 12) return `${diffMonths}个月前`
+  if (diffMonths < 12) return `${diffMonths}個月前`
   return `${diffYears}年前`
 }
 

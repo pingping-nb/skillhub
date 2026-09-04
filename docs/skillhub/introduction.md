@@ -1,42 +1,42 @@
-# 项目简介
+# 專案簡介
 
-SkillHub 是一个专为企业打造的自托管 Agent Skill 注册中心。
+SkillHub 是一個專為企業打造的自託管 Agent Skill 註冊中心。
 
-在 AI Agent 时代，每个团队都在积累自己的技能包（Skills）。但这些技能包散落在各处：有的在开发者本地，有的在 Git 仓库，有的在内部文档里。团队成员很难发现彼此的工作，更难复用已有的能力。
+在 AI Agent 時代，每個團隊都在積累自己的技能包（Skills）。但這些技能包散落在各處：有的在開發者本地，有的在 Git 倉庫，有的在內部檔案裡。團隊成員很難發現彼此的工作，更難複用已有的能力。
 
-SkillHub 解决了这个问题。它提供了一个**私有、可控、易用**的技能包注册中心，让团队可以像使用 npm、PyPI 一样管理 Agent Skills。
+SkillHub 解決了這個問題。它提供了一個**私有、可控、易用**的技能包註冊中心，讓團隊可以像使用 npm、PyPI 一樣管理 Agent Skills。
 
-![项目架构图](/diagrams/architecture.png)
+![專案架構圖](/diagrams/architecture.png)
 
-## 核心价值
+## 核心價值
 
-- **3 分钟发布**：从本地开发到全球分发，只需一条命令
-- **企业级权限**：基于命名空间的 RBAC，支持团队协作和审核流程
-- **完整生命周期**：版本管理、标签系统、审核工作流、归档机制
-- **开箱即用**：一条 curl 命令启动完整环境
-- **安全扫描**：内置 Skill Scanner，自动检测安全风险
-- **数据主权**：完全自托管，所有数据都在你的防火墙内
+- **3 分鐘發布**：從本地開發到全球分發，只需一條命令
+- **企業級許可權**：基於名稱空間的 RBAC，支援團隊協作和稽核流程
+- **完整生命週期**：版本管理、標籤系統、稽核工作流、歸檔機制
+- **開箱即用**：一條 curl 命令啟動完整環境
+- **安全掃描**：內建 Skill Scanner，自動檢測安全風險
+- **資料主權**：完全自託管，所有資料都在你的防火牆內
 
-## 技术栈
+## 技術棧
 
-![技术栈图](/diagrams/tech-stack.png)
+![技術棧圖](/diagrams/tech-stack.png)
 
-| 层级 | 技术 | 说明 |
+| 層級 | 技術 | 說明 |
 |------|------|------|
-| **前端** | React 19 + Vite + TanStack Router | 现代化 SPA，支持中英文切换 |
-| **后端** | Java 21 + Spring Boot 3.2 | 企业级 REST API |
-| **数据库** | PostgreSQL 16 | 全文搜索、Flyway 自动迁移 |
-| **缓存** | Redis 7 | 会话管理、热点缓存 |
-| **存储** | MinIO / S3 | 技能包文件存储，支持本地和云端 |
-| **部署** | Docker Compose / K8s | 一键启动，支持自托管 |
+| **前端** | React 19 + Vite + TanStack Router | 現代化 SPA，支援中英文切換 |
+| **後端** | Java 21 + Spring Boot 3.2 | 企業級 REST API |
+| **資料庫** | PostgreSQL 16 | 全文搜尋、Flyway 自動遷移 |
+| **快取** | Redis 7 | 會話管理、熱點快取 |
+| **儲存** | MinIO / S3 | 技能包檔案儲存，支援本地和雲端 |
+| **部署** | Docker Compose / K8s | 一鍵啟動，支援自託管 |
 
-## 核心功能一览
+## 核心功能一覽
 
-| 功能 | 说明 |
+| 功能 | 說明 |
 |------|------|
-| [Skill 发布与版本管理](/guide/skill-publish) | 一键发布技能包，语义化版本管理 |
-| [Skill 搜索与发现](/guide/skill-discovery) | 全文搜索、智能过滤、权限感知 |
-| [命名空间与团队管理](/guide/namespace) | 基于命名空间的 RBAC 权限体系 |
-| [审核与治理](/guide/review) | 多级审核工作流、举报系统 |
-| [安全扫描](/guide/scanner) | 内置 Skill Scanner，多引擎安全分析 |
-| [用户交互与社交](/guide/social) | 星标、评分、通知系统 |
+| [Skill 發布與版本管理](/guide/skill-publish) | 一鍵發布技能包，語義化版本管理 |
+| [Skill 搜尋與發現](/guide/skill-discovery) | 全文搜尋、智慧過濾、許可權感知 |
+| [名稱空間與團隊管理](/guide/namespace) | 基於名稱空間的 RBAC 許可權體系 |
+| [稽核與治理](/guide/review) | 多級稽核工作流、舉報系統 |
+| [安全掃描](/guide/scanner) | 內建 Skill Scanner，多引擎安全分析 |
+| [使用者互動與社交](/guide/social) | 星標、評分、通知系統 |
