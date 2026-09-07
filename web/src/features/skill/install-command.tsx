@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, Copy } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shared/ui/tabs'
 import { useCopyToClipboard } from '@/shared/lib/clipboard'
 import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
 
@@ -10,10 +9,6 @@ interface InstallCommandProps {
   namespace: string
   slug: string
   version?: string
-}
-
-export function buildInstallTarget(namespace: string, slug: string): string {
-  return namespace === 'global' ? slug : `${namespace}--${slug}`
 }
 
 export function buildSkillhubCoordinate(namespace: string, slug: string): string {
@@ -36,11 +31,6 @@ export function getBaseUrl(): string {
   )
 }
 
-export function buildInstallCommand(namespace: string, slug: string, baseUrl: string): string {
-  const installTarget = buildInstallTarget(namespace, slug)
-  return `npx clawhub install ${installTarget} --registry ${baseUrl}`
-}
-
 export function buildSkillhubInstallCommand(
   namespace: string,
   slug: string,
@@ -58,9 +48,6 @@ export function buildSkillhubInstallCommand(
 interface CommandBlockProps {
   command: string
 }
-
-const installMethodTabTriggerClass =
-  "relative border-b-0 px-1 py-2 text-xs after:absolute after:bottom-[-1px] after:left-1/2 after:h-0.5 after:w-6 after:-translate-x-1/2 after:rounded-full after:bg-transparent after:content-[''] data-[state=active]:after:bg-primary"
 
 function CommandBlock({ command }: CommandBlockProps) {
   const { t } = useTranslation()
@@ -99,30 +86,16 @@ function CommandBlock({ command }: CommandBlockProps) {
 export function InstallCommand({ namespace, slug, version }: InstallCommandProps) {
   const { t } = useTranslation()
   const baseUrl = useMemo(() => getBaseUrl(), [])
-  const clawhubCommand = useMemo(() => buildInstallCommand(namespace, slug, baseUrl), [baseUrl, namespace, slug])
   const skillhubCommand = useMemo(
     () => buildSkillhubInstallCommand(namespace, slug, baseUrl, version),
     [baseUrl, namespace, slug, version],
   )
 
   return (
-    <Tabs defaultValue="skillhub" className="space-y-3">
-      <TabsList className="w-full gap-6 border-border/70 bg-transparent p-0 text-xs">
-        <TabsTrigger value="skillhub" className={installMethodTabTriggerClass}>
-          {t('skillDetail.installMethodSkillhub')}
-        </TabsTrigger>
-        <TabsTrigger value="clawhub" className={installMethodTabTriggerClass}>
-          {t('skillDetail.installMethodClawhub')}
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="skillhub">
-        {skillhubCommand
-          ? <CommandBlock command={skillhubCommand} />
-          : <p role="alert" className="text-sm text-destructive">{t('skillDetail.installCommandUnsafeVersion')}</p>}
-      </TabsContent>
-      <TabsContent value="clawhub">
-        <CommandBlock command={clawhubCommand} />
-      </TabsContent>
-    </Tabs>
+    <div className="space-y-3">
+      {skillhubCommand
+        ? <CommandBlock command={skillhubCommand} />
+        : <p role="alert" className="text-sm text-destructive">{t('skillDetail.installCommandUnsafeVersion')}</p>}
+    </div>
   )
 }
