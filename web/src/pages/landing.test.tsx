@@ -68,6 +68,16 @@ describe('LandingPage', () => {
     const html = renderToStaticMarkup(<LandingPage />)
 
     expect(html).toContain('SkillHub')
-    expect(html).toContain('landing.hero.title')
+    expect(html).toContain('landing.hero.searchPlaceholder')
+  })
+
+  it('does not render marketing copy', () => {
+    const html = renderToStaticMarkup(<LandingPage />)
+
+    expect(html).not.toContain('landing.hero.title')
+    expect(html).not.toContain('landing.hero.subtitle')
+    expect(html).not.toContain('landing.whySkillHub.title')
+    expect(html).not.toContain('landing.features.')
+    expect(html).not.toContain('landing.stats.')
   })
 })
