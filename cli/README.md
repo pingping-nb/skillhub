@@ -276,14 +276,18 @@ must be reinstalled before upgrade because its original working directory cannot
 
 ## 🔄 Namespace Workspaces
 
-Use namespace synchronization when an Agent workspace should maintain all installable skills from one team space.
+Use namespace synchronization to maintain explicitly selected skills from one team space. Every sync action requires
+`--namespace`; `global` is not a valid sync target because it has no namespace membership.
 
 ```bash
-# Pull new and updated skills into ./.agents/skills
+# Interactively select new or updated skills in a TTY
 skillhub sync pull --namespace team-a
 
-# Use an explicit workspace directory
-skillhub sync pull --namespace team-a --dir ./.claude/skills
+# Non-interactive/CI pull: repeat --skill for every explicit target
+skillhub sync pull --namespace team-a --skill code-review --skill java-guide
+
+# Use an explicit workspace directory and target
+skillhub sync pull --namespace team-a --skill code-review --dir ./.claude/skills
 
 # Check without downloading
 skillhub sync pull --namespace team-a --check
@@ -292,15 +296,20 @@ skillhub sync pull --namespace team-a --check
 skillhub sync status --namespace team-a --json
 skillhub sync diff --namespace team-a
 
-# Remove only unchanged SkillHub-managed skills that no longer exist remotely
-skillhub sync pull --namespace team-a --prune
+# Remove only an explicitly selected, unchanged managed skill that no longer exists remotely
+skillhub sync pull --namespace team-a --skill retired-guide --prune
 
 # Validate and upload every local skill for review
 skillhub sync push --all --namespace team-a --dry-run
 skillhub sync push --all --namespace team-a --submit-review
 ```
 
-The default workspace is `<cwd>/.agents/skills`. Pull never overwrites local changes unless `--force` is supplied. Remote removals are reported as `orphaned` and are retained unless `--prune` is supplied. Both destructive cases still require explicit flags.
+The default workspace is `<cwd>/.agents/skills`. In an interactive TTY, pull presents a multi-select list; an empty
+selection changes nothing. Outside a TTY, and always with `--json`, pull requires one or more repeatable
+`--skill <slug>` options and never prompts. `sync pull --check` is the exception: it checks the entire namespace and
+never writes local files. Pull never overwrites local changes unless `--force` is supplied, and `--force` applies only
+to explicitly selected skills. Remote removals are reported as `orphaned` and are retained unless both `--prune` and
+the matching `--skill` are supplied.
 
 Sync compares both the published version and package fingerprint. An exact match is `up-to-date`,
 while a newer version is `update-available` even when its content is unchanged. An older remote
@@ -398,7 +407,9 @@ Visibility options:
 - `namespace-only` — Visible to namespace members only
 - `private` — Visible to yourself only
 
-After successful publication, the skill detail page URL will be displayed.
+After the server accepts a submission, the CLI displays the server's current status and the skill detail page URL.
+Statuses such as `SCANNING` and `PENDING_REVIEW` are successful asynchronous submissions, not confirmation that the
+skill is finally published. Check the Web page for the final publish or review state.
 
 ## ⬆️ Self-Update
 
@@ -437,7 +448,7 @@ Update mechanism:
 | Command | Description |
 |---------|-------------|
 | `skillhub help [command]` | Display help information |
-| `skillhub version [--json]` | Display CLI version |
+| `skillhub version [--json]`, `skillhub --version`, `skillhub -v` | Display CLI version |
 | `skillhub login --token <token> [--registry <url>] [--json]` | Save token and registry configuration |
 | `skillhub logout [--registry <url>] [--json]` | Remove token for specified registry |
 | `skillhub whoami [--registry <url>] [--token <token>] [--json]` | Validate current token and display user information |
@@ -448,6 +459,8 @@ Update mechanism:
 | `skillhub remove <coordinate> [--agent <profile>] [--all] [--remote] [--hard] [--namespace <slug>] [--registry <url>] [--token <token>] [--json]` | Remove a skill |
 | `skillhub doctor [--json]` | Scan project directory and rebuild local inventory |
 | `skillhub publish <path> [--namespace <slug>] [--visibility <v>] [--registry <url>] [--token <token>] [--json]` | Publish a skill |
+| `skillhub sync pull --namespace <slug> [--skill <slug>]... [options]` | Pull explicitly selected skills from a non-global namespace |
+| `skillhub sync <status\|diff\|push> --namespace <slug> [options]` | Inspect or push a non-global namespace workspace |
 | `skillhub update [--check] [--json]` | Check or execute CLI self-update |
 
 ## 🔒 Security Notes

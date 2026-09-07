@@ -17,7 +17,217 @@ function makeSkill(body: string): { zipBytes: Uint8Array; fingerprint: string } 
   return { zipBytes: zipSync({ 'SKILL.md': content }), fingerprint }
 }
 
+async function makeLocalSkill(rootDir: string, slug = 'demo'): Promise<string> {
+  const skillDir = join(rootDir, slug)
+  await mkdir(skillDir, { recursive: true })
+  await writeFile(join(skillDir, 'SKILL.md'), `---\nname: ${slug}\ndescription: Demo\nversion: 1.0.0\n---\n`)
+  return skillDir
+}
+
 describe('sync command', () => {
+  test('mutating pull service rejects an empty selection before reading the namespace', async () => {
+    const registry = await startFakeRegistry({
+      token: 'token',
+      skills: [{ namespace: 'team-a', slug: 'demo', ...makeSkill('# demo\n') }]
+    })
+
+    try {
+      await expect(pullNamespace({
+        client: new SkillHubClient(registry.url, 'token'),
+        registry: registry.url,
+        token: 'token',
+        namespace: 'team-a',
+        rootDir: '/unused',
+        check: false,
+        prune: false,
+        force: false,
+        selectedSlugs: []
+      })).rejects.toThrow('requires at least one selected skill')
+      expect(registry.received.namespaceRequests).toBe(0)
+    } finally {
+      registry.stop()
+    }
+  })
+
+  test('all sync actions reject a missing or global namespace before a registry request', async () => {
+    const env = await createTempHome()
+    const registry = await startFakeRegistry({ token: 'token' })
+    const invocations = [
+      ['pull', '--check'],
+      ['status'],
+      ['diff'],
+      ['push', '--all']
+    ]
+
+    try {
+      for (const invocation of invocations) {
+        for (const namespaceArgs of [[], ['--namespace', 'global']]) {
+          const result = await runCli([
+            'sync', ...invocation, ...namespaceArgs,
+            '--registry', registry.url, '--token', 'token', '--json'
+          ], { HOME: env.home }, { cwd: env.cwd })
+          expect(result.exitCode).toBe(5)
+          expect(result.stdout).toBe('')
+          expect(JSON.parse(result.stderr).message).toMatch(/namespace|required|global/)
+        }
+      }
+      expect(registry.received.namespaceRequests).toBe(0)
+      expect(registry.received.publish).toBeNull()
+    } finally {
+      registry.stop()
+    }
+  })
+
+  test('non-pull sync actions reject the pull-only --skill option', async () => {
+    const result = await runCli([
+      'sync', 'status', '--namespace', 'team-a', '--skill', 'demo', '--json'
+    ])
+
+    expect(result.exitCode).toBe(5)
+    expect(result.stdout).toBe('')
+    expect(JSON.parse(result.stderr).message).toBe('--skill is only valid with sync pull')
+  })
+
+  test('non-interactive JSON pull without --skill returns usage error without prompting or requesting', async () => {
+    const env = await createTempHome()
+    const registry = await startFakeRegistry({
+      token: 'token',
+      skills: [{ namespace: 'team-a', slug: 'demo', ...makeSkill('# demo\n') }]
+    })
+
+    try {
+      const result = await runCli([
+        'sync', 'pull', '--namespace', 'team-a', '--registry', registry.url, '--token', 'token', '--json'
+      ], { HOME: env.home }, { cwd: env.cwd })
+
+      expect(result.exitCode).toBe(5)
+      expect(result.stdout).toBe('')
+      expect(JSON.parse(result.stderr)).toMatchObject({
+        ok: false,
+        message: expect.stringContaining('requires at least one --skill'),
+        exitCode: 5
+      })
+      expect(registry.received.namespaceRequests).toBe(0)
+    } finally {
+      registry.stop()
+    }
+  })
+
+  test('sync preserves server membership errors and request IDs', async () => {
+    const env = await createTempHome()
+    const registry = await startFakeRegistry({
+      token: 'token',
+      failures: { namespaceSync: 'forbidden' }
+    })
+
+    try {
+      const result = await runCli([
+        'sync', 'status', '--namespace', 'team-a',
+        '--registry', registry.url, '--token', 'token', '--json'
+      ], { HOME: env.home }, { cwd: env.cwd })
+
+      expect(result.exitCode).toBe(2)
+      expect(result.stdout).toBe('')
+      expect(JSON.parse(result.stderr)).toMatchObject({
+        ok: false,
+        message: 'API token is missing required scope: skill:publish',
+        details: { requestId: 'req-test-forbidden' }
+      })
+    } finally {
+      registry.stop()
+    }
+  })
+
+  test('pull --check inspects the whole namespace without writing files or requiring --skill', async () => {
+    const env = await createTempHome()
+    const skillsDir = join(env.cwd, 'team-skills')
+    const registry = await startFakeRegistry({
+      token: 'token',
+      skills: [
+        { namespace: 'team-a', slug: 'first', ...makeSkill('# first\n') },
+        { namespace: 'team-a', slug: 'second', ...makeSkill('# second\n') }
+      ]
+    })
+
+    try {
+      const result = await runCli([
+        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir, '--check',
+        '--registry', registry.url, '--token', 'token', '--json'
+      ], { HOME: env.home }, { cwd: env.cwd })
+
+      expect(result.exitCode).toBe(0)
+      expect(JSON.parse(result.stdout)).toMatchObject({ ok: true, check: true })
+      expect(JSON.parse(result.stdout).entries).toHaveLength(2)
+      expect(await Bun.file(join(skillsDir, 'first', 'SKILL.md')).exists()).toBe(false)
+      expect(await Bun.file(join(skillsDir, '.skillhub', 'namespace-sync.json')).exists()).toBe(false)
+    } finally {
+      registry.stop()
+    }
+  })
+
+  test('pull installs only explicitly selected skills', async () => {
+    const env = await createTempHome()
+    const skillsDir = join(env.cwd, 'team-skills')
+    const registry = await startFakeRegistry({
+      token: 'token',
+      skills: [
+        { namespace: 'team-a', slug: 'first', ...makeSkill('# first\n') },
+        { namespace: 'team-a', slug: 'second', ...makeSkill('# second\n') }
+      ]
+    })
+
+    try {
+      const result = await runCli([
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'second', '--dir', skillsDir,
+        '--registry', registry.url, '--token', 'token', '--json'
+      ], { HOME: env.home }, { cwd: env.cwd })
+
+      expect(result.exitCode).toBe(0)
+      expect(JSON.parse(result.stdout).actions).toEqual([{ slug: 'second', action: 'installed' }])
+      expect(await Bun.file(join(skillsDir, 'first')).exists()).toBe(false)
+      expect(await Bun.file(join(skillsDir, 'second', 'SKILL.md')).exists()).toBe(true)
+      const workspaceState = JSON.parse(
+        await readFile(join(skillsDir, '.skillhub', 'namespace-sync.json'), 'utf8')
+      )
+      expect(Object.keys(workspaceState.skills)).toEqual(['second'])
+    } finally {
+      registry.stop()
+    }
+  })
+
+  test('pull reads every cursor page without duplicates and still writes only the selected skill', async () => {
+    const env = await createTempHome()
+    const skillsDir = join(env.cwd, 'team-skills')
+    const registry = await startFakeRegistry({
+      token: 'token',
+      namespacePageSize: 1,
+      skills: ['first', 'second', 'third'].map(slug => ({
+        namespace: 'team-a',
+        slug,
+        ...makeSkill(`# ${slug}\n`)
+      }))
+    })
+
+    try {
+      const result = await runCli([
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'third', '--dir', skillsDir,
+        '--registry', registry.url, '--token', 'token', '--json'
+      ], { HOME: env.home }, { cwd: env.cwd })
+      const output = JSON.parse(result.stdout)
+
+      expect(result.exitCode).toBe(0)
+      expect(registry.received.namespaceRequests).toBe(3)
+      expect(output.entries.map((item: { slug: string }) => item.slug)).toEqual(['first', 'second', 'third'])
+      expect(new Set(output.entries.map((item: { slug: string }) => item.slug)).size).toBe(3)
+      expect(output.actions).toEqual([{ slug: 'third', action: 'installed' }])
+      expect(await Bun.file(join(skillsDir, 'first')).exists()).toBe(false)
+      expect(await Bun.file(join(skillsDir, 'second')).exists()).toBe(false)
+      expect(await Bun.file(join(skillsDir, 'third', 'SKILL.md')).exists()).toBe(true)
+    } finally {
+      registry.stop()
+    }
+  })
+
   test('pull propagates committed install warnings', async () => {
     const env = await createTempHome()
     const skillsDir = join(env.cwd, 'team-skills')
@@ -37,6 +247,7 @@ describe('sync command', () => {
         check: false,
         prune: false,
         force: false,
+        selectedSlugs: ['demo'],
         installSkillFn: async () => ({
           installed: [{ agent: 'workspace', dir: join(skillsDir, 'demo') }],
           warnings: ['target lock cleanup failed: simulated release failure']
@@ -70,7 +281,7 @@ describe('sync command', () => {
 
     try {
       const pulled = await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'first', '--skill', 'second', '--dir', skillsDir,
         '--registry', registry.url, '--token', 'token', '--json'
       ], { HOME: env.home }, { cwd: env.cwd })
 
@@ -83,7 +294,7 @@ describe('sync command', () => {
       expect(await readFile(join(skillsDir, '.skillhub', 'namespace-sync.json'), 'utf8')).toContain('team-a')
 
       const secondPull = await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'first', '--skill', 'second', '--dir', skillsDir,
         '--registry', registry.url, '--token', 'token', '--json'
       ], { HOME: env.home }, { cwd: env.cwd })
       expect(secondPull.exitCode).toBe(0)
@@ -97,7 +308,8 @@ describe('sync command', () => {
   test('status detects local changes and pull does not overwrite without force', async () => {
     const env = await createTempHome()
     const skillsDir = join(env.cwd, 'team-skills')
-    const fixture = makeSkill('---\nname: demo\ndescription: Demo\nversion: 1.0.0\n---\n')
+    const remoteBody = '---\nname: demo\ndescription: Demo\nversion: 1.0.0\n---\n'
+    const fixture = makeSkill(remoteBody)
     const registry = await startFakeRegistry({
       token: 'token',
       skills: [{ namespace: 'team-a', slug: 'demo', ...fixture }]
@@ -105,7 +317,7 @@ describe('sync command', () => {
 
     try {
       await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir,
         '--registry', registry.url, '--token', 'token'
       ], { HOME: env.home }, { cwd: env.cwd })
       await writeFile(join(skillsDir, 'demo', 'SKILL.md'), '# local change\n')
@@ -117,11 +329,19 @@ describe('sync command', () => {
       expect(JSON.parse(status.stdout).items[0].status).toBe('local-changed')
 
       const pull = await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir,
         '--registry', registry.url, '--token', 'token', '--json'
       ], { HOME: env.home }, { cwd: env.cwd })
       expect(pull.exitCode).toBe(1)
       expect(await readFile(join(skillsDir, 'demo', 'SKILL.md'), 'utf8')).toBe('# local change\n')
+
+      const forced = await runCli([
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir, '--force',
+        '--registry', registry.url, '--token', 'token', '--json'
+      ], { HOME: env.home }, { cwd: env.cwd })
+      expect(forced.exitCode).toBe(0)
+      expect(JSON.parse(forced.stdout).actions).toEqual([{ slug: 'demo', action: 'updated' }])
+      expect(await readFile(join(skillsDir, 'demo', 'SKILL.md'), 'utf8')).toBe(remoteBody)
     } finally {
       registry.stop()
     }
@@ -142,7 +362,7 @@ describe('sync command', () => {
 
     try {
       await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir,
         '--registry', registry.url, '--token', 'token'
       ], { HOME: env.home }, { cwd: env.cwd })
       skill.version = '1.1.0'
@@ -178,7 +398,7 @@ describe('sync command', () => {
 
     try {
       await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir,
         '--registry', registry.url, '--token', 'token'
       ], { HOME: env.home }, { cwd: env.cwd })
       skill.fingerprint = changed.fingerprint
@@ -201,7 +421,7 @@ describe('sync command', () => {
       expect(JSON.parse(checked.stdout)).toMatchObject({ ok: false, check: true })
 
       const pulled = await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir, '--force',
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir, '--force',
         '--registry', registry.url, '--token', 'token', '--json'
       ], { HOME: env.home }, { cwd: env.cwd })
       expect(pulled.exitCode).toBe(6)
@@ -226,14 +446,14 @@ describe('sync command', () => {
 
     try {
       await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir,
         '--registry', registry.url, '--token', 'token'
       ], { HOME: env.home }, { cwd: env.cwd })
       skill.version = '1.0.0'
       skill.versionId = 1
 
       const pulled = await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir, '--force',
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir, '--force',
         '--registry', registry.url, '--token', 'token', '--json'
       ], { HOME: env.home }, { cwd: env.cwd })
       expect(pulled.exitCode).toBe(6)
@@ -264,14 +484,14 @@ describe('sync command', () => {
 
     try {
       await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir,
         '--registry', registry.url, '--token', 'token'
       ], { HOME: env.home }, { cwd: env.cwd })
       skill.version = 'release-b'
       skill.versionId = 2
 
       const pulled = await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir, '--force',
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir, '--force',
         '--registry', registry.url, '--token', 'token', '--json'
       ], { HOME: env.home }, { cwd: env.cwd })
       expect(pulled.exitCode).toBe(6)
@@ -325,7 +545,7 @@ describe('sync command', () => {
       const registry = await startFakeRegistry({ token: 'token', skills: [skill] })
       try {
         await runCli([
-          'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+          'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir,
           '--registry', registry.url, '--token', 'token'
         ], { HOME: env.home }, { cwd: env.cwd })
         await writeFile(join(skillsDir, 'demo', 'SKILL.md'), `# local edit before ${variant.name}\n`)
@@ -335,7 +555,7 @@ describe('sync command', () => {
         skill.zipBytes = variant.remote.zipBytes
 
         const pulled = await runCli([
-          'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir, '--force',
+          'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir, '--force',
           '--registry', registry.url, '--token', 'token', '--json'
         ], { HOME: env.home }, { cwd: env.cwd })
         const output = JSON.parse(pulled.stdout)
@@ -351,27 +571,70 @@ describe('sync command', () => {
     }
   })
 
-  test('prune removes only unchanged managed orphan skills', async () => {
+  test('an unselected blocked skill does not change the selected skill failure classification', async () => {
     const env = await createTempHome()
     const skillsDir = join(env.cwd, 'team-skills')
-    const fixture = makeSkill('---\nname: demo\ndescription: Demo\nversion: 1.0.0\n---\n')
-    const skills: FakeSkill[] = [{ namespace: 'team-a', slug: 'demo', ...fixture }]
+    const chosen = makeSkill('# chosen\n')
+    const blockedOriginal = makeSkill('# blocked original\n')
+    const blockedChanged = makeSkill('# blocked changed\n')
+    const skills: FakeSkill[] = [
+      { namespace: 'team-a', slug: 'chosen', version: '1.0.0', ...chosen },
+      { namespace: 'team-a', slug: 'blocked', version: '1.0.0', ...blockedOriginal }
+    ]
     const registry = await startFakeRegistry({ token: 'token', skills })
 
     try {
       await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'chosen', '--skill', 'blocked', '--dir', skillsDir,
+        '--registry', registry.url, '--token', 'token'
+      ], { HOME: env.home }, { cwd: env.cwd })
+      await writeFile(join(skillsDir, 'chosen', 'SKILL.md'), '# chosen local edit\n')
+      skills[1]!.fingerprint = blockedChanged.fingerprint
+      skills[1]!.zipBytes = blockedChanged.zipBytes
+
+      const result = await runCli([
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'chosen', '--dir', skillsDir,
+        '--registry', registry.url, '--token', 'token', '--json'
+      ], { HOME: env.home }, { cwd: env.cwd })
+
+      expect(result.exitCode).toBe(1)
+      expect(JSON.parse(result.stdout).failures).toEqual([{
+        slug: 'chosen',
+        message: 'local changes detected; pass --force to overwrite'
+      }])
+      expect(JSON.parse(result.stderr).message).toBe('namespace sync completed with failures')
+      expect(await readFile(join(skillsDir, 'chosen', 'SKILL.md'), 'utf8')).toBe('# chosen local edit\n')
+      expect(await readFile(join(skillsDir, 'blocked', 'SKILL.md'), 'utf8')).toBe('# blocked original\n')
+    } finally {
+      registry.stop()
+    }
+  })
+
+  test('prune removes only unchanged managed orphan skills', async () => {
+    const env = await createTempHome()
+    const skillsDir = join(env.cwd, 'team-skills')
+    const fixture = makeSkill('---\nname: demo\ndescription: Demo\nversion: 1.0.0\n---\n')
+    const skills: FakeSkill[] = [
+      { namespace: 'team-a', slug: 'demo', ...fixture },
+      { namespace: 'team-a', slug: 'keep', ...makeSkill('# keep\n') }
+    ]
+    const registry = await startFakeRegistry({ token: 'token', skills })
+
+    try {
+      await runCli([
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--skill', 'keep', '--dir', skillsDir,
         '--registry', registry.url, '--token', 'token'
       ], { HOME: env.home }, { cwd: env.cwd })
       skills.splice(0, skills.length)
 
       const pruned = await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir, '--prune',
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir, '--prune',
         '--registry', registry.url, '--token', 'token', '--json'
       ], { HOME: env.home }, { cwd: env.cwd })
       expect(pruned.exitCode).toBe(0)
       expect(JSON.parse(pruned.stdout).actions).toContainEqual({ slug: 'demo', action: 'pruned' })
       expect(await Bun.file(join(skillsDir, 'demo')).exists()).toBe(false)
+      expect(await Bun.file(join(skillsDir, 'keep', 'SKILL.md')).exists()).toBe(true)
     } finally {
       registry.stop()
     }
@@ -394,14 +657,107 @@ describe('sync command', () => {
 
       expect(pushed.exitCode).toBe(0)
       expect(JSON.parse(pushed.stdout).items[0].action).toBe('submitted-review')
+      expect(JSON.parse(pushed.stdout).items[0]).toMatchObject({
+        status: 'UPLOADED',
+        reviewStatus: 'PENDING_REVIEW'
+      })
       expect(registry.received.publish?.visibility).toBe('NAMESPACE_ONLY')
       expect(registry.received.publish?.rejectExistingVersion).toBe(true)
       expect(registry.received.review).toMatchObject({
         namespace: 'team-a', slug: 'demo', version: '1.0.0', targetVisibility: 'NAMESPACE_ONLY'
       })
+      expect(registry.received.reviews).toBe(1)
     } finally {
       registry.stop()
       await rm(skillsDir, { recursive: true, force: true })
+    }
+  })
+
+  test.each([
+    { status: 'SCANNING', submitReview: false, action: 'uploaded', reviews: 0 },
+    { status: 'SCANNING', submitReview: true, action: 'uploaded', reviews: 0 },
+    { status: 'UPLOADED', submitReview: true, action: 'submitted-review', reviews: 1 },
+    { status: 'PENDING_REVIEW', submitReview: true, action: 'submitted-review', reviews: 0 },
+    { status: 'PUBLISHED', submitReview: true, action: 'uploaded', reviews: 0 }
+  ])('push preserves $status and applies submit-review boundary', async scenario => {
+    const env = await createTempHome()
+    const skillDir = await makeLocalSkill(env.cwd)
+    const registry = await startFakeRegistry({ token: 'token', publishStatus: scenario.status })
+
+    try {
+      const result = await runCli([
+        'sync', 'push', skillDir, '--namespace', 'team-a',
+        ...(scenario.submitReview ? ['--submit-review'] : []),
+        '--registry', registry.url, '--token', 'token', '--json'
+      ], { HOME: env.home }, { cwd: env.cwd })
+      const item = JSON.parse(result.stdout).items[0]
+
+      expect(result.exitCode).toBe(0)
+      expect(item).toMatchObject({ status: scenario.status, action: scenario.action })
+      expect(registry.received.reviews).toBe(scenario.reviews)
+    } finally {
+      registry.stop()
+    }
+  })
+
+  test('PUBLIC uploaded push submits review once with PUBLIC visibility', async () => {
+    const env = await createTempHome()
+    const skillDir = await makeLocalSkill(env.cwd)
+    const registry = await startFakeRegistry({ token: 'token', publishStatus: 'UPLOADED' })
+
+    try {
+      const result = await runCli([
+        'sync', 'push', skillDir, '--namespace', 'team-a', '--visibility', 'public', '--submit-review',
+        '--registry', registry.url, '--token', 'token', '--json'
+      ], { HOME: env.home }, { cwd: env.cwd })
+
+      expect(result.exitCode).toBe(0)
+      expect(registry.received.reviews).toBe(1)
+      expect(registry.received.review?.targetVisibility).toBe('PUBLIC')
+    } finally {
+      registry.stop()
+    }
+  })
+
+  test('PRIVATE push rejects --submit-review before validation or upload', async () => {
+    const env = await createTempHome()
+    const skillDir = await makeLocalSkill(env.cwd)
+    const registry = await startFakeRegistry({ token: 'token' })
+
+    try {
+      const result = await runCli([
+        'sync', 'push', skillDir, '--namespace', 'team-a', '--visibility', 'private', '--submit-review',
+        '--registry', registry.url, '--token', 'token', '--json'
+      ], { HOME: env.home }, { cwd: env.cwd })
+
+      expect(result.exitCode).toBe(5)
+      expect(JSON.parse(result.stderr).message).toContain('--submit-review requires public or namespace-only visibility')
+      expect(registry.received.validate).toBeNull()
+      expect(registry.received.publish).toBeNull()
+      expect(registry.received.reviews).toBe(0)
+    } finally {
+      registry.stop()
+    }
+  })
+
+  test('human push output always uses submitted semantics and includes the raw status', async () => {
+    const env = await createTempHome()
+    const skillDir = await makeLocalSkill(env.cwd)
+    const registry = await startFakeRegistry({ token: 'token', publishStatus: 'SCANNING' })
+
+    try {
+      const result = await runCli([
+        'sync', 'push', skillDir, '--namespace', 'team-a',
+        '--registry', registry.url, '--token', 'token'
+      ], { HOME: env.home }, { cwd: env.cwd })
+
+      expect(result.exitCode).toBe(0)
+      expect(result.stdout).toContain('submitted')
+      expect(result.stdout).toContain('status=SCANNING')
+      expect(result.stdout).not.toContain('uploaded')
+      expect(result.stdout).toContain('Check the Web page for final publish or review status.')
+    } finally {
+      registry.stop()
     }
   })
 
@@ -439,7 +795,7 @@ describe('sync command', () => {
 
     try {
       const result = await runCli([
-        'sync', 'pull', '--namespace', 'team-a', '--dir', skillsDir,
+        'sync', 'pull', '--namespace', 'team-a', '--skill', 'demo', '--dir', skillsDir,
         '--registry', registry.url, '--token', 'token', '--json'
       ], { HOME: env.home }, { cwd: env.cwd })
       expect(result.exitCode).toBe(1)

@@ -8,6 +8,8 @@ import { SyncWorkspaceStore, type NamespaceSyncState } from '../stores/sync-work
 import { createZip, isZipFile } from '../platform/archive'
 import { pathExists } from '../platform/paths'
 import { compareSkillVersions } from './skill-version-order'
+import { CliError } from '../shared/errors'
+import { EXIT } from '../shared/constants'
 
 export type SyncStatus = 'up-to-date' | 'update-available' | 'local-changed' | 'blocked' | 'orphaned' | 'not-installed'
 
@@ -45,6 +47,7 @@ export interface PushResultItem {
   slug?: string
   version?: string
   status?: string
+  reviewStatus?: string
   action: 'validated' | 'uploaded' | 'submitted-review' | 'failed'
   errors?: string[]
   warnings?: string[]
@@ -166,16 +169,26 @@ export async function pullNamespace(options: {
   check: boolean
   prune: boolean
   force: boolean
+  remoteItems?: NamespaceSyncItem[]
+  selectedSlugs?: readonly string[]
   installSkillFn?: typeof installSkill
 }): Promise<PullResult> {
-  const inspected = await inspectNamespaceWorkspace(options)
+  if (!options.check && (!options.selectedSlugs || options.selectedSlugs.length === 0)) {
+    throw new CliError('mutating namespace pull requires at least one selected skill', EXIT.usage)
+  }
+  const inspected = await inspectNamespaceWorkspace({
+    ...options,
+    ...(options.remoteItems ? { remoteItems: options.remoteItems } : {})
+  })
+  const selectedSlugs = options.selectedSlugs ? new Set(options.selectedSlugs) : undefined
+  const isSelected = (entry: SyncStatusEntry): boolean => !selectedSlugs || selectedSlugs.has(entry.slug)
   const result: PullResult = {
     namespace: options.namespace,
     rootDir: options.rootDir,
     entries: inspected.entries,
     actions: [],
     failures: inspected.entries
-      .filter(entry => entry.status === 'blocked')
+      .filter(entry => entry.status === 'blocked' && isSelected(entry))
       .map(entry => ({ slug: entry.slug, message: entry.reason ?? 'automatic sync is blocked' })),
     warnings: []
   }
@@ -183,6 +196,7 @@ export async function pullNamespace(options: {
 
   const remoteBySlug = new Map(inspected.remoteItems.map(item => [item.slug, item]))
   for (const entry of inspected.entries) {
+    if (!isSelected(entry)) continue
     if (entry.status === 'up-to-date' || entry.status === 'orphaned') continue
     if (entry.status === 'blocked') continue
     if (entry.status === 'local-changed' && !options.force) {
@@ -217,7 +231,7 @@ export async function pullNamespace(options: {
   }
 
   if (options.prune) {
-    for (const entry of inspected.entries.filter(item => item.status === 'orphaned')) {
+    for (const entry of inspected.entries.filter(item => item.status === 'orphaned' && isSelected(item))) {
       if (entry.reason && !options.force) {
         result.failures.push({ slug: entry.slug, message: 'orphan has local changes; pass --force to prune' })
         continue
@@ -244,14 +258,17 @@ export async function pullNamespace(options: {
   }
 
   if (result.failures.length === 0) {
+    const managed = await scanManagedSkills(options.rootDir, options.registry, options.namespace)
     const state: NamespaceSyncState = {
       registry: options.registry,
       namespace: options.namespace,
       lastSyncAt: new Date().toISOString(),
-      skills: Object.fromEntries(inspected.remoteItems.map(item => [item.slug, {
-        version: item.version,
-        fingerprint: item.fingerprint
-      }]))
+      skills: Object.fromEntries([...managed.entries()]
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([slug, metadata]) => [slug, {
+          version: metadata.version,
+          fingerprint: metadata.fingerprint
+        }]))
     }
     await new SyncWorkspaceStore(options.rootDir).write(state)
   }
@@ -300,7 +317,8 @@ export async function pushSkills(options: {
       const published = await options.client.publish(
         options.namespace, archive.blob, options.visibility, archive.fileName, true)
       let action: PushResultItem['action'] = 'uploaded'
-      let status = published.status
+      const status = published.status
+      let reviewStatus: string | undefined
       if (options.submitReview && published.status === 'PENDING_REVIEW') {
         action = 'submitted-review'
       } else if (options.submitReview && published.status === 'UPLOADED') {
@@ -314,9 +332,16 @@ export async function pushSkills(options: {
           options.visibility
         )
         action = 'submitted-review'
-        status = review.status
+        reviewStatus = review.status
       }
-      results.push({ path, slug: published.slug, version: published.version, status, action })
+      results.push({
+        path,
+        slug: published.slug,
+        version: published.version,
+        status,
+        action,
+        ...(reviewStatus ? { reviewStatus } : {})
+      })
     } catch (error) {
       results.push({ path, action: 'failed', errors: [error instanceof Error ? error.message : 'push failed'] })
     }

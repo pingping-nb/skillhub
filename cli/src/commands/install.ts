@@ -6,6 +6,9 @@ import { resolveInstallTargets } from '../agents/resolver'
 import { CliError } from '../shared/errors'
 import { EXIT } from '../shared/constants'
 import { resolveSkillName } from '../shared/skill-name-parser'
+import { computeStrictIsTTY } from '../shared/tty'
+
+export { computeStrictIsTTY } from '../shared/tty'
 
 export interface InstallCommandOptions {
   namespace?: string | undefined
@@ -24,14 +27,6 @@ export interface InstallCommandDeps {
   resolveInstallTargets?: typeof resolveInstallTargets
   installSkill?: typeof installSkill
   isTTY?: () => boolean
-}
-
-export function computeStrictIsTTY(env: {
-  stdinIsTTY: boolean
-  stdoutIsTTY: boolean
-  json: boolean
-}): boolean {
-  return env.stdinIsTTY && env.stdoutIsTTY && !env.json
 }
 
 export async function resolveEffectiveScope(

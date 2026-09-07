@@ -108,14 +108,21 @@ export async function publishCommand(path: string, options: PublishCommandOption
   if (options.json) {
     return JSON.stringify({
       ok: true,
+      action: 'submitted',
       namespace: result.namespace,
       slug: result.slug,
       version: result.version,
       visibility: result.visibility.toLowerCase(),
+      status: result.status,
       detailUrl
     })
   }
-  return `Published successfully: ${result.namespace}/${result.slug}@${result.version}\nDetail: ${detailUrl}`
+  return [
+    `Submitted successfully: ${result.namespace}/${result.slug}@${result.version}`,
+    `Status: ${result.status}`,
+    `Detail: ${detailUrl}`,
+    'Check the Web page for final publish or review status.'
+  ].join('\n')
 }
 
 /**

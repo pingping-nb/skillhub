@@ -28,10 +28,11 @@ export function createFakeRegistry(handlers: Record<string, FakeHandler>) {
  *   'forbidden'    => 403 with a standard SkillHub error envelope
  *   'forbidden_unstructured' => 403 with a non-JSON response body
  *   'not_found'    => 404 { code: 404, message: 'not found' }
+ *   'rate_limited' => 429 { code: 429, msg: 'rate limit exceeded' }
  *   'server_error' => 500 { code: 500, message: 'internal error' }
  *   'network'      => handler throws, causing fetch() to reject with a TypeError
  */
-export type FailureMode = 'auth' | 'forbidden' | 'forbidden_unstructured' | 'not_found' | 'server_error' | 'network'
+export type FailureMode = 'auth' | 'forbidden' | 'forbidden_unstructured' | 'not_found' | 'rate_limited' | 'server_error' | 'network'
 
 function failureResponse(mode: FailureMode): Response {
   switch (mode) {
@@ -50,6 +51,8 @@ function failureResponse(mode: FailureMode): Response {
       })
     case 'not_found':
       return Response.json({ code: 404, message: 'not found' }, { status: 404 })
+    case 'rate_limited':
+      return Response.json({ code: 429, msg: 'rate limit exceeded', requestId: 'req-test-rate-limit' }, { status: 429 })
     case 'server_error':
       return Response.json({ code: 500, message: 'internal error' }, { status: 500 })
     case 'network':
@@ -164,6 +167,7 @@ interface FakeRegistryOptions {
   /** Response to return for publish/validate (dry-run) requests. */
   dryRunResponse?: { valid: boolean; errors: string[]; warnings: string[]; resolvedSlug: string | null; resolvedVersion: string | null }
   publishStatus?: string
+  namespacePageSize?: number
   /**
    * Per-endpoint failure injection. When set for an endpoint, that endpoint
    * ignores all other logic and returns the specified failure (or throws for
@@ -222,7 +226,19 @@ export async function startFakeRegistry(options: FakeRegistryOptions = {}) {
     review: CapturedReview | null
     resolves: number
     downloads: number
-  } = { publish: null, resolve: null, delete: null, validate: null, review: null, resolves: 0, downloads: 0 }
+    reviews: number
+    namespaceRequests: number
+  } = {
+    publish: null,
+    resolve: null,
+    delete: null,
+    validate: null,
+    review: null,
+    resolves: 0,
+    downloads: 0,
+    reviews: 0,
+    namespaceRequests: 0
+  }
 
   // If any endpoint is configured with 'network' failure mode, we need a real
   // TCP-level failure. Start a connection-dropping server and return its URL
@@ -297,25 +313,31 @@ export async function startFakeRegistry(options: FakeRegistryOptions = {}) {
 
       const namespaceSyncMatch = path.match(/^\/api\/cli\/v1\/namespaces\/([^/]+)\/skills$/)
       if (namespaceSyncMatch && req.method === 'GET') {
+        state.namespaceRequests += 1
         if (options.failures?.namespaceSync) return failureResponse(options.failures.namespaceSync)
         const authErr = checkAuth(req)
         if (authErr) return authErr
-        const namespace = namespaceSyncMatch[1]!
+        const namespace = decodeURIComponent(namespaceSyncMatch[1]!)
         const skills = (options.skills ?? []).filter(skill => skill.namespace === namespace)
+        const offset = Number.parseInt(url.searchParams.get('cursor') ?? '0', 10)
+        const requestedLimit = Number.parseInt(url.searchParams.get('limit') ?? '100', 10)
+        const pageSize = Math.min(options.namespacePageSize ?? requestedLimit, 100)
+        const page = skills.slice(offset, offset + pageSize)
+        const nextOffset = offset + page.length
         return Response.json({
           code: 0,
           data: {
-            items: skills.map((skill, index) => ({
+            items: page.map((skill, index) => ({
               namespace,
               slug: skill.slug,
               version: skill.version ?? '1.0.0',
-              versionId: skill.versionId ?? index + 1,
+              versionId: skill.versionId ?? offset + index + 1,
               fingerprint: resolveSkillFingerprint(skill),
               updatedAt: '2026-08-18T00:00:00Z',
               visibility: 'NAMESPACE_ONLY',
               downloadUrl: buildDownloadUrl(baseUrl, namespace, skill.slug, skill.version ?? '1.0.0')
             })),
-            nextCursor: null
+            nextCursor: nextOffset < skills.length ? String(nextOffset) : null
           }
         })
       }
@@ -502,6 +524,7 @@ export async function startFakeRegistry(options: FakeRegistryOptions = {}) {
 
       const submitReviewMatch = path.match(/^\/api\/v1\/skills\/([^/]+)\/([^/]+)\/submit-review$/)
       if (submitReviewMatch && req.method === 'POST') {
+        state.reviews += 1
         if (options.failures?.submitReview) return failureResponse(options.failures.submitReview)
         const authErr = checkAuth(req)
         if (authErr) return authErr

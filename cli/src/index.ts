@@ -178,8 +178,8 @@ cli
   .command('help [command]', 'Show help')
   .option('--json', 'Output JSON')
   .action((command: string | undefined, options: { json?: boolean }) => {
-    // TODO: --json is not forwarded to helpCommand; see help-command.test.ts
-    return runCommand(() => helpCommand(command ? [command] : []), Boolean(options.json))
+    const args = [...(command ? [command] : []), ...(options.json ? ['--json'] : [])]
+    return runCommand(() => helpCommand(args), Boolean(options.json))
   })
 
 cli
@@ -267,7 +267,8 @@ cli
 
 cli
   .command('sync <action> [path]', 'Synchronize and maintain a namespace workspace')
-  .option('--namespace <slug>', 'Namespace', { default: 'global' })
+  .option('--namespace <slug>', 'Namespace (required; global is not supported)')
+  .option('--skill <slug>', 'Skill to pull (repeatable)')
   .option('--dir <path>', 'Skill workspace directory')
   .option('--check', 'Show changes without downloading')
   .option('--prune', 'Remove managed local skills missing remotely')
@@ -279,9 +280,18 @@ cli
   .option('--registry <url>', 'Registry URL')
   .option('--token <token>', 'API token')
   .option('--json', 'Output JSON')
-  .action((action: string, path: string | undefined, options: SyncPullOptions & SyncPushOptions) => {
+  .action((action: string, path: string | undefined, options: SyncPullOptions & SyncPushOptions & { skill?: string | string[] }) => {
+    if (action !== 'pull' && options.skill !== undefined) {
+      return runCommand(
+        () => Promise.reject(new CliError('--skill is only valid with sync pull', EXIT.usage)),
+        Boolean(options.json)
+      )
+    }
     const command = action === 'pull'
-      ? () => syncPullCommand(options)
+      ? () => syncPullCommand({
+          ...options,
+          ...(options.skill === undefined ? {} : { skill: toArray(options.skill)! })
+        })
       : action === 'status'
         ? () => syncStatusCommand(options as SyncCommonOptions)
         : action === 'diff'
@@ -343,14 +353,18 @@ cli.help()
 
 if (import.meta.main) {
   const args = process.argv.slice(2)
-  const json = isJsonRequested(args)
-  const unknownCommand = readUnknownCommand(args)
-  if (unknownCommand) {
-    exitUnknownCommand(unknownCommand, json)
-  }
-  try {
-    cli.parse(process.argv)
-  } catch (error) {
-    handleCliParseError(error, json)
+  if (args.length === 1 && (args[0] === '--version' || args[0] === '-v')) {
+    await runCommand(() => versionCommand([]))
+  } else {
+    const json = isJsonRequested(args)
+    const unknownCommand = readUnknownCommand(args)
+    if (unknownCommand) {
+      exitUnknownCommand(unknownCommand, json)
+    }
+    try {
+      cli.parse(process.argv)
+    } catch (error) {
+      handleCliParseError(error, json)
+    }
   }
 }

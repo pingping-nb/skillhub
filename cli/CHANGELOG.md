@@ -6,12 +6,20 @@ All notable CLI behavior changes are documented in this file.
 
 ### Added
 
+- Add repeatable `sync pull --skill <slug>` selection for non-interactive and JSON workflows, with
+  interactive multi-select in a TTY.
 - Add `skillhub upgrade <coordinate...>` for bounded, explicit upgrades of already-installed Skills,
   including side-effect-free `--check`, structured `--json`, local-change protection, and target
   filters.
 
 ### Fixed
 
+- Return structured JSON from `help --json` and topic help, report unknown help topics as usage
+  errors, and support `--version` / `-v` alongside the existing `version` command.
+- Report successful publish and sync push requests as submissions, preserving the registry's raw
+  `SCANNING`, `UPLOADED`, `PENDING_REVIEW`, or `PUBLISHED` status without implying final publication.
+- Require an explicit non-`global` namespace for every sync action. `sync pull --check` remains a
+  whole-namespace read-only check; mutating pulls now affect only explicitly selected skills.
 - Prevent `--force` from overwriting an unmanaged or different-source Skill at the same target path.
   Source ownership is the full `registry + namespace + slug` identity.
 - Reject registry downgrades and partial-target updates that the shared inventory version cannot
