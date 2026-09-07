@@ -41,13 +41,13 @@ export function resolveNotificationDisplay(item: NotificationItem, language: str
       }
     case 'REVIEW_APPROVED':
       return {
-        title: zh ? '技能稽核透過' : 'Review approved',
-        description: skillName ? (zh ? `${skillName}${versionSuffix} 已稽核透過。` : `${skillName}${versionSuffix} was approved.`) : '',
+        title: zh ? '技能稽核通過' : 'Review approved',
+        description: skillName ? (zh ? `${skillName}${versionSuffix} 已稽核通過。` : `${skillName}${versionSuffix} was approved.`) : '',
       }
     case 'REVIEW_REJECTED':
       return {
         title: zh ? '技能稽核駁回' : 'Review rejected',
-        description: skillName ? (zh ? `${skillName}${versionSuffix} 稽核未透過。` : `${skillName}${versionSuffix} was rejected.`) : '',
+        description: skillName ? (zh ? `${skillName}${versionSuffix} 稽核未通過。` : `${skillName}${versionSuffix} was rejected.`) : '',
       }
     case 'PROMOTION_SUBMITTED':
       return {
@@ -56,13 +56,13 @@ export function resolveNotificationDisplay(item: NotificationItem, language: str
       }
     case 'PROMOTION_APPROVED':
       return {
-        title: zh ? '技能推廣透過' : 'Promotion approved',
-        description: skillName ? (zh ? `${skillName}${versionSuffix} 推廣已透過。` : `${skillName}${versionSuffix} promotion was approved.`) : '',
+        title: zh ? '技能推廣通過' : 'Promotion approved',
+        description: skillName ? (zh ? `${skillName}${versionSuffix} 推廣已通過。` : `${skillName}${versionSuffix} promotion was approved.`) : '',
       }
     case 'PROMOTION_REJECTED':
       return {
         title: zh ? '技能推廣駁回' : 'Promotion rejected',
-        description: skillName ? (zh ? `${skillName}${versionSuffix} 推廣未透過。` : `${skillName}${versionSuffix} promotion was rejected.`) : '',
+        description: skillName ? (zh ? `${skillName}${versionSuffix} 推廣未通過。` : `${skillName}${versionSuffix} promotion was rejected.`) : '',
       }
     case 'REPORT_SUBMITTED':
       return {

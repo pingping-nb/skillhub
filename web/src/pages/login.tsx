@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
 import { SessionBootstrapEntry } from '@/features/auth/session-bootstrap-entry'
@@ -34,15 +34,21 @@ export function LoginPage() {
     (method) => method.methodType === 'DIRECT_PASSWORD' && method.provider !== 'local',
   )
   const [selectedProvider, setSelectedProvider] = useState<string>('local')
+  // Tracks whether the user has explicitly picked a provider, so the
+  // auto-default effect below never overrides an explicit choice (e.g. local).
+  const providerChosenRef = useRef(false)
   const loginMutation = usePasswordLogin(selectedProvider === 'local' ? undefined : selectedProvider)
   const bootstrapMethod = authMethods?.find((method) => method.methodType === 'SESSION_BOOTSTRAP')
 
-  // Default to the first direct-auth provider (e.g. LDAP) once the catalog loads.
+  // Default to the first direct-auth provider (e.g. LDAP) once the catalog loads,
+  // but only while the user has not selected a provider manually.
   useEffect(() => {
-    if (directProviders.length > 0 && selectedProvider === 'local') {
-      setSelectedProvider(directProviders[0].provider)
+    if (providerChosenRef.current || directProviders.length === 0) {
+      return
     }
-  }, [directProviders, selectedProvider])
+    providerChosenRef.current = true
+    setSelectedProvider(directProviders[0].provider)
+  }, [directProviders])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -101,7 +107,10 @@ export function LoginPage() {
                   <select
                     id="provider"
                     value={selectedProvider}
-                    onChange={(event) => setSelectedProvider(event.target.value)}
+                    onChange={(event) => {
+                      providerChosenRef.current = true
+                      setSelectedProvider(event.target.value)
+                    }}
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   >
                     <option value="local">{t('login.providerLocal')}</option>
