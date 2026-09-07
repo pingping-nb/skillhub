@@ -103,7 +103,7 @@ skillhub:
     service-version: ${SKILLHUB_SERVICE_VERSION:unknown}
     service-environment: ${SKILLHUB_SERVICE_ENVIRONMENT:local}
   builtin-skills:
-    enabled: ${SKILLHUB_BUILTIN_SKILLS_ENABLED:true}
+    enabled: ${SKILLHUB_BUILTIN_SKILLS_ENABLED:false}
   redis:
     sentinel:
       check-sentinels-list: ${SKILLHUB_REDIS_SENTINEL_CHECK_SENTINELS_LIST:true}
