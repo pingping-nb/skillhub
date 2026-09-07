@@ -85,7 +85,8 @@ public class LdapIdentityService {
             user = userRepo.findById(binding.getUserId())
                 .orElseThrow(() -> new IllegalStateException("User not found for binding"));
             ensureLoginAllowed(user);
-            user.setDisplayName(ldapUser.displayName());
+            // Do not overwrite displayName on subsequent logins; it is only set
+            // when the user is first created. Email is still synced from LDAP.
             if (ldapUser.email() != null && !ldapUser.email().isBlank()) {
                 user.setEmail(ldapUser.email());
             }

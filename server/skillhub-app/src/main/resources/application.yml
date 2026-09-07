@@ -209,7 +209,7 @@ skillhub:
     fields:
       displayName:
         editable: true
-        requires-review: ${SKILLHUB_PROFILE_HUMAN_REVIEW_ENABLED:true}
+        requires-review: false
       email:
         editable: false
         requires-review: false
