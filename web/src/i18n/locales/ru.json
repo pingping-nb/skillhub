@@ -941,6 +941,13 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "SkillHub CLI",
     "installCommandUnsafeVersion": "Номер этой версии нельзя безопасно использовать в кроссплатформенной команде. Попросите автора исправить его.",
+    "installScopeLabel": "Область установки",
+    "installScope": {
+      "user": "Пользователь",
+      "project": "Проект"
+    },
+    "upgradeCommandLabel": "Обновить существующую установку",
+    "removeCommandLabel": "Очистить устаревшие записи перед переустановкой",
     "download": "Скачать",
     "labelsSectionTitle": "Метки",
     "labelsSectionDescription": "Прикрепите или удалите рекомендуемые метки, которые помогают пользователям фильтровать и находить этот скилл.",

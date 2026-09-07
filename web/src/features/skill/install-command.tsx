@@ -1,9 +1,12 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Check, Copy } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { useCopyToClipboard } from '@/shared/lib/clipboard'
 import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
+import { cn } from '@/shared/lib/utils'
+
+export type InstallScope = 'user' | 'project'
 
 interface InstallCommandProps {
   namespace: string
@@ -36,13 +39,32 @@ export function buildSkillhubInstallCommand(
   slug: string,
   baseUrl: string,
   version?: string,
+  scope: InstallScope = 'user',
 ): string {
   if (version && !isPortableSkillVersion(version)) {
     return ''
   }
   const coordinate = buildSkillhubCoordinate(namespace, slug)
   const versionArg = version ? ` --version ${version}` : ''
-  return `npx @astron-team/skillhub@latest install ${coordinate}${versionArg} --registry ${baseUrl}`
+  return `npx @astron-team/skillhub@latest install ${coordinate}${versionArg} --scope ${scope} --registry ${baseUrl}`
+}
+
+export function buildSkillhubUpgradeCommand(
+  namespace: string,
+  slug: string,
+  baseUrl: string,
+): string {
+  const coordinate = buildSkillhubCoordinate(namespace, slug)
+  return `npx @astron-team/skillhub@latest upgrade ${coordinate} --registry ${baseUrl}`
+}
+
+export function buildSkillhubRemoveCommand(
+  namespace: string,
+  slug: string,
+  baseUrl: string,
+): string {
+  const coordinate = buildSkillhubCoordinate(namespace, slug)
+  return `npx @astron-team/skillhub@latest remove ${coordinate} --all --registry ${baseUrl}`
 }
 
 interface CommandBlockProps {
@@ -86,16 +108,56 @@ function CommandBlock({ command }: CommandBlockProps) {
 export function InstallCommand({ namespace, slug, version }: InstallCommandProps) {
   const { t } = useTranslation()
   const baseUrl = useMemo(() => getBaseUrl(), [])
+  const [scope, setScope] = useState<InstallScope>('user')
   const skillhubCommand = useMemo(
-    () => buildSkillhubInstallCommand(namespace, slug, baseUrl, version),
-    [baseUrl, namespace, slug, version],
+    () => buildSkillhubInstallCommand(namespace, slug, baseUrl, version, scope),
+    [baseUrl, namespace, slug, version, scope],
+  )
+  const upgradeCommand = useMemo(
+    () => buildSkillhubUpgradeCommand(namespace, slug, baseUrl),
+    [baseUrl, namespace, slug],
+  )
+  const removeCommand = useMemo(
+    () => buildSkillhubRemoveCommand(namespace, slug, baseUrl),
+    [baseUrl, namespace, slug],
   )
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center gap-2" role="radiogroup" aria-label={t('skillDetail.installScopeLabel')}>
+        <span className="text-xs text-muted-foreground">{t('skillDetail.installScopeLabel')}</span>
+        {(['user', 'project'] as const).map((value) => (
+          <button
+            key={value}
+            type="button"
+            role="radio"
+            aria-checked={scope === value}
+            onClick={() => setScope(value)}
+            className={cn(
+              'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+              scope === value
+                ? 'border-primary bg-primary/10 text-primary'
+                : 'border-border text-muted-foreground hover:bg-muted/70',
+            )}
+          >
+            {t(`skillDetail.installScope.${value}`)}
+          </button>
+        ))}
+      </div>
       {skillhubCommand
         ? <CommandBlock command={skillhubCommand} />
         : <p role="alert" className="text-sm text-destructive">{t('skillDetail.installCommandUnsafeVersion')}</p>}
+
+      <div className="space-y-2 border-t border-border/60 pt-3">
+        <div className="space-y-1">
+          <span className="text-xs font-medium text-muted-foreground">{t('skillDetail.upgradeCommandLabel')}</span>
+          <CommandBlock command={upgradeCommand} />
+        </div>
+        <div className="space-y-1">
+          <span className="text-xs font-medium text-muted-foreground">{t('skillDetail.removeCommandLabel')}</span>
+          <CommandBlock command={removeCommand} />
+        </div>
+      </div>
     </div>
   )
 }

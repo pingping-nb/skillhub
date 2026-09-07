@@ -133,7 +133,8 @@ async function resolveExplicitAgents(
     const profile = profileMap.get(agentId)
     if (!profile) {
       throw new CliError(`unknown agent: ${agentId}`, EXIT.usage, {
-        next: 'use a supported agent profile or pass --dir'
+        next: 'use a supported agent profile, omit --agent for the generic target, or pass --dir',
+        supportedAgents: allProfiles.map(p => p.id)
       })
     }
     let roots: string[]

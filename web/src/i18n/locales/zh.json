@@ -876,6 +876,13 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "SkillHub CLI",
     "installCommandUnsafeVersion": "該版本號無法安全地生成跨平台命令，請聯絡發布者修正版本號。",
+    "installScopeLabel": "安裝範圍",
+    "installScope": {
+      "user": "使用者",
+      "project": "專案"
+    },
+    "upgradeCommandLabel": "升級既有安裝",
+    "removeCommandLabel": "重新安裝前清除陳舊條目",
     "download": "下載",
     "labelsSectionTitle": "標籤管理",
     "labelsSectionDescription": "為這個技能掛載或移除推薦標籤，幫助使用者篩選和發現。",

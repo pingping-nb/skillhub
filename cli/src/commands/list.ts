@@ -2,6 +2,9 @@ import { stat } from 'node:fs/promises'
 import { ConfigStore } from '../stores/config-store'
 import { InventoryStore } from '../stores/inventory-store'
 import { resolveRegistry } from '../services/registry-service'
+import { profileMap } from '../agents/detector'
+import { CliError } from '../shared/errors'
+import { EXIT } from '../shared/constants'
 
 export interface ListCommandOptions {
   agent?: string[] | undefined
@@ -15,6 +18,17 @@ export async function listCommand(options: ListCommandOptions): Promise<string> 
   const registry = resolveRegistry(options, process.env, await configStore.read())
   const store = new InventoryStore()
   const inventory = await store.read()
+
+  // Validate --agent values up front so an unknown profile fails loudly
+  // instead of silently returning an empty list (matching install's behavior).
+  for (const agentId of options.agent ?? []) {
+    if (!profileMap.has(agentId)) {
+      throw new CliError(`unknown agent: ${agentId}`, EXIT.usage, {
+        next: 'use a supported agent profile or omit --agent',
+        supportedAgents: [...profileMap.keys()]
+      })
+    }
+  }
 
   // Flatten targets
   type FlatTarget = { namespace: string; slug: string; version: string; agent: string; installDir: string; installedAt: string; status: string }

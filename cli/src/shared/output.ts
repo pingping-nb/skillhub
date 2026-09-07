@@ -36,6 +36,9 @@ export function renderError(error: unknown, json: boolean): string {
   if (typeof cliError.details.next === 'string') {
     lines.push(`Next: ${cliError.details.next}`)
   }
+  if (Array.isArray(cliError.details.supportedAgents)) {
+    lines.push(`Supported agents: ${(cliError.details.supportedAgents as string[]).join(', ')}`)
+  }
   return lines.join('\n')
 }
 

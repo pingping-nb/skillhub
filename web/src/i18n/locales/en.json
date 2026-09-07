@@ -876,6 +876,13 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "SkillHub CLI",
     "installCommandUnsafeVersion": "This version cannot be represented safely in a cross-platform command. Ask the publisher to correct it.",
+    "installScopeLabel": "Install scope",
+    "installScope": {
+      "user": "User",
+      "project": "Project"
+    },
+    "upgradeCommandLabel": "Upgrade an existing installation",
+    "removeCommandLabel": "Clear stale entries before reinstalling",
     "download": "Download",
     "labelsSectionTitle": "Labels",
     "labelsSectionDescription": "Attach or remove recommended labels that help users filter and discover this skill.",
