@@ -58,6 +58,9 @@ export function ProfileSettingsPage() {
   const effectiveDisplayName = profileData?.displayName ?? user?.displayName ?? ''
   const effectiveAvatarUrl = profileData?.avatarUrl ?? user?.avatarUrl ?? null
   const effectiveEmail = profileData?.email ?? user?.email ?? ''
+  // Password reset is only available for accounts with a local credential.
+  // LDAP/direct-auth users manage their password in the external directory.
+  const canResetPassword = user?.canChangePassword === true
 
   const effectiveProfile = {
     displayName: effectiveDisplayName,
@@ -184,9 +187,11 @@ export function ProfileSettingsPage() {
           </div>
           {!isEditing ? (
             <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => void navigate({ to: '/reset-password' })}>
-                {t('profile.resetPassword')}
-              </Button>
+              {canResetPassword ? (
+                <Button type="button" variant="outline" size="sm" onClick={() => void navigate({ to: '/reset-password' })}>
+                  {t('profile.resetPassword')}
+                </Button>
+              ) : null}
               {hasEditableFields ? (
                 <Button type="button" variant="outline" size="sm" onClick={handleEdit}>
                   {t('profile.edit')}
