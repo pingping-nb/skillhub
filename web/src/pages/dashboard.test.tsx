@@ -74,4 +74,11 @@ describe('DashboardPage', () => {
 
     expect(html).toContain('mySkills.title')
   })
+
+  it('links to the review progress page', () => {
+    const html = renderToStaticMarkup(<DashboardPage />)
+
+    expect(html).toContain('dashboard.reviewProgressTitle')
+    expect(html).toContain('dashboard.viewReviewProgress')
+  })
 })
