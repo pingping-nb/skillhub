@@ -36,18 +36,18 @@ export function resolveNotificationDisplay(item: NotificationItem, language: str
   switch (item.eventType) {
     case 'REVIEW_SUBMITTED':
       return {
-        title: zh ? '技能稽核提交' : 'Review submitted',
-        description: skillName ? (zh ? `${skillName}${versionSuffix} 已提交稽核。` : `${skillName}${versionSuffix} was submitted for review.`) : '',
+        title: zh ? '技能審核提交' : 'Review submitted',
+        description: skillName ? (zh ? `${skillName}${versionSuffix} 已提交審核。` : `${skillName}${versionSuffix} was submitted for review.`) : '',
       }
     case 'REVIEW_APPROVED':
       return {
-        title: zh ? '技能稽核通過' : 'Review approved',
-        description: skillName ? (zh ? `${skillName}${versionSuffix} 已稽核通過。` : `${skillName}${versionSuffix} was approved.`) : '',
+        title: zh ? '技能審核通過' : 'Review approved',
+        description: skillName ? (zh ? `${skillName}${versionSuffix} 已審核通過。` : `${skillName}${versionSuffix} was approved.`) : '',
       }
     case 'REVIEW_REJECTED':
       return {
-        title: zh ? '技能稽核駁回' : 'Review rejected',
-        description: skillName ? (zh ? `${skillName}${versionSuffix} 稽核未通過。` : `${skillName}${versionSuffix} was rejected.`) : '',
+        title: zh ? '技能審核駁回' : 'Review rejected',
+        description: skillName ? (zh ? `${skillName}${versionSuffix} 審核未通過。` : `${skillName}${versionSuffix} was rejected.`) : '',
       }
     case 'PROMOTION_SUBMITTED':
       return {
