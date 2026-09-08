@@ -4,80 +4,80 @@
 
 @layer base {
   :root {
-    /* SkillHub — 淺色主題 (indigo-violet brand) */
-    --background: 210 20% 98%;
-    --foreground: 220 26% 14%;
+    /* SkillHub — 淺色主題 (Neobards brown-orange brand) */
+    --background: 48 83% 95%;
+    --foreground: 27 51% 24%;
     --card: 0 0% 100%;
-    --card-foreground: 220 26% 14%;
+    --card-foreground: 27 51% 24%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 26% 14%;
-    /* Indigo primary (#6A6DFF) */
-    --primary: 239 100% 71%;
+    --popover-foreground: 27 51% 24%;
+    /* Neobards primary (#AA601A) */
+    --primary: 29 73% 38%;
     --primary-foreground: 0 0% 100%;
     /* Surface tones */
-    --secondary: 210 30% 96%;
-    --secondary-foreground: 220 26% 14%;
-    --muted: 210 25% 95%;
-    --muted-foreground: 215 14% 46%;
-    /* Violet accent (#B85EFF) */
-    --accent: 271 100% 68%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 55%;
+    --secondary: 44 92% 95%;
+    --secondary-foreground: 27 51% 24%;
+    --muted: 44 60% 94%;
+    --muted-foreground: 27 20% 45%;
+    /* Neobards accent gold (#FCB541) */
+    --accent: 37 97% 62%;
+    --accent-foreground: 25 76% 31%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 239 100% 71%;
+    --border: 40 40% 88%;
+    --input: 40 40% 88%;
+    --ring: 23 96% 53%;
     --radius: 0.75rem;
 
     /* Extended palette */
-    --surface-glass: 210 30% 97%;
-    --glow-primary: 239 100% 71%;
-    --glow-accent: 271 100% 68%;
-    --success: 160 60% 45%;
+    --surface-glass: 48 83% 96%;
+    --glow-primary: 29 73% 38%;
+    --glow-accent: 37 97% 62%;
+    --success: 142 76% 36%;
     --warning: 38 92% 58%;
 
     /* Brand */
-    --brand-start: #6A6DFF;
-    --brand-end: #B85EFF;
-    --brand-gradient: linear-gradient(135deg, #6A6DFF 0%, #B85EFF 100%);
+    --brand-start: #AA601A;
+    --brand-end: #FA6C16;
+    --brand-gradient: linear-gradient(135deg, #AA601A 0%, #FA6C16 100%);
 
     /* Text semantic */
-    --text-secondary: 215 19% 35%;
-    --text-muted: 215 14% 46%;
-    --text-placeholder: 213 12% 63%;
+    --text-secondary: 27 30% 35%;
+    --text-muted: 27 20% 45%;
+    --text-placeholder: 27 15% 60%;
 
     /* Border semantic */
-    --border-card: 220 26% 94%;
+    --border-card: 40 40% 90%;
   }
 
   .dark {
-    /* Cool ink surfaces: distinct depth without near-black dead zones. */
-    --background: 222 30% 10%;
-    --foreground: 216 28% 93%;
-    --card: 222 25% 14%;
-    --card-foreground: 216 28% 93%;
-    --popover: 222 24% 15%;
-    --popover-foreground: 216 28% 93%;
-    --primary: 241 92% 74%;
-    --primary-foreground: 222 30% 10%;
-    --secondary: 222 20% 18%;
-    --secondary-foreground: 216 24% 88%;
-    --muted: 222 18% 19%;
-    --muted-foreground: 216 14% 66%;
-    --accent: 272 86% 72%;
-    --accent-foreground: 0 0% 100%;
+    /* Warm brown surfaces: distinct depth without near-black dead zones. */
+    --background: 27 30% 10%;
+    --foreground: 40 40% 92%;
+    --card: 27 25% 14%;
+    --card-foreground: 40 40% 92%;
+    --popover: 27 24% 15%;
+    --popover-foreground: 40 40% 92%;
+    --primary: 29 73% 55%;
+    --primary-foreground: 27 30% 10%;
+    --secondary: 27 20% 18%;
+    --secondary-foreground: 40 30% 88%;
+    --muted: 27 18% 19%;
+    --muted-foreground: 40 15% 66%;
+    --accent: 37 97% 62%;
+    --accent-foreground: 25 76% 31%;
     --destructive: 0 72% 52%;
     --destructive-foreground: 0 0% 100%;
-    --border: 222 16% 25%;
-    --input: 222 16% 25%;
-    --ring: 241 92% 74%;
-    --surface-glass: 222 24% 14%;
-    --glow-primary: 241 92% 70%;
-    --glow-accent: 272 80% 68%;
-    --text-secondary: 216 17% 76%;
-    --text-muted: 216 14% 66%;
-    --text-placeholder: 216 12% 54%;
-    --border-card: 222 16% 24%;
+    --border: 27 16% 25%;
+    --input: 27 16% 25%;
+    --ring: 37 97% 62%;
+    --surface-glass: 27 24% 14%;
+    --glow-primary: 29 73% 55%;
+    --glow-accent: 37 97% 62%;
+    --text-secondary: 40 20% 76%;
+    --text-muted: 40 15% 66%;
+    --text-placeholder: 40 12% 54%;
+    --border-card: 27 16% 24%;
   }
 }
 
@@ -258,7 +258,7 @@
 }
 
 .dark .text-gradient-hero {
-  background: linear-gradient(135deg, #8183FF, #C77EFF);
+  background: linear-gradient(135deg, #C77E3A, #FCB541);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
