@@ -51,7 +51,7 @@ export function LandingPage() {
       {/* Hero Section */}
       <main ref={heroView.ref} className={`relative z-10 flex flex-col items-center pt-16 pb-14 px-4 md:pt-20 scroll-fade-up${heroView.inView ? ' in-view' : ''}`}>
         <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-brand-gradient mb-8">
-          SkillHub
+          Neobards SkillHub
         </h1>
 
         {/* Search box */}
