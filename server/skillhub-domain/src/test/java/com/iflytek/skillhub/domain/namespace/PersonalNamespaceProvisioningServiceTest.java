@@ -79,7 +79,7 @@ class PersonalNamespaceProvisioningServiceTest {
 
     @Test
     void skipsSystemAccount() {
-        withSettings(true, "personal-${random}", "${username}-个人空间");
+        withSettings(true, "personal-${random}", "${username}-個人空間");
         when(userAccountRepository.findById("usr_system"))
                 .thenReturn(Optional.of(com.iflytek.skillhub.domain.user.UserAccount
                         .systemAccount("usr_system", "system", null, null)));
