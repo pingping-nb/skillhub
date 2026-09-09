@@ -26,6 +26,31 @@ vi.mock('@/shared/components/namespace-badge', () => ({
   NamespaceBadge: ({ name }: { name: string }) => createElement('span', null, name),
 }))
 
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, values?: Record<string, number | string>) => {
+      const count = values?.count ?? ''
+      const plural = values?.plural ?? ''
+      switch (key) {
+        case 'skillCard.relativeTime.justNow':
+          return 'just now'
+        case 'skillCard.relativeTime.minutesAgo':
+          return `${count} minute${plural} ago`
+        case 'skillCard.relativeTime.hoursAgo':
+          return `${count} hour${plural} ago`
+        case 'skillCard.relativeTime.daysAgo':
+          return `${count} day${plural} ago`
+        case 'skillCard.relativeTime.monthsAgo':
+          return `${count} month${plural} ago`
+        case 'skillCard.relativeTime.yearsAgo':
+          return `${count} year${plural} ago`
+        default:
+          return key
+      }
+    },
+  }),
+}))
+
 /**
  * skill-card.tsx exports a single React component (SkillCard).
  * All visual logic is in JSX and depends on hooks (useAuth, useStar).

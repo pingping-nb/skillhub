@@ -1,3 +1,5 @@
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import type { SkillSummary } from '@/api/types'
 import { useAuth } from '@/features/auth/use-auth'
 import { useStarredIdSet } from '@/features/social/use-star'
@@ -13,7 +15,11 @@ interface SkillCardProps {
   highlightStarred?: boolean
 }
 
-function formatRelativeTime(dateString: string): string {
+/**
+ * Formats a timestamp as a localized relative time string (e.g. "Il y a 3 jours").
+ * Uses the `skillCard.relativeTime.*` i18n keys so the output follows the active UI language.
+ */
+function formatRelativeTime(dateString: string, t: TFunction): string {
   const date = new Date(dateString)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
@@ -24,18 +30,21 @@ function formatRelativeTime(dateString: string): string {
   const diffMonths = Math.floor(diffDays / 30)
   const diffYears = Math.floor(diffDays / 365)
 
-  if (diffSeconds < 60) return '剛剛'
-  if (diffMinutes < 60) return `${diffMinutes}分鐘前`
-  if (diffHours < 24) return `${diffHours}小時前`
-  if (diffDays < 30) return `${diffDays}天前`
-  if (diffMonths < 12) return `${diffMonths}個月前`
-  return `${diffYears}年前`
+  const plural = (count: number) => (count > 1 ? 's' : '')
+
+  if (diffSeconds < 60) return t('skillCard.relativeTime.justNow')
+  if (diffMinutes < 60) return t('skillCard.relativeTime.minutesAgo', { count: diffMinutes, plural: plural(diffMinutes) })
+  if (diffHours < 24) return t('skillCard.relativeTime.hoursAgo', { count: diffHours, plural: plural(diffHours) })
+  if (diffDays < 30) return t('skillCard.relativeTime.daysAgo', { count: diffDays, plural: plural(diffDays) })
+  if (diffMonths < 12) return t('skillCard.relativeTime.monthsAgo', { count: diffMonths, plural: plural(diffMonths) })
+  return t('skillCard.relativeTime.yearsAgo', { count: diffYears, plural: plural(diffYears) })
 }
 
 /**
  * Reusable card for displaying one skill in lists such as landing, namespace, search, and stars.
  */
 export function SkillCard({ skill, onClick, highlightStarred = true }: SkillCardProps) {
+  const { t } = useTranslation()
   const { isAuthenticated } = useAuth()
   // Batch highlight via shared ['skills','stars'] — never N× useStar per grid row.
   const { starredIds } = useStarredIdSet(highlightStarred && isAuthenticated)
@@ -138,7 +147,7 @@ export function SkillCard({ skill, onClick, highlightStarred = true }: SkillCard
             {skill.updatedAt && (
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                {formatRelativeTime(skill.updatedAt)}
+                {formatRelativeTime(skill.updatedAt, t)}
               </span>
             )}
           </div>

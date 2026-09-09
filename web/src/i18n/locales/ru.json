@@ -1671,7 +1671,15 @@
     "starredAction": "Нажмите, чтобы убрать из избранного",
     "unstarTitle": "Убрать из избранного",
     "unstarDescription": "Убрать «{{name}}» из избранных скиллов?",
-    "unstarConfirm": "Убрать"
+    "unstarConfirm": "Убрать",
+    "relativeTime": {
+      "justNow": "только что",
+      "minutesAgo": "{{count}} мин. назад",
+      "hoursAgo": "{{count}} ч. назад",
+      "daysAgo": "{{count}} дн. назад",
+      "monthsAgo": "{{count}} мес. назад",
+      "yearsAgo": "{{count}} г. назад"
+    }
   },
   "starButton": {
     "starred": "В избранном",

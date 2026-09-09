@@ -24,6 +24,7 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const languages = [
     { code: 'zh', name: '繁體中文' },
     { code: 'en', name: 'English' },
+    { code: 'fr', name: 'Français' },
   ]
 
   // Full language code (preserve region, e.g. zh-CN).

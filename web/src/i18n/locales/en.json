@@ -1399,7 +1399,15 @@
     "starredAction": "Click to unstar",
     "unstarTitle": "Remove from starred",
     "unstarDescription": "Are you sure you want to remove \"{{name}}\" from your starred skills?",
-    "unstarConfirm": "Remove"
+    "unstarConfirm": "Remove",
+    "relativeTime": {
+      "justNow": "just now",
+      "minutesAgo": "{{count}} minute{{plural}} ago",
+      "hoursAgo": "{{count}} hour{{plural}} ago",
+      "daysAgo": "{{count}} day{{plural}} ago",
+      "monthsAgo": "{{count}} month{{plural}} ago",
+      "yearsAgo": "{{count}} year{{plural}} ago"
+    }
   },
   "copyButton": {
     "copied": "Copied",

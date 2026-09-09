@@ -1390,7 +1390,15 @@
     "starredAction": "点击取消收藏",
     "unstarTitle": "取消收藏",
     "unstarDescription": "确定要取消收藏技能“{{name}}”吗？",
-    "unstarConfirm": "取消收藏"
+    "unstarConfirm": "取消收藏",
+    "relativeTime": {
+      "justNow": "刚刚",
+      "minutesAgo": "{{count}}分钟前",
+      "hoursAgo": "{{count}}小时前",
+      "daysAgo": "{{count}}天前",
+      "monthsAgo": "{{count}}个月前",
+      "yearsAgo": "{{count}}年前"
+    }
   },
   "copyButton": {
     "copied": "已复制",
