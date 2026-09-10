@@ -44,7 +44,7 @@ describe('landing quick start locales', () => {
 
   it('limits fallback to discovery in both served guide sources', () => {
     for (const guide of [skillGuide, skillGuideTemplate]) {
-      expect(guide).toContain('version: 1.1.1')
+      expect(guide).toContain('version: 2.0.2')
       expect(guide).toContain('Fallback is only appropriate for discovery requests')
       expect(guide).toContain('For an exact coordinate or version request, report the failure and stop')
     }
