@@ -1,0 +1,100 @@
+/*
+ * Neobards SkillHub theme overlay.
+ *
+ * This file is a non-invasive extension: it overrides the upstream SkillHub
+ * design tokens (defined in `index.css`) with the Neobards brown-orange brand
+ * palette. It is imported AFTER `index.css` so its `:root` / `.dark` variable
+ * declarations win the cascade without modifying any upstream source file.
+ *
+ * To revert to the upstream monochrome theme, simply remove the import in
+ * `main.tsx` — no other file needs to change.
+ */
+
+:root {
+  /* Neobards brown-orange brand palette */
+  --background: 48 83% 95%;
+  --foreground: 27 51% 24%;
+  --card: 0 0% 100%;
+  --card-foreground: 27 51% 24%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 27 51% 24%;
+
+  /* Neobards primary (#AA601A) */
+  --primary: 29 73% 38%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Surface tones */
+  --secondary: 44 92% 95%;
+  --secondary-foreground: 27 51% 24%;
+  --muted: 44 60% 94%;
+  --muted-foreground: 27 20% 45%;
+
+  /* Neobards accent gold (#FCB541) */
+  --accent: 37 97% 62%;
+  --accent-foreground: 25 76% 31%;
+
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 40 40% 88%;
+  --input: 40 40% 88%;
+  --ring: 23 96% 53%;
+  --radius: 0.75rem;
+
+  /* Extended palette */
+  --surface-glass: 48 83% 96%;
+  --glow-primary: 29 73% 38%;
+  --glow-accent: 37 97% 62%;
+  --success: 142 76% 36%;
+  --warning: 38 92% 58%;
+
+  /* Brand gradient */
+  --brand-start: #AA601A;
+  --brand-end: #FA6C16;
+  --brand-gradient: linear-gradient(135deg, #AA601A 0%, #FA6C16 100%);
+
+  /* Text semantic */
+  --text-secondary: 27 30% 35%;
+  --text-muted: 27 20% 45%;
+  --text-placeholder: 27 15% 60%;
+
+  /* Border semantic */
+  --border-card: 40 40% 90%;
+}
+
+.dark {
+  /* Warm brown surfaces: distinct depth without near-black dead zones. */
+  --background: 27 30% 10%;
+  --foreground: 40 40% 92%;
+  --card: 27 25% 14%;
+  --card-foreground: 40 40% 92%;
+  --popover: 27 24% 15%;
+  --popover-foreground: 40 40% 92%;
+  --primary: 29 73% 55%;
+  --primary-foreground: 27 30% 10%;
+  --secondary: 27 20% 18%;
+  --secondary-foreground: 40 30% 88%;
+  --muted: 27 18% 19%;
+  --muted-foreground: 40 15% 66%;
+  --accent: 37 97% 62%;
+  --accent-foreground: 25 76% 31%;
+  --destructive: 0 72% 52%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 27 16% 25%;
+  --input: 27 16% 25%;
+  --ring: 37 97% 62%;
+  --surface-glass: 27 24% 14%;
+  --glow-primary: 29 73% 55%;
+  --glow-accent: 37 97% 62%;
+  --text-secondary: 40 20% 76%;
+  --text-muted: 40 15% 66%;
+  --text-placeholder: 40 12% 54%;
+  --border-card: 27 16% 24%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Syne', 'IBM Plex Sans', system-ui, sans-serif;
+}

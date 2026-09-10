@@ -37,7 +37,7 @@ vi.mock('./locales/zh.json', () => ({
   default: { greeting: '你好' },
 }))
 
-vi.mock('./locales/zh-CN.json', () => ({
+vi.mock('./locales/zh-TW.json', () => ({
   default: { greeting: '你好' },
 }))
 
@@ -72,11 +72,11 @@ describe('i18n config', () => {
     expect(initOptions.resources).toHaveProperty('fr')
     expect(initOptions.resources).toHaveProperty('ru')
     expect(initOptions.resources).toHaveProperty('zh')
-    expect(initOptions.resources).toHaveProperty('zh-CN')
+    expect(initOptions.resources).toHaveProperty('zh-TW')
     expect(initOptions.resources.en).toHaveProperty('translation')
     expect(initOptions.resources.fr).toHaveProperty('translation')
     expect(initOptions.resources.ru).toHaveProperty('translation')
     expect(initOptions.resources.zh).toHaveProperty('translation')
-    expect(initOptions.resources['zh-CN']).toHaveProperty('translation')
+    expect(initOptions.resources['zh-TW']).toHaveProperty('translation')
   })
 })

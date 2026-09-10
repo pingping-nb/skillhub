@@ -16,6 +16,14 @@ spring:
     fallback-to-system-locale: false
   application:
     name: skillhub
+  # The LDAP extension (com.iflytek.skillhub.auth.ldap) manages its own
+  # LdapContextSource/LdapTemplate lazily. Exclude Spring Boot's LDAP
+  # auto-configuration so it does not eagerly build a ContextSource from
+  # spring.ldap.* properties. Kept here (not in SkillhubApplication) so the
+  # upstream application entry point stays unmodified.
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration
   lifecycle:
     timeout-per-shutdown-phase: 30s
   jpa:

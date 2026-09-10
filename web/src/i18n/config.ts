@@ -5,7 +5,7 @@ import en from './locales/en.json'
 import fr from './locales/fr.json'
 import ru from './locales/ru.json'
 import zh from './locales/zh.json'
-import zhCN from './locales/zh-CN.json'
+import zhTW from './locales/zh-TW.json'
 
 /**
  * Initializes i18next for the browser app. Language preference is restored from
@@ -21,7 +21,7 @@ i18n
       fr: { translation: fr },
       ru: { translation: ru },
       zh: { translation: zh },
-      'zh-CN': { translation: zhCN },
+      'zh-TW': { translation: zhTW },
     },
     fallbackLng: 'en',
     interpolation: {

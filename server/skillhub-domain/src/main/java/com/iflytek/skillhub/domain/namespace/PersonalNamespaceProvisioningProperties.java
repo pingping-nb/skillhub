@@ -23,7 +23,7 @@ public class PersonalNamespaceProvisioningProperties {
      */
     private String slugTemplate = "personal-${random}";
 
-    private String displayNameTemplate = "${username}-個人空間";
+    private String displayNameTemplate = "${username}-个人空间";
 
     public boolean isEnabled() {
         return enabled;

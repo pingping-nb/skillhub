@@ -32,6 +32,9 @@ yarn-error.log*
 .memory/
 *.local.json
 
+# Local npm registry config (environment-specific hosts must not be committed)
+.npmrc
+
 # Java / Spring Boot
 .gradle/
 build/

@@ -18,13 +18,13 @@ After the PR is merged, you manually tag and push — the tag triggers [`release
 Configure in GitHub repository → Settings → Secrets and variables → Actions:
 
 - `NPM_TOKEN`: npm token with publish permissions
-  - Generate at http://192.168.22.27:4873 (internal registry) or https://www.npmjs.com/settings/YOUR_USERNAME/tokens
+  - Generate at https://www.npmjs.com/settings/YOUR_USERNAME/tokens
   - Use **Classic Automation Token** (bypasses 2FA automatically), or
   - **Granular Access Token** with "Allow bypass 2FA" enabled, scoped to the package
 
 ### Repository Variables (optional)
 
-- `NPM_REGISTRY`: npm registry URL (default: `http://192.168.22.27:4873`)
+- `NPM_REGISTRY`: npm registry URL (default: `https://registry.npmjs.org`)
 
 ### Local Environment
 

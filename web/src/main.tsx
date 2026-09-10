@@ -2,6 +2,7 @@ import ReactDOM from 'react-dom/client'
 import { App } from './app/providers'
 import './i18n/config'
 import './index.css'
+import './styles/neobards-theme.css'
 
 /**
  * Main React entry point.

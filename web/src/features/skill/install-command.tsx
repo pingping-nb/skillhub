@@ -8,6 +8,15 @@ import { cn } from '@/shared/lib/utils'
 
 export type InstallScope = 'user' | 'project'
 
+/**
+ * The npm package name of the SkillHub CLI.
+ *
+ * Centralized here so the fork's package rename (upstream: `@astron-team/skillhub`)
+ * is a single-point change rather than scattered hardcoded strings across the
+ * codebase and locale files.
+ */
+export const SKILLHUB_CLI_PACKAGE = '@neobards/skillhub'
+
 interface InstallCommandProps {
   namespace: string
   slug: string
@@ -46,7 +55,7 @@ export function buildSkillhubInstallCommand(
   }
   const coordinate = buildSkillhubCoordinate(namespace, slug)
   const versionArg = version ? ` --version ${version}` : ''
-  return `npx @neobards/skillhub@latest install ${coordinate}${versionArg} --scope ${scope} --registry ${baseUrl}`
+  return `npx ${SKILLHUB_CLI_PACKAGE}@latest install ${coordinate}${versionArg} --scope ${scope} --registry ${baseUrl}`
 }
 
 export function buildSkillhubUpgradeCommand(
@@ -55,7 +64,7 @@ export function buildSkillhubUpgradeCommand(
   baseUrl: string,
 ): string {
   const coordinate = buildSkillhubCoordinate(namespace, slug)
-  return `npx @neobards/skillhub@latest upgrade ${coordinate} --registry ${baseUrl}`
+  return `npx ${SKILLHUB_CLI_PACKAGE}@latest upgrade ${coordinate} --registry ${baseUrl}`
 }
 
 export function buildSkillhubRemoveCommand(
@@ -64,7 +73,7 @@ export function buildSkillhubRemoveCommand(
   baseUrl: string,
 ): string {
   const coordinate = buildSkillhubCoordinate(namespace, slug)
-  return `npx @neobards/skillhub@latest remove ${coordinate} --all --registry ${baseUrl}`
+  return `npx ${SKILLHUB_CLI_PACKAGE}@latest remove ${coordinate} --all --registry ${baseUrl}`
 }
 
 interface CommandBlockProps {

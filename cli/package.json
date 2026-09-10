@@ -1,6 +1,6 @@
 {
   "name": "@neobards/skillhub",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "Manage and install skills for AI coding agents",
   "keywords": [
     "skillhub",
@@ -42,8 +42,7 @@
     "lint": "eslint src test --ext .ts"
   },
   "publishConfig": {
-    "access": "public",
-    "registry": "http://192.168.22.27:4873"
+    "access": "public"
   },
   "dependencies": {
     "cac": "^6.7.14",

@@ -22,12 +22,15 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   const [open, setOpen] = useState(false)
 
   const languages = [
-    { code: 'zh', name: '繁體中文' },
+    { code: 'zh', name: '简体中文' },
+    { code: 'zh-TW', name: '繁體中文' },
     { code: 'en', name: 'English' },
     { code: 'fr', name: 'Français' },
+    { code: 'ru', name: 'Русский' },
   ]
 
-  // Full language code (preserve region, e.g. zh-CN).
+  // Full language code (preserve region, e.g. zh-TW) so Simplified and
+  // Traditional Chinese are distinguished.
   const currentLangCode = i18n.language || 'zh'
   const currentLanguage = languages.find((lang) => lang.code === currentLangCode) || languages[0]
 

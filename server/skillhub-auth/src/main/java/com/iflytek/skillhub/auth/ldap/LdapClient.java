@@ -10,6 +10,7 @@ import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.filter.HardcodedFilter;
 import org.springframework.ldap.query.LdapQueryBuilder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
@@ -25,6 +26,7 @@ import java.util.UUID;
  * does not require a reachable LDAP server unless the provider is enabled.
  */
 @Component
+@ConditionalOnProperty(name = "skillhub.auth.ldap.enabled", havingValue = "true")
 public class LdapClient {
 
     private static final Logger log = LoggerFactory.getLogger(LdapClient.class);

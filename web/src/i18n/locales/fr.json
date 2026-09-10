@@ -118,7 +118,7 @@
       },
       "cli": {
         "description": "Installez la CLI SkillHub localement pour exécuter skillhub install afin d'installer des compétences.",
-        "command": "npm i -g @neobards/skillhub --registry http://192.168.22.27:4873"
+        "command": "npm i -g @neobards/skillhub"
       },
       "agent": {
         "description": "Envoyez une requête à votre agent pour configurer le registre SkillHub",

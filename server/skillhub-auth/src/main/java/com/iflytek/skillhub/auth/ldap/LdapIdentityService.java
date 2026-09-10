@@ -15,6 +15,7 @@ import com.iflytek.skillhub.domain.user.UserAccount;
 import com.iflytek.skillhub.domain.user.UserAccountRepository;
 import com.iflytek.skillhub.domain.user.UserStatus;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
  * UID attribute as the external subject. No account merging is performed.
  */
 @Service
+@ConditionalOnProperty(name = "skillhub.auth.ldap.enabled", havingValue = "true")
 public class LdapIdentityService {
 
     public static final String PROVIDER_CODE = "ldap";

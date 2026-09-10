@@ -1,6 +1,11 @@
 import { PKG_NAME, PKG_VERSION } from '../generated/pkg-info'
 
-export const DEFAULT_REGISTRY = 'http://192.168.22.27:4873'
+/**
+ * Default SkillHub registry endpoint. Override with the `SKILLHUB_REGISTRY`
+ * environment variable (e.g. for an internal/self-hosted deployment) instead of
+ * hardcoding an environment-specific host here.
+ */
+export const DEFAULT_REGISTRY = process.env.SKILLHUB_REGISTRY?.trim() || 'https://skill.xfyun.cn'
 export const CLI_VERSION: string = PKG_VERSION
 export const CLI_PACKAGE_NAME: string = PKG_NAME
 export const EXIT = {

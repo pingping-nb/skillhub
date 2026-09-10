@@ -1,5 +1,6 @@
 package com.iflytek.skillhub.auth.ldap;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
  * build remains unchanged unless an operator explicitly enables LDAP.
  */
 @Component
+@ConditionalOnProperty(name = "skillhub.auth.ldap.enabled", havingValue = "true")
 @ConfigurationProperties(prefix = "skillhub.auth.ldap")
 public class LdapProperties {
 

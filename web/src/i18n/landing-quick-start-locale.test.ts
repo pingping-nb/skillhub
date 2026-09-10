@@ -4,23 +4,23 @@ import skillGuideTemplate from '../docs/skill.md.template?raw'
 import en from './locales/en.json'
 import ru from './locales/ru.json'
 import zh from './locales/zh.json'
-import zhCN from './locales/zh-CN.json'
+import zhTW from './locales/zh-TW.json'
 
 describe('landing quick start locales', () => {
   it('uses localized agent setup prompts for chinese, english, and russian', () => {
-    expect(zh.landing.quickStart.agent.command).toBe('請根據 https://www.example.com/install/skillhub.md 接入 SkillHub')
-    expect(zhCN.landing.quickStart.agent.command).toBe('请根据 https://www.example.com/install/skillhub.md 接入 SkillHub')
+    expect(zh.landing.quickStart.agent.command).toBe('请根据 https://www.example.com/install/skillhub.md 接入 SkillHub')
+    expect(zhTW.landing.quickStart.agent.command).toBe('請根據 https://www.example.com/install/skillhub.md 接入 SkillHub')
     expect(en.landing.quickStart.agent.command).toBe('Connect SkillHub using https://www.example.com/install/skillhub.md')
     expect(ru.landing.quickStart.agent.command).toBe('Подключите SkillHub по инструкции https://www.example.com/install/skillhub.md')
   })
 
   it('provides command templates with url placeholder for dynamic rendering', () => {
-    expect(zh.landing.quickStart.agent.commandTemplate).toBe('請根據 {{url}} 接入 SkillHub')
-    expect(zhCN.landing.quickStart.agent.commandTemplate).toBe('请根据 {{url}} 接入 SkillHub')
+    expect(zh.landing.quickStart.agent.commandTemplate).toBe('请根据 {{url}} 接入 SkillHub')
+    expect(zhTW.landing.quickStart.agent.commandTemplate).toBe('請根據 {{url}} 接入 SkillHub')
     expect(en.landing.quickStart.agent.commandTemplate).toBe('Connect SkillHub using {{url}}')
     expect(ru.landing.quickStart.agent.commandTemplate).toBe('Подключите SkillHub по инструкции {{url}}')
     expect(zh.landing.quickStart.human.commandTemplate).toContain('--registry {{url}}')
-    expect(zhCN.landing.quickStart.human.commandTemplate).toContain('--registry {{url}}')
+    expect(zhTW.landing.quickStart.human.commandTemplate).toContain('--registry {{url}}')
     expect(en.landing.quickStart.human.commandTemplate).toContain('--registry {{url}}')
     expect(ru.landing.quickStart.human.commandTemplate).toContain('--registry {{url}}')
   })
@@ -28,7 +28,7 @@ describe('landing quick start locales', () => {
   it('keeps exact skill installs on the selected registry', () => {
     for (const prompt of [
       zh.skillDetail.installForAgent.prompt,
-      zhCN.skillDetail.installForAgent.prompt,
+      zhTW.skillDetail.installForAgent.prompt,
       en.skillDetail.installForAgent.prompt,
       ru.skillDetail.installForAgent.prompt,
     ]) {
@@ -52,10 +52,10 @@ describe('landing quick start locales', () => {
 
   it('exposes CLI install command in both locales', () => {
     expect(zh.landing.quickStart.tabs.cli).toBe('CLI')
-    expect(zh.landing.quickStart.cli.command).toBe('npm i -g @neobards/skillhub --registry http://192.168.22.27:4873')
-    expect(zh.landing.quickStart.cli.description).toBe('安裝 SkillHub CLI 到本地，後續可執行 skillhub install 安裝技能')
+    expect(zh.landing.quickStart.cli.command).toBe('npm i -g @astron-team/skillhub')
+    expect(zh.landing.quickStart.cli.description).toBe('安装 SkillHub CLI 到本地，后续可执行 skillhub install 安装技能')
     expect(en.landing.quickStart.tabs.cli).toBe('CLI')
-    expect(en.landing.quickStart.cli.command).toBe('npm i -g @neobards/skillhub --registry http://192.168.22.27:4873')
+    expect(en.landing.quickStart.cli.command).toBe('npm i -g @astron-team/skillhub')
     expect(en.landing.quickStart.cli.description).toBe('Install the SkillHub CLI locally to run skillhub install for skills.')
   })
 })

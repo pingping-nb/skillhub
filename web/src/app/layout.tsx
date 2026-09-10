@@ -10,6 +10,7 @@ import { UserMenu } from '@/shared/components/user-menu'
 import { NotificationBell } from '@/features/notification/notification-bell'
 import { dismissOpenOverlays } from '@/shared/lib/dismiss-open-overlays'
 import { syncDocumentLanguage } from '@/shared/lib/document-language'
+import { BRAND_NAME } from '@/shared/lib/brand'
 import { DashboardSidebar, SIDEBAR_GROUPS } from '@/pages/dashboard'
 import { canViewGovernanceCenter } from '@/shared/lib/governance-access'
 import { getAppHeaderClassName } from './layout-header-style'
@@ -117,7 +118,7 @@ export function Layout() {
       {/* Header */}
       <header className={getAppHeaderClassName(isHeaderElevated)} style={{ borderColor: 'hsl(var(--border))' }}>
         <Link to="/" className="text-xl font-semibold tracking-tight flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>
-          SkillHub
+          {BRAND_NAME}
         </Link>
 
         {/* Desktop nav — lg+ only */}
@@ -227,7 +228,7 @@ export function Layout() {
             <div className="col-span-2 md:col-span-1">
               <div className="mb-4 flex items-center gap-2.5">
                 <BrandMark className="h-8 w-8 rounded-lg bg-background ring-1 ring-border/70" />
-                <span className="font-semibold text-foreground">SkillHub</span>
+                <span className="font-semibold text-foreground">{BRAND_NAME}</span>
               </div>
               <p className="text-sm text-muted-foreground">{t('layout.footerDescription')}</p>
             </div>
