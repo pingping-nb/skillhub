@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Check, Copy } from 'lucide-react'
 import { Button } from '@/shared/ui/button'
 import { useCopyToClipboard } from '@/shared/lib/clipboard'
-import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
+import { resolvePublicRegistryUrl, CLI_NPM_REGISTRY } from '@/shared/lib/registry-url'
 import { cn } from '@/shared/lib/utils'
 
 export type InstallScope = 'user' | 'project'
@@ -46,7 +46,7 @@ export function buildSkillhubInstallCommand(
   }
   const coordinate = buildSkillhubCoordinate(namespace, slug)
   const versionArg = version ? ` --version ${version}` : ''
-  return `npx @neobards/skillhub@latest install ${coordinate}${versionArg} --scope ${scope} --registry ${baseUrl}`
+  return `npx --registry ${CLI_NPM_REGISTRY} @neobards/skillhub@latest install ${coordinate}${versionArg} --scope ${scope} --registry ${baseUrl}`
 }
 
 export function buildSkillhubUpgradeCommand(
@@ -55,7 +55,7 @@ export function buildSkillhubUpgradeCommand(
   baseUrl: string,
 ): string {
   const coordinate = buildSkillhubCoordinate(namespace, slug)
-  return `npx @neobards/skillhub@latest upgrade ${coordinate} --registry ${baseUrl}`
+  return `npx --registry ${CLI_NPM_REGISTRY} @neobards/skillhub@latest upgrade ${coordinate} --registry ${baseUrl}`
 }
 
 export function buildSkillhubRemoveCommand(
@@ -64,7 +64,7 @@ export function buildSkillhubRemoveCommand(
   baseUrl: string,
 ): string {
   const coordinate = buildSkillhubCoordinate(namespace, slug)
-  return `npx @neobards/skillhub@latest remove ${coordinate} --all --registry ${baseUrl}`
+  return `npx --registry ${CLI_NPM_REGISTRY} @neobards/skillhub@latest remove ${coordinate} --all --registry ${baseUrl}`
 }
 
 interface CommandBlockProps {

@@ -48,7 +48,7 @@ test.describe('Public Skill Detail Anonymous Access (Real API)', () => {
     const registryUrl = new URL(page.url()).origin
 
     await expect(page.getByText(
-      `npx @neobards/skillhub@latest install ${skillhubCoordinate} --version ${current.skill.version} --registry ${registryUrl}`,
+      `npx --registry http://192.168.22.27:4873 @neobards/skillhub@latest install ${skillhubCoordinate} --version ${current.skill.version} --registry ${registryUrl}`,
       { exact: true },
     )).toBeVisible()
     await expect(page.getByRole('button', { name: 'Copy' }).first()).toBeVisible()
