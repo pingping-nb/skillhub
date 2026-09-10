@@ -69,11 +69,4 @@ describe('DashboardPage', () => {
     expect(html).toContain('overview.mySkills')
     expect(html).not.toContain('overview.publish')
   })
-
-  it('links to the review progress page', () => {
-    const html = renderToStaticMarkup(<DashboardPage />)
-
-    expect(html).toContain('dashboard.reviewProgressTitle')
-    expect(html).toContain('dashboard.viewReviewProgress')
-  })
 })

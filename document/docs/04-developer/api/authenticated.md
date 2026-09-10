@@ -1,14 +1,14 @@
 ---
-title: 認證 API
+title: 认证 API
 sidebar_position: 3
-description: 需要認證的 API
+description: 需要认证的 API
 ---
 
-# 認證 API
+# 认证 API
 
-## 認證相關
+## 认证相关
 
-### 獲取當前使用者
+### 获取当前用户
 
 ```http
 GET /api/v1/auth/me
@@ -20,7 +20,7 @@ GET /api/v1/auth/me
 POST /api/v1/auth/logout
 ```
 
-## 技能發布
+## 技能发布
 
 ```http
 POST /api/v1/publish
@@ -37,7 +37,7 @@ POST /api/v1/skills/{namespace}/{slug}/star
 DELETE /api/v1/skills/{namespace}/{slug}/star
 ```
 
-## 評分
+## 评分
 
 ```http
 POST /api/v1/skills/{namespace}/{slug}/rating
@@ -48,7 +48,7 @@ Content-Type: application/json
 }
 ```
 
-## 標籤管理
+## 标签管理
 
 ```http
 GET /api/v1/skills/{namespace}/{slug}/tags
@@ -56,14 +56,14 @@ PUT /api/v1/skills/{namespace}/{slug}/tags/{tagName}
 DELETE /api/v1/skills/{namespace}/{slug}/tags/{tagName}
 ```
 
-## 我的資源
+## 我的资源
 
 ```http
 GET /api/v1/me/stars
 GET /api/v1/me/skills
 ```
 
-## 名稱空間管理
+## 命名空间管理
 
 ```http
 POST /api/v1/namespaces
@@ -74,7 +74,7 @@ PUT /api/v1/namespaces/{slug}/members/{userId}/role
 DELETE /api/v1/namespaces/{slug}/members/{userId}
 ```
 
-## 稽核
+## 审核
 
 ```http
 GET /api/v1/namespaces/{slug}/reviews
@@ -82,7 +82,7 @@ POST /api/v1/namespaces/{slug}/reviews/{id}/approve
 POST /api/v1/namespaces/{slug}/reviews/{id}/reject
 ```
 
-## 提升申請
+## 提升申请
 
 ```http
 POST /api/v1/namespaces/{slug}/skills/{skillId}/promote
@@ -98,4 +98,4 @@ DELETE /api/v1/tokens/{id}
 
 ## 下一步
 
-- [CLI 相容層](./cli-compat) - ClawHub 相容介面
+- [CLI 兼容层](./cli-compat) - ClawHub 兼容接口

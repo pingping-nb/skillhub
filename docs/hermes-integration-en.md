@@ -9,7 +9,7 @@ This guide explains how to install skills from SkillHub into [NousResearch Herme
 | Component | Validated version | Notes |
 |-----------|-------------------|-------|
 | SkillHub Server | `v0.2.13` | Public or self-hosted registry |
-| SkillHub CLI | `0.1.8` | npm package `@neobards/skillhub` |
+| SkillHub CLI | `0.1.8` | npm package `@astron-team/skillhub` |
 | Hermes Agent | `0.18.2` | Upstream tag [`v2026.7.7.2`](https://github.com/NousResearch/hermes-agent/tree/v2026.7.7.2) |
 
 Validation date: 2026-07-17.
@@ -31,7 +31,7 @@ SkillHub registry
 2. Install SkillHub CLI:
 
 ```bash
-npm install -g @neobards/skillhub
+npm install -g @astron-team/skillhub
 
 skillhub version
 hermes version

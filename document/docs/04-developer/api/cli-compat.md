@@ -1,18 +1,18 @@
 ---
-title: CLI 相容層
+title: CLI 兼容层
 sidebar_position: 4
-description: ClawHub CLI 協議相容層
+description: ClawHub CLI 协议兼容层
 ---
 
-# CLI 相容層
+# CLI 兼容层
 
-SkillHub 提供 ClawHub CLI 協議相容層，現有工具可無縫遷移。
+SkillHub 提供 ClawHub CLI 协议兼容层，现有工具可无缝迁移。
 
 ## 配置 ClawHub CLI
 
-要讓 ClawHub CLI 連線到你的 SkillHub 例項，需要配置以下環境變數：
+要让 ClawHub CLI 连接到你的 SkillHub 实例，需要配置以下环境变量：
 
-### 環境變數配置
+### 环境变量配置
 
 **Linux/macOS (bash/zsh):**
 ```bash
@@ -23,32 +23,32 @@ export CLAWHUB_REGISTRY=https://skill.xfyun.cn
 
 **Windows (PowerShell):**
 ```powershell
-# 永久設定（當前使用者）
+# 永久设置（当前用户）
 [Environment]::SetEnvironmentVariable('CLAWHUB_SITE', 'https://skill.xfyun.cn', 'User')
 [Environment]::SetEnvironmentVariable('CLAWHUB_REGISTRY', 'https://skill.xfyun.cn', 'User')
 
-# 或者臨時設定（當前會話）
+# 或者临时设置（当前会话）
 $env:CLAWHUB_SITE = 'https://skill.xfyun.cn'
 $env:CLAWHUB_REGISTRY = 'https://skill.xfyun.cn'
 ```
 
-### 使用 CLI 標誌（單次命令）
+### 使用 CLI 标志（单次命令）
 
 ```bash
 clawhub --site https://skill.xfyun.cn --registry https://skill.xfyun.cn install <skill>
 ```
 
-### 前端一鍵複製
+### 前端一键复制
 
-SkillHub 網頁端的技能詳情頁會自動顯示帶有正確環境變數的安裝命令，直接複製即可使用。
+SkillHub 网页端的技能详情页会自动显示带有正确环境变量的安装命令，直接复制即可使用。
 
-## Well-known 發現
+## Well-known 发现
 
 ```http
 GET /.well-known/clawhub.json
 ```
 
-響應：
+响应：
 
 ```json
 {
@@ -56,7 +56,7 @@ GET /.well-known/clawhub.json
 }
 ```
 
-## 相容層 API
+## 兼容层 API
 
 ### Whoami
 
@@ -64,7 +64,7 @@ GET /.well-known/clawhub.json
 GET /api/v1/whoami
 ```
 
-響應：
+响应：
 
 ```json
 {
@@ -74,13 +74,13 @@ GET /api/v1/whoami
 }
 ```
 
-### 搜尋
+### 搜索
 
 ```http
 GET /api/v1/search?q={keyword}&page={page}&limit={limit}
 ```
 
-響應：
+响应：
 
 ```json
 {
@@ -112,7 +112,7 @@ GET /api/v1/search?q={keyword}&page={page}&limit={limit}
 GET /api/v1/resolve?slug={slug}&version={version}
 ```
 
-響應：
+响应：
 
 ```json
 {
@@ -122,13 +122,13 @@ GET /api/v1/resolve?slug={slug}&version={version}
 }
 ```
 
-### 下載
+### 下载
 
 ```http
 GET /api/v1/download/{slug}/{version}
 ```
 
-### 發布
+### 发布
 
 ```http
 POST /api/v1/publish
@@ -137,7 +137,7 @@ Content-Type: multipart/form-data
 file: <zip-file>
 ```
 
-響應：
+响应：
 
 ```json
 {
@@ -147,13 +147,13 @@ file: <zip-file>
 }
 ```
 
-## 座標對映
+## 坐标映射
 
-| SkillHub 座標 | ClawHub canonical slug |
+| SkillHub 坐标 | ClawHub canonical slug |
 |---------------|------------------------|
 | `@global/my-skill` | `my-skill` |
 | `@team-name/my-skill` | `team-name--my-skill` |
 
 ## 下一步
 
-- [系統架構](../architecture/overview) - 瞭解架構設計
+- [系统架构](../architecture/overview) - 了解架构设计

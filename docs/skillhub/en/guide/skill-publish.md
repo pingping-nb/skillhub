@@ -62,10 +62,10 @@ export SKILLHUB_REGISTRY=http://localhost:8080
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
 
 # Publish to default namespace
-npx @neobards/skillhub@latest publish ./my-skill
+npx @astron-team/skillhub@latest publish ./my-skill
 
 # Publish to specific namespace
-npx @neobards/skillhub@latest publish ./my-skill --namespace my-team
+npx @astron-team/skillhub@latest publish ./my-skill --namespace my-team
 ```
 
 > The ClawHub CLI publish and sync protocols are not compatible with SkillHub. Use the SkillHub CLI above for publishing.

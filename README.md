@@ -145,10 +145,10 @@ Install and manage Agent skills from the command line:
 
 ```bash
 # Install CLI
-npm install -g @neobards/skillhub
+npm install -g @astron-team/skillhub
 
 # Or run directly
-npx @neobards/skillhub@latest version
+npx @astron-team/skillhub@latest version
 
 # Login
 skillhub login --token sk_xxx --registry https://skill.xfyun.cn
@@ -173,7 +173,7 @@ skillhub list
 make dev-all
 ```
 
-> **For developers in China**: If Maven dependency download times out, configure Aliyun mirror. See [Local Development Guide](https://iflytek.github.io/skillhub/quickstart.html#本地開發) for details.
+> **For developers in China**: If Maven dependency download times out, configure Aliyun mirror. See [Local Development Guide](https://iflytek.github.io/skillhub/quickstart.html#本地开发) for details.
 
 Then open:
 
@@ -305,7 +305,7 @@ docker compose --env-file .env.release -f compose.release.yml up -d
 
 Then open:
 
-- Web UI: `SKILLHUB_PUBLIC_BASE_URL` 對應的地址
+- Web UI: `SKILLHUB_PUBLIC_BASE_URL` 对应的地址
 - Backend API: `http://localhost:8080`
 
 Stop it with:
@@ -517,7 +517,7 @@ git clone https://github.com/anthropics/skills
 # ...and publish it into your private SkillHub registry
 export SKILLHUB_REGISTRY=https://skillhub.your-company.com
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
-npx @neobards/skillhub@latest publish ./skills/<category>/<skill-name>
+npx @astron-team/skillhub@latest publish ./skills/<category>/<skill-name>
 ```
 
 > ⚖️ **Licensing**: honor each skill's own license when republishing. Most skills in
@@ -550,7 +550,7 @@ npx clawhub install my-namespace--my-skill
 # Publishing uses the first-party SkillHub CLI
 export SKILLHUB_REGISTRY=https://skillhub.your-company.com
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
-npx @neobards/skillhub@latest publish ./my-skill --namespace my-space
+npx @astron-team/skillhub@latest publish ./my-skill --namespace my-space
 ```
 
 `my-space--my-skill` is the canonical compat slug. SkillHub parses it as

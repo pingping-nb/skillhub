@@ -104,7 +104,7 @@
     "ctaTitle": "Готовы начать?",
     "ctaDescription": "Запустите локальное окружение одной командой и пройдите полный цикл управления скиллами",
     "ctaButton": "Попробовать",
-    "footerLicense": "© 2026 Neobards SkillHub. Apache License 2.0.",
+    "footerLicense": "© 2026 SkillHub. Apache License 2.0.",
     "footerDocs": "Документация",
     "footerGithub": "GitHub",
     "footerCommunity": "Сообщество",
@@ -120,7 +120,7 @@
       },
       "cli": {
         "description": "Установите SkillHub CLI локально, чтобы выполнять skillhub install для скиллов.",
-        "command": "npm i -g @neobards/skillhub --registry http://192.168.22.27:4873"
+        "command": "npm i -g @astron-team/skillhub"
       },
       "agent": {
         "description": "Отправьте промпт своему Agent, чтобы настроить SkillHub Registry",
@@ -129,8 +129,8 @@
       },
       "human": {
         "description": "Используйте SkillHub CLI для поиска и установки Skills",
-        "command": "npx @neobards/skillhub@latest search <keyword> --registry https://www.example.com",
-        "commandTemplate": "npx @neobards/skillhub@latest search <keyword> --registry {{url}}"
+        "command": "npx @astron-team/skillhub@latest search <keyword> --registry https://www.example.com",
+        "commandTemplate": "npx @astron-team/skillhub@latest search <keyword> --registry {{url}}"
       },
       "steps": {
         "configureEnv": {
@@ -337,8 +337,6 @@
     "passwordPlaceholder": "Введите пароль",
     "usernameRequired": "Имя пользователя обязательно",
     "passwordRequired": "Пароль обязателен",
-    "providerLabel": "Способ входа",
-    "providerLocal": "Локальная учётная запись",
     "showPassword": "Показать пароль",
     "hidePassword": "Скрыть пароль",
     "submitting": "Вход...",
@@ -453,10 +451,6 @@
     "viewSubscriptions": "Мои подписки",
     "mySkillsTitle": "Мои скиллы",
     "openMySkills": "Перейти к моим скиллам",
-    "reviewProgressTitle": "Мои проверки",
-    "viewReviewProgress": "Перейти к моим проверкам",
-    "myNamespacesTitle": "Мои пространства имён",
-    "openMyNamespaces": "Мои пространства имён",
     "mySkillsPreviewDescription": "Показаны 5 последних скиллов. Откройте скилл или перейдите в «Мои скиллы», чтобы увидеть все.",
     "mySkillsPreviewEmpty": "Вы ещё не публиковали скиллы",
     "credentials": "Учётные данные",
@@ -1101,13 +1095,6 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "SkillHub CLI",
     "installCommandUnsafeVersion": "Номер этой версии нельзя безопасно использовать в кроссплатформенной команде. Попросите автора исправить его.",
-    "installScopeLabel": "Область установки",
-    "installScope": {
-      "user": "Пользователь",
-      "project": "Проект"
-    },
-    "upgradeCommandLabel": "Обновить существующую установку",
-    "removeCommandLabel": "Очистить устаревшие записи перед переустановкой",
     "download": "Скачать",
     "labelsSectionTitle": "Метки",
     "labelsSectionDescription": "Прикрепите или удалите рекомендуемые метки, которые помогают пользователям фильтровать и находить этот скилл.",
@@ -1833,15 +1820,7 @@
     "starredAction": "Нажмите, чтобы убрать из избранного",
     "unstarTitle": "Убрать из избранного",
     "unstarDescription": "Убрать «{{name}}» из избранных скиллов?",
-    "unstarConfirm": "Убрать",
-    "relativeTime": {
-      "justNow": "только что",
-      "minutesAgo": "{{count}} мин. назад",
-      "hoursAgo": "{{count}} ч. назад",
-      "daysAgo": "{{count}} дн. назад",
-      "monthsAgo": "{{count}} мес. назад",
-      "yearsAgo": "{{count}} г. назад"
-    }
+    "unstarConfirm": "Убрать"
   },
   "starButton": {
     "starred": "В избранном",

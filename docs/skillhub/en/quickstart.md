@@ -132,7 +132,7 @@ Use the first-party SkillHub CLI for skill package management:
 
 ```bash
 # Install the CLI and configure the SkillHub registry URL
-npm install -g @neobards/skillhub
+npm install -g @astron-team/skillhub
 export SKILLHUB_REGISTRY=http://localhost:8080
 
 # Search for skill packages

@@ -1,77 +1,77 @@
 ---
-title: 領域模型
+title: 领域模型
 sidebar_position: 2
-description: 核心領域實體和關係
+description: 核心领域实体和关系
 ---
 
-# 領域模型
+# 领域模型
 
-## 核心實體
+## 核心实体
 
-### Namespace（名稱空間）
+### Namespace（命名空间）
 
-| 欄位 | 型別 | 說明 |
+| 字段 | 类型 | 说明 |
 |------|------|------|
-| id | bigint | 主鍵 |
-| slug | varchar(64) | URL 友好標識 |
+| id | bigint | 主键 |
+| slug | varchar(64) | URL 友好标识 |
 | display_name | varchar(128) | 展示名 |
 | type | enum | `GLOBAL` / `TEAM` |
 | description | text | 描述 |
 | status | enum | `ACTIVE` / `FROZEN` / `ARCHIVED` |
 
-### NamespaceMember（名稱空間成員）
+### NamespaceMember（命名空间成员）
 
-| 欄位 | 型別 | 說明 |
+| 字段 | 类型 | 说明 |
 |------|------|------|
-| id | bigint | 主鍵 |
-| namespace_id | bigint | 名稱空間 ID |
-| user_id | varchar(128) | 使用者 ID |
+| id | bigint | 主键 |
+| namespace_id | bigint | 命名空间 ID |
+| user_id | varchar(128) | 用户 ID |
 | role | enum | `OWNER` / `ADMIN` / `MEMBER` |
 
 ### Skill（技能）
 
-| 欄位 | 型別 | 說明 |
+| 字段 | 类型 | 说明 |
 |------|------|------|
-| id | bigint | 主鍵 |
-| namespace_id | bigint | 所屬名稱空間 |
-| slug | varchar(128) | URL 友好標識 |
+| id | bigint | 主键 |
+| namespace_id | bigint | 所属命名空间 |
+| slug | varchar(128) | URL 友好标识 |
 | display_name | varchar(256) | 展示名 |
 | summary | varchar(512) | 摘要 |
-| owner_id | varchar(128) | 主要維護人 |
+| owner_id | varchar(128) | 主要维护人 |
 | visibility | enum | `PUBLIC` / `NAMESPACE_ONLY` / `PRIVATE` |
 | status | enum | `ACTIVE` / `HIDDEN` / `ARCHIVED` |
-| latest_version_id | bigint | 最新已發布版本 |
+| latest_version_id | bigint | 最新已发布版本 |
 
-**唯一約束**：`(namespace_id, slug)`
+**唯一约束**：`(namespace_id, slug)`
 
 ### SkillVersion（技能版本）
 
-| 欄位 | 型別 | 說明 |
+| 字段 | 类型 | 说明 |
 |------|------|------|
-| id | bigint | 主鍵 |
+| id | bigint | 主键 |
 | skill_id | bigint | 技能 ID |
-| version | varchar(32) | semver 版本號 |
+| version | varchar(32) | semver 版本号 |
 | status | enum | `DRAFT` / `PENDING_REVIEW` / `PUBLISHED` / `REJECTED` / `YANKED` |
-| manifest_json | json | 檔案清單 |
-| parsed_metadata_json | json | SKILL.md 解析結果 |
+| manifest_json | json | 文件清单 |
+| parsed_metadata_json | json | SKILL.md 解析结果 |
 
-**唯一約束**：`(skill_id, version)`
+**唯一约束**：`(skill_id, version)`
 
-### SkillTag（技能標籤）
+### SkillTag（技能标签）
 
-| 欄位 | 型別 | 說明 |
+| 字段 | 类型 | 说明 |
 |------|------|------|
-| id | bigint | 主鍵 |
+| id | bigint | 主键 |
 | skill_id | bigint | 技能 ID |
-| tag_name | varchar(64) | 標籤名 |
-| target_version_id | bigint | 目標版本 |
+| tag_name | varchar(64) | 标签名 |
+| target_version_id | bigint | 目标版本 |
 
-**唯一約束**：`(skill_id, tag_name)`
+**唯一约束**：`(skill_id, tag_name)`
 
-## 座標系統
+## 坐标系统
 
-技能完整定址：`@{namespace_slug}/{skill_slug}`
+技能完整寻址：`@{namespace_slug}/{skill_slug}`
 
 ## 下一步
 
-- [安全架構](./security) - 安全設計
+- [安全架构](./security) - 安全设计

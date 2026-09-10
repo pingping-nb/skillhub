@@ -104,13 +104,13 @@
     "ctaTitle": "Ready to Get Started?",
     "ctaDescription": "Start your local development environment with a single command and experience the complete skill management workflow",
     "ctaButton": "Try Now",
-    "footerLicense": "© 2026 Neobards SkillHub. Apache License 2.0.",
+    "footerLicense": "© 2026 SkillHub. Apache License 2.0.",
     "footerDocs": "Docs",
     "footerGithub": "GitHub",
     "footerCommunity": "Community",
     "quickStart": {
       "title": "Quick Start",
-      "subtitle": "快速開始",
+      "subtitle": "快速开始",
       "description": "Choose how you want to work, then copy the setup instruction and continue",
       "tip": "💡 Tip: Visit the skill detail page for one-click install commands with environment variables",
       "tabs": {
@@ -120,7 +120,7 @@
       },
       "cli": {
         "description": "Install the SkillHub CLI locally to run skillhub install for skills.",
-        "command": "npm i -g @neobards/skillhub --registry http://192.168.22.27:4873"
+        "command": "npm i -g @astron-team/skillhub"
       },
       "agent": {
         "description": "Send a prompt to your Agent to set up the SkillHub Registry",
@@ -129,8 +129,8 @@
       },
       "human": {
         "description": "Use the SkillHub CLI to search for and install Skills",
-        "command": "npx @neobards/skillhub@latest search <keyword> --registry https://www.example.com",
-        "commandTemplate": "npx @neobards/skillhub@latest search <keyword> --registry {{url}}"
+        "command": "npx @astron-team/skillhub@latest search <keyword> --registry https://www.example.com",
+        "commandTemplate": "npx @astron-team/skillhub@latest search <keyword> --registry {{url}}"
       },
       "steps": {
         "configureEnv": {
@@ -275,7 +275,7 @@
     "viewAll": "View All →",
     "quickStart": {
       "title": "Quick Start",
-      "subtitle": "快速開始",
+      "subtitle": "快速开始",
       "description": "Get started with SkillHub in just a few simple steps",
       "tip": "💡 Tip: Visit the skill detail page for one-click install commands with environment variables",
       "steps": {
@@ -331,8 +331,6 @@
     "subtitle": "Choose a method to continue",
     "tabPassword": "Password",
     "tabOAuth": "OAuth",
-    "providerLabel": "Login method",
-    "providerLocal": "Local Account",
     "username": "Username",
     "password": "Password",
     "usernamePlaceholder": "Enter username",
@@ -453,10 +451,6 @@
     "viewSubscriptions": "View My Subscriptions",
     "mySkillsTitle": "My Skills",
     "openMySkills": "View My Skills",
-    "reviewProgressTitle": "My Review Progress",
-    "viewReviewProgress": "View Review Progress",
-    "myNamespacesTitle": "My Namespaces",
-    "openMyNamespaces": "View My Namespaces",
     "mySkillsPreviewDescription": "Showing your 5 most recent skills. Open a skill or go to My Skills to view all.",
     "mySkillsPreviewEmpty": "You have not published any skills yet",
     "credentials": "Credentials",
@@ -1036,13 +1030,6 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "SkillHub CLI",
     "installCommandUnsafeVersion": "This version cannot be represented safely in a cross-platform command. Ask the publisher to correct it.",
-    "installScopeLabel": "Install scope",
-    "installScope": {
-      "user": "User",
-      "project": "Project"
-    },
-    "upgradeCommandLabel": "Upgrade an existing installation",
-    "removeCommandLabel": "Clear stale entries before reinstalling",
     "download": "Download",
     "labelsSectionTitle": "Labels",
     "labelsSectionDescription": "Attach or remove recommended labels that help users filter and discover this skill.",
@@ -1554,15 +1541,7 @@
     "starredAction": "Click to unstar",
     "unstarTitle": "Remove from starred",
     "unstarDescription": "Are you sure you want to remove \"{{name}}\" from your starred skills?",
-    "unstarConfirm": "Remove",
-    "relativeTime": {
-      "justNow": "just now",
-      "minutesAgo": "{{count}} minute{{plural}} ago",
-      "hoursAgo": "{{count}} hour{{plural}} ago",
-      "daysAgo": "{{count}} day{{plural}} ago",
-      "monthsAgo": "{{count}} month{{plural}} ago",
-      "yearsAgo": "{{count}} year{{plural}} ago"
-    }
+    "unstarConfirm": "Remove"
   },
   "copyButton": {
     "copied": "Copied",

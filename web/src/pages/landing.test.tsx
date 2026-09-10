@@ -16,12 +16,19 @@ vi.mock('react-i18next', async () => {
 })
 
 vi.mock('lucide-react', () => ({
+  ArrowRight: () => null,
+  CheckCircle2: () => null,
+  Clock3: () => null,
+  Copy: () => null,
   PackageOpen: () => null,
   Terminal: () => null,
   Shield: () => null,
   Users: () => null,
   GitBranch: () => null,
+  Lock: () => null,
+  Monitor: () => null,
   Search: () => null,
+  Server: () => null,
   Settings: () => null,
 }))
 
@@ -68,16 +75,6 @@ describe('LandingPage', () => {
     const html = renderToStaticMarkup(<LandingPage />)
 
     expect(html).toContain('SkillHub')
-    expect(html).toContain('landing.hero.searchPlaceholder')
-  })
-
-  it('does not render marketing copy', () => {
-    const html = renderToStaticMarkup(<LandingPage />)
-
-    expect(html).not.toContain('landing.hero.title')
-    expect(html).not.toContain('landing.hero.subtitle')
-    expect(html).not.toContain('landing.whySkillHub.title')
-    expect(html).not.toContain('landing.features.')
-    expect(html).not.toContain('landing.stats.')
+    expect(html).toContain('landing.experience.heroTitle')
   })
 })

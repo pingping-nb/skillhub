@@ -1,53 +1,53 @@
 # SkillHub CLI
 
-SkillHub CLI 是 SkillHub 的第一方命令列工具，用於搜尋、安裝、管理和發布 Agent 技能包。
+SkillHub CLI 是 SkillHub 的第一方命令行工具，用于搜索、安装、管理和发布 Agent 技能包。
 
-## 安裝
+## 安装
 
 ```bash
-# 透過 npm 全域性安裝
-npm install -g @neobards/skillhub
+# 通过 npm 全局安装
+npm install -g @astron-team/skillhub
 
-# 或使用 npx 直接執行（無需安裝）
-npx @neobards/skillhub@latest version
+# 或使用 npx 直接运行（无需安装）
+npx @astron-team/skillhub@latest version
 
-# 或透過 Bun 全域性安裝
-bun add -g @neobards/skillhub
+# 或通过 Bun 全局安装
+bun add -g @astron-team/skillhub
 ```
 
-## 快速開始
+## 快速开始
 
 ```bash
-# 登入
+# 登录
 skillhub login --token sk_xxx
 
-# 搜尋技能
+# 搜索技能
 skillhub search pdf
 
-# 安裝技能到 Agent 目錄
+# 安装技能到 Agent 目录
 skillhub install pdf-parser --agent codex
 
-# 檢視已安裝技能
+# 查看已安装技能
 skillhub list
 
-# 發布技能
+# 发布技能
 skillhub publish ./my-skill --namespace myspace
 ```
 
 ## Registry 配置
 
-當前生效的 registry 按以下優先順序解析：
+当前生效的 registry 按以下优先级解析：
 
-1. `--registry <url>` 命令列引數
-2. `SKILLHUB_REGISTRY` 環境變數
-3. 使用者配置檔案 `~/.skillhub/config.json` 中的 `registry` 欄位
-4. 預設值 `https://skill.xfyun.cn`
+1. `--registry <url>` 命令行参数
+2. `SKILLHUB_REGISTRY` 环境变量
+3. 用户配置文件 `~/.skillhub/config.json` 中的 `registry` 字段
+4. 默认值 `https://skill.xfyun.cn`
 
 ```bash
-# 臨時使用其他 registry
+# 临时使用其他 registry
 skillhub search pdf --registry https://skillhub.example.com
 
-# 透過環境變數設定（Linux/macOS）
+# 通过环境变量设置（Linux/macOS）
 export SKILLHUB_REGISTRY=https://skillhub.example.com
 ```
 
@@ -63,37 +63,37 @@ $env:SKILLHUB_REGISTRY="https://skillhub.example.com"
 set SKILLHUB_REGISTRY=https://skillhub.example.com
 ```
 
-## 認證
+## 认证
 
-Token 按以下優先順序解析：
+Token 按以下优先级解析：
 
-1. `--token <token>` 命令列引數
-2. `SKILLHUB_TOKEN` 環境變數
-3. `~/.skillhub/credentials.json` 中儲存的 token（按 registry 區分）
+1. `--token <token>` 命令行参数
+2. `SKILLHUB_TOKEN` 环境变量
+3. `~/.skillhub/credentials.json` 中存储的 token（按 registry 区分）
 
-### 登入
+### 登录
 
 ```bash
-# 使用 API token 登入
+# 使用 API token 登录
 skillhub login --token sk_xxx
 
-# 指定 registry 登入
+# 指定 registry 登录
 skillhub login --token sk_xxx --registry https://skillhub.example.com
 ```
 
-`login` 會驗證 token 有效性，然後將 token 儲存到 `~/.skillhub/credentials.json`，同時將 registry 寫入 `~/.skillhub/config.json`。
+`login` 会验证 token 有效性，然后将 token 存储到 `~/.skillhub/credentials.json`，同时将 registry 写入 `~/.skillhub/config.json`。
 
-API Token 請求被拒絕時，CLI 會顯示服務端返回的具體原因和 `Request ID`。排查問題時可使用該 ID 對照服務端日誌；非 API Token 的授權失敗仍只顯示通用資訊。
+API Token 请求被拒绝时，CLI 会显示服务端返回的具体原因和 `Request ID`。排查问题时可使用该 ID 对照服务端日志；非 API Token 的授权失败仍只显示通用信息。
 
-### 檢視當前身份
+### 查看当前身份
 
 ```bash
 skillhub whoami
 
-# 指定 registry 檢視
+# 指定 registry 查看
 skillhub whoami --registry https://skillhub.example.com
 
-# 臨時使用其他 token
+# 临时使用其他 token
 skillhub whoami --token sk_other
 ```
 
@@ -106,84 +106,84 @@ skillhub logout
 skillhub logout --registry https://skillhub.example.com
 ```
 
-登出只刪除對應 registry 的 token，保留 registry 配置和安裝記錄。
+登出只删除对应 registry 的 token，保留 registry 配置和安装记录。
 
-## 搜尋
+## 搜索
 
 ```bash
-# 關鍵詞搜尋
+# 关键词搜索
 skillhub search pdf
 
-# 列出所有技能（空字串查詢）
+# 列出所有技能（空字符串查询）
 skillhub search "" --limit 50
 
-# JSON 輸出
+# JSON 输出
 skillhub search pdf --json
 ```
 
-輸出格式：`namespace/slug  version  summary`
+输出格式：`namespace/slug  version  summary`
 
-## 安裝技能
+## 安装技能
 
-安裝座標支援裸 slug（預設解析到 `global`）和三種等價的顯式 namespace
-形式。顯式座標與 `--namespace` 同時出現時，兩者必須一致。
+安装坐标支持裸 slug（默认解析到 `global`）和三种等价的显式 namespace
+形式。显式坐标与 `--namespace` 同时出现时，两者必须一致。
 
 ```bash
-# 安裝到自動探測的 Agent 目錄
+# 安装到自动探测的 Agent 目录
 skillhub install pdf-parser
 
-# 等價的 namespace 座標
+# 等价的 namespace 坐标
 skillhub install team/my-skill
 skillhub install @team/my-skill
 skillhub install team--my-skill
 
-# 顯式指定安裝範圍
+# 显式指定安装范围
 skillhub install pdf-parser --scope user
 skillhub install pdf-parser --scope project --agent codex
 
-# 為裸 slug 指定 namespace
+# 为裸 slug 指定 namespace
 skillhub install pdf-parser --namespace myspace
 
 # 指定版本
 skillhub install pdf-parser --version 1.2.0
 
-# 安裝到指定 Agent
+# 安装到指定 Agent
 skillhub install pdf-parser --agent codex
 
-# 安裝到 AStudio 的固定使用者級目錄
+# 安装到 AStudio 的固定用户级目录
 skillhub install pdf-parser --agent astudio
 
-# 安裝到多個 Agent
+# 安装到多个 Agent
 skillhub install pdf-parser --agent codex --agent claude-code
 
-# 安裝到自定義目錄
+# 安装到自定义目录
 skillhub install pdf-parser --dir ~/.claude/skills
 
-# 強制覆蓋已存在的安裝
+# 强制覆盖已存在的安装
 skillhub install pdf-parser --force
 ```
 
-### 安裝目標解析
+### 安装目标解析
 
-CLI 按以下邏輯確定安裝位置：
+CLI 按以下逻辑确定安装位置：
 
-1. 指定 `--dir`：安裝到該目錄，agent 標記為 `custom`。`--dir` 與 `--scope`、`--agent` 互斥。
-2. 指定 `--scope user|project`：探測限定在該 scope 內。
-   - 同時指定 `--agent <profile>`：直接安裝到該 profile 對應 scope 的 skills 目錄。
-   - 未指定 `--agent`：只探測該 scope 下已存在的 skills 目錄。在互動式 user scope 下，始終額外提供 `generic` 目標（`<home>/.agents/skills/`），可單獨選擇或與已探測目標同時選擇。
-   - 該 scope 下未探測到 → fallback：`--scope user` 回退到 `<home>/.agents/skills/`，`--scope project` 回退到 `<cwd>/.agents/skills/`。
-3. 指定 `--agent`（無 `--scope`）：安裝到對應 Agent 的 skills 目錄（沿用現有行為，不變）。
+1. 指定 `--dir`：安装到该目录，agent 标记为 `custom`。`--dir` 与 `--scope`、`--agent` 互斥。
+2. 指定 `--scope user|project`：探测限定在该 scope 内。
+   - 同时指定 `--agent <profile>`：直接安装到该 profile 对应 scope 的 skills 目录。
+   - 未指定 `--agent`：只探测该 scope 下已存在的 skills 目录。在交互式 user scope 下，始终额外提供 `generic` 目标（`<home>/.agents/skills/`），可单独选择或与已探测目标同时选择。
+   - 该 scope 下未探测到 → fallback：`--scope user` 回退到 `<home>/.agents/skills/`，`--scope project` 回退到 `<cwd>/.agents/skills/`。
+3. 指定 `--agent`（无 `--scope`）：安装到对应 Agent 的 skills 目录（沿用现有行为，不变）。
 4. 三者均未指定：
-   - **互動模式**（stdin 和 stdout 都是 TTY 且未傳 `--json`）：先互動式詢問 user 還是 project scope，再按 `--scope` 規則繼續。
-   - **非互動模式**：自動掃描當前目錄探測已存在的 Agent 配置目錄。1 個 → 直接安裝；多個 → 報錯；未探測到 → 回退到 `<cwd>/.agents/skills/`。
+   - **交互模式**（stdin 和 stdout 都是 TTY 且未传 `--json`）：先交互式询问 user 还是 project scope，再按 `--scope` 规则继续。
+   - **非交互模式**：自动扫描当前目录探测已存在的 Agent 配置目录。1 个 → 直接安装；多个 → 报错；未探测到 → 回退到 `<cwd>/.agents/skills/`。
 
-> `--dir` 不能與 `--scope` 或 `--agent` 同時使用。
+> `--dir` 不能与 `--scope` 或 `--agent` 同时使用。
 
-### 安裝路徑
+### 安装路径
 
-每個 Agent 有專案級和使用者級兩個 skills 目錄。`--scope user|project` 決定使用哪一個。AStudio 僅使用固定的使用者級目錄。
+大多数 Agent 都有项目级和用户级两个 skills 目录。`--scope user|project` 决定使用哪一个。AStudio 仅使用固定的用户级目录。
 
-| Agent | 專案級路徑 | 使用者級路徑 |
+| Agent | 项目级路径 | 用户级路径 |
 |-------|-----------|-----------|
 | `astudio`（AStudio） | 不支持 | `~/.acode/skills/` |
 | `claude-code` | `<project>/.claude/skills/` | `~/.claude/skills/` |
@@ -202,18 +202,18 @@ CLI 按以下邏輯確定安裝位置：
 | `kilo` | `<project>/.kilo/skills/` | `~/.kilo/skills/` |
 | _fallback_ | `<project>/.agents/skills/` | `~/.agents/skills/` |
 
-對於自定義路徑或不在列表中的 Agent 目錄，使用 `--dir` 顯式指定安裝路徑。互動式 user scope 下會與已探測 Agent 目標一同提供 `generic` 目標；當 `~/.acode/skills/` 存在時，選擇器會顯示 AStudio。當 `--scope user|project` 找不到匹配的 agent 目錄時，CLI 會回退到上表的 `_fallback_` 行。
+对于自定义路径或不在列表中的 Agent 目录，使用 `--dir` 显式指定安装路径。交互式 user scope 下会与已探测 Agent 目标一同提供 `generic` 目标；当 `~/.acode/skills/` 存在时，选择器会显示 AStudio。当 `--scope user|project` 找不到匹配的 agent 目录时，CLI 会回退到上表的 `_fallback_` 行。
 
-### 安裝後的檔案結構
+### 安装后的文件结构
 
 ```
 .codex/skills/pdf-parser/
-├── ...                          # 技能包解壓後的檔案
+├── ...                          # 技能包解压后的文件
 └── .skillhub/
-    └── metadata.json            # 安裝後設資料
+    └── metadata.json            # 安装元数据
 ```
 
-`metadata.json` 內容示例：
+`metadata.json` 内容示例：
 
 ```json
 {
@@ -228,122 +228,122 @@ CLI 按以下邏輯確定安裝位置：
 
 ## 本地管理
 
-### 檢視已安裝技能
+### 查看已安装技能
 
 ```bash
-# 列出所有已安裝技能
+# 列出所有已安装技能
 skillhub list
 
-# 按 Agent 過濾
+# 按 Agent 过滤
 skillhub list --agent codex
 
-# 按多個 Agent 過濾
+# 按多个 Agent 过滤
 skillhub list --agent codex --agent claude-code
 
-# 按目錄過濾
+# 按目录过滤
 skillhub list --dir ~/.codex/skills
 
-# JSON 輸出
+# JSON 输出
 skillhub list --json
 ```
 
-### 刪除技能
+### 删除技能
 
 ```bash
-# 裸 slug 刪除所有 namespace 中的同名本地安裝
+# 裸 slug 删除所有 namespace 中的同名本地安装
 skillhub remove pdf-parser
 
-# 顯式 namespace 座標只刪除該 namespace
+# 显式 namespace 坐标只删除该 namespace
 skillhub remove myspace/pdf-parser
 skillhub remove @myspace/pdf-parser
 skillhub remove myspace--pdf-parser
 
-# 使用 namespace 引數進行等價的精確本地刪除
+# 使用 namespace 参数进行等价的精确本地删除
 skillhub remove pdf-parser --namespace myspace
 
-# 只刪除指定 Agent 的安裝
+# 只删除指定 Agent 的安装
 skillhub remove pdf-parser --agent codex
 
-# 刪除所有目標（跳過互動確認）
+# 删除所有目标（跳过交互确认）
 skillhub remove pdf-parser --all
 
-# 刪除遠端技能（需要認證，會彈出確認提示）
+# 删除远程技能（需要认证，会弹出确认提示）
 skillhub remove pdf-parser --remote --namespace myspace
 
-# 跳過遠端刪除確認
+# 跳过远程删除确认
 skillhub remove pdf-parser --remote --hard --namespace myspace
 ```
 
-> 引數互斥規則：
-> - `--all` 不能與 `--agent` 同時使用
-> - `--remote` 不能與 `--agent` 或 `--all` 同時使用
-> - 非互動環境下遠端刪除必須加 `--hard`
+> 参数互斥规则：
+> - `--all` 不能与 `--agent` 同时使用
+> - `--remote` 不能与 `--agent` 或 `--all` 同时使用
+> - 非交互环境下远程删除必须加 `--hard`
 
-### 重建本地清單
+### 重建本地清单
 
 ```bash
 skillhub doctor
 ```
 
-`doctor` 執行以下操作：
+`doctor` 执行以下操作：
 
-1. 掃描 `<cwd>/.<agent>/skills/<slug>/.skillhub/metadata.json`
-2. 按 `registry + namespace + slug` 分組
-3. 備份舊的 `inventory.json`（如果存在）
-4. 寫入新的 `inventory.json`
+1. 扫描 `<cwd>/.<agent>/skills/<slug>/.skillhub/metadata.json`
+2. 按 `registry + namespace + slug` 分组
+3. 备份旧的 `inventory.json`（如果存在）
+4. 写入新的 `inventory.json`
 
-如果同一技能在不同目標中存在版本衝突，該技能會被跳過並報告。
+如果同一技能在不同目标中存在版本冲突，该技能会被跳过并报告。
 
-## 發布
+## 发布
 
 ```bash
-# 發布目錄（自動打包為 zip）
+# 发布目录（自动打包为 zip）
 skillhub publish ./my-skill --namespace myspace
 
-# 發布已有的 zip 檔案
+# 发布已有的 zip 文件
 skillhub publish ./my-skill.zip --namespace myspace
 
-# 指定可見性
+# 指定可见性
 skillhub publish ./my-skill --namespace myspace --visibility private
 ```
 
-可見性選項：
-- `public`（預設）— 所有人可見
-- `namespace-only` — 僅 namespace 成員可見
-- `private` — 僅自己可見
+可见性选项：
+- `public`（默认）— 所有人可见
+- `namespace-only` — 仅 namespace 成员可见
+- `private` — 仅自己可见
 
-發布成功後會輸出技能詳情頁 URL。
+发布成功后会输出技能详情页 URL。
 
 ## 自更新
 
 ```bash
-# 檢查是否有新版本
+# 检查是否有新版本
 skillhub update --check
 
-# 執行更新
+# 执行更新
 skillhub update
 ```
 
-更新機制：
-- 透過 npm 全域性安裝：自動執行 `npm install -g @neobards/skillhub@latest`
-- 透過 Bun 全域性安裝：自動執行 `bun add -g @neobards/skillhub@latest`
-- 透過 npx 執行：提示手動更新命令
-- 未知安裝方式：提示手動更新
+更新机制：
+- 通过 npm 全局安装：自动执行 `npm install -g @astron-team/skillhub@latest`
+- 通过 Bun 全局安装：自动执行 `bun add -g @astron-team/skillhub@latest`
+- 通过 npx 运行：提示手动更新命令
+- 未知安装方式：提示手动更新
 
-## 環境變數
+## 环境变量
 
-| 變數 | 說明 | 優先順序 |
+| 变量 | 说明 | 优先级 |
 |------|------|--------|
-| `SKILLHUB_REGISTRY` | 預設 registry URL | 低於 `--registry` 引數 |
-| `SKILLHUB_TOKEN` | API token | 低於 `--token` 引數，高於儲存的 token |
+| `SKILLHUB_REGISTRY` | 默认 registry URL | 低于 `--registry` 参数 |
+| `SKILLHUB_TOKEN` | API token | 低于 `--token` 参数，高于存储的 token |
 
-## 本地檔案結構
+## 本地文件结构
 
 ```
 ~/.skillhub/
-├── config.json           # 使用者配置（registry、defaultAgent 等）
-├── credentials.json      # API tokens（按 registry 儲存，許可權 0600）
-└── inventory.json        # 已安裝技能清單
+├── config.json           # 用户配置（registry、defaultAgent 等）
+├── credentials.json      # API tokens（按 registry 存储，权限 0600）
+└── inventory.json        # 已安装技能清单
 ```
 
 ### config.json
@@ -390,9 +390,9 @@ skillhub update
 }
 ```
 
-## JSON 輸出
+## JSON 输出
 
-所有命令都支援 `--json` 引數，輸出機器可讀的 JSON 格式：
+所有命令都支持 `--json` 参数，输出机器可读的 JSON 格式：
 
 ```bash
 skillhub search pdf --json
@@ -403,7 +403,7 @@ skillhub remove pdf-parser --json
 skillhub doctor --json
 ```
 
-成功響應格式：
+成功响应格式：
 
 ```json
 {
@@ -412,7 +412,7 @@ skillhub doctor --json
 }
 ```
 
-錯誤響應格式：
+错误响应格式：
 
 ```json
 {
@@ -426,18 +426,18 @@ skillhub doctor --json
 }
 ```
 
-## 退出碼
+## 退出码
 
-| 退出碼 | 說明 |
+| 退出码 | 说明 |
 |--------|------|
 | 0 | 成功 |
-| 1 | 通用錯誤 |
-| 2 | 認證失敗 |
-| 3 | 網路錯誤 |
-| 4 | 檔案系統錯誤 |
-| 5 | 引數錯誤 |
+| 1 | 通用错误 |
+| 2 | 认证失败 |
+| 3 | 网络错误 |
+| 4 | 文件系统错误 |
+| 5 | 参数错误 |
 
-## 命令參考
+## 命令参考
 
 ### help
 
@@ -446,7 +446,7 @@ skillhub help
 skillhub help install
 ```
 
-顯示幫助資訊。
+显示帮助信息。
 
 ### version
 
@@ -455,7 +455,7 @@ skillhub version
 skillhub version --json
 ```
 
-顯示 CLI 版本。
+显示 CLI 版本。
 
 ### login
 
@@ -463,7 +463,7 @@ skillhub version --json
 skillhub login --token <token> [--registry <url>] [--json]
 ```
 
-儲存 token 和 registry 配置。
+保存 token 和 registry 配置。
 
 CLI 以非破坏方式更新 `~/.skillhub/credentials.json` 和 `~/.skillhub/config.json`：只修改
 自己使用的 `tokens` 和 `registry` 字段，保留其他兼容工具写入的未知字段。
@@ -474,7 +474,7 @@ CLI 以非破坏方式更新 `~/.skillhub/credentials.json` 和 `~/.skillhub/con
 skillhub logout [--registry <url>] [--json]
 ```
 
-刪除指定 registry 的 token。
+删除指定 registry 的 token。
 
 ### whoami
 
@@ -482,7 +482,7 @@ skillhub logout [--registry <url>] [--json]
 skillhub whoami [--registry <url>] [--token <token>] [--json]
 ```
 
-驗證當前 token 並顯示使用者資訊。
+验证当前 token 并显示用户信息。
 
 ### search
 
@@ -490,7 +490,7 @@ skillhub whoami [--registry <url>] [--token <token>] [--json]
 skillhub search <query> [--registry <url>] [--limit <n>] [--json]
 ```
 
-搜尋已發布的技能。
+搜索已发布的技能。
 
 ### install
 
@@ -498,21 +498,21 @@ skillhub search <query> [--registry <url>] [--limit <n>] [--json]
 skillhub install <coordinate> [options]
 ```
 
-`<coordinate>` 支援裸 slug（`my-skill`，解析為 `global/my-skill`）以及
-`team/my-skill`、`@team/my-skill`、`team--my-skill` 三種等價的顯式
-namespace 形式。裸 slug 可透過 `--namespace team` 選擇非 global namespace；
-顯式座標可以同時傳入相同的 `--namespace`，但衝突值會作為用法錯誤被拒絕。
+`<coordinate>` 支持裸 slug（`my-skill`，解析为 `global/my-skill`）以及
+`team/my-skill`、`@team/my-skill`、`team--my-skill` 三种等价的显式
+namespace 形式。裸 slug 可通过 `--namespace team` 选择非 global namespace；
+显式坐标可以同时传入相同的 `--namespace`，但冲突值会作为用法错误被拒绝。
 
-選項：
-- `--scope <user|project>` — 安裝範圍（不傳時：TTY 模式下互動式詢問，非 TTY 模式沿用現有探測邏輯）
-- `--namespace <slug>` — 為裸 slug 指定 namespace
-- `--version <v>` — 版本（預設最新版本）
-- `--agent <profile>` — Agent 配置（可重複）
-- `--dir <path>` — 自定義安裝目錄（與 `--scope`、`--agent` 互斥）
-- `--force` — 覆蓋已存在的安裝
+选项：
+- `--scope <user|project>` — 安装范围（不传时：TTY 模式下交互式询问，非 TTY 模式沿用现有探测逻辑）
+- `--namespace <slug>` — 为裸 slug 指定 namespace
+- `--version <v>` — 版本（默认最新版本）
+- `--agent <profile>` — Agent 配置（可重复）
+- `--dir <path>` — 自定义安装目录（与 `--scope`、`--agent` 互斥）
+- `--force` — 覆盖已存在的安装
 - `--registry <url>` — Registry URL
 - `--token <token>` — API token
-- `--json` — JSON 輸出
+- `--json` — JSON 输出
 
 ### list
 
@@ -520,11 +520,11 @@ namespace 形式。裸 slug 可透過 `--namespace team` 選擇非 global namesp
 skillhub list [options]
 ```
 
-選項：
-- `--agent <profile>` — 按 Agent 過濾（可重複）
-- `--dir <path>` — 按目錄過濾
+选项：
+- `--agent <profile>` — 按 Agent 过滤（可重复）
+- `--dir <path>` — 按目录过滤
 - `--registry <url>` — Registry URL
-- `--json` — JSON 輸出
+- `--json` — JSON 输出
 
 ### remove
 
@@ -532,19 +532,19 @@ skillhub list [options]
 skillhub remove <coordinate> [options]
 ```
 
-選項：
-- `--agent <profile>` — 按 Agent 過濾（可重複）
-- `--all` — 刪除所有目標
-- `--remote` — 刪除遠端技能
-- `--hard` — 跳過遠端刪除確認
-- `--namespace <slug>` — 本地或遠端刪除的 namespace
+选项：
+- `--agent <profile>` — 按 Agent 过滤（可重复）
+- `--all` — 删除所有目标
+- `--remote` — 删除远程技能
+- `--hard` — 跳过远程删除确认
+- `--namespace <slug>` — 本地或远程删除的 namespace
 - `--registry <url>` — Registry URL
 - `--token <token>` — API token
-- `--json` — JSON 輸出
+- `--json` — JSON 输出
 
-顯式名稱空間座標（`team/my-skill`、`@team/my-skill`、`team--my-skill`）或
-`--namespace team` 只刪除該 namespace 中的本地安裝。為保持相容，裸 slug
-會刪除當前 registry 中所有 namespace 下的同名本地安裝。
+显式命名空间坐标（`team/my-skill`、`@team/my-skill`、`team--my-skill`）或
+`--namespace team` 只删除该 namespace 中的本地安装。为保持兼容，裸 slug
+会删除当前 registry 中所有 namespace 下的同名本地安装。
 
 ### doctor
 
@@ -552,7 +552,7 @@ skillhub remove <coordinate> [options]
 skillhub doctor [--json]
 ```
 
-掃描專案目錄，重建本地清單。
+扫描项目目录，重建本地清单。
 
 ### publish
 
@@ -560,12 +560,12 @@ skillhub doctor [--json]
 skillhub publish <path> [options]
 ```
 
-選項：
+选项：
 - `--namespace <slug>` — Namespace
-- `--visibility <v>` — 可見性（`public` | `namespace-only` | `private`）
+- `--visibility <v>` — 可见性（`public` | `namespace-only` | `private`）
 - `--registry <url>` — Registry URL
 - `--token <token>` — API token
-- `--json` — JSON 輸出
+- `--json` — JSON 输出
 
 ### update
 
@@ -573,72 +573,72 @@ skillhub publish <path> [options]
 skillhub update [--check] [--json]
 ```
 
-檢查或執行 CLI 自更新。
+检查或执行 CLI 自更新。
 
-## 安全說明
+## 安全说明
 
-- Token 只儲存在使用者目錄 `~/.skillhub/credentials.json`
-- 在 Linux/macOS 上，憑據檔案許可權自動設定為 `0600`
-- 不會將 token 寫入任何專案本地檔案
-- 遠端刪除操作需要顯式確認或 `--hard` 引數
-- `remove` 命令會驗證路徑安全性，防止刪除非技能目錄
+- Token 只存储在用户目录 `~/.skillhub/credentials.json`
+- 在 Linux/macOS 上，凭据文件权限自动设置为 `0600`
+- 不会将 token 写入任何项目本地文件
+- 远程删除操作需要显式确认或 `--hard` 参数
+- `remove` 命令会验证路径安全性，防止删除非技能目录
 
 ## 故障排查
 
-### 認證失敗
+### 认证失败
 
 ```bash
-# 驗證 token 是否有效
+# 验证 token 是否有效
 skillhub whoami
 
-# 重新登入
+# 重新登录
 skillhub login --token sk_xxx
 ```
 
-### 網路錯誤
+### 网络错误
 
 ```bash
-# 檢查 registry 是否可訪問
+# 检查 registry 是否可访问
 curl https://skill.xfyun.cn/api/cli/v1/skills/search?q=test&limit=1
 
 # 使用其他 registry
 skillhub search test --registry https://skillhub.example.com
 ```
 
-### 安裝目錄衝突
+### 安装目录冲突
 
 ```bash
-# 使用 --force 覆蓋
+# 使用 --force 覆盖
 skillhub install pdf-parser --force
 
-# 或先刪除再安裝
+# 或先删除再安装
 skillhub remove pdf-parser
 skillhub install pdf-parser
 ```
 
-### 清單損壞
+### 清单损坏
 
 ```bash
-# 重建清單
+# 重建清单
 skillhub doctor
 ```
 
-## 本地開發驗證
+## 本地开发验证
 
-如果你在本地開發 SkillHub，可以這樣驗證 CLI：
+如果你在本地开发 SkillHub，可以这样验证 CLI：
 
 ```bash
-# 1. 構建 CLI
+# 1. 构建 CLI
 cd cli
 bun install
 bun run build
 bun link
 
-# 2. 啟動本地後端
+# 2. 启动本地后端
 cd ..
 make dev-all
 
-# 3. 配置 CLI 連線本地服務（Linux/macOS）
+# 3. 配置 CLI 连接本地服务（Linux/macOS）
 export SKILLHUB_REGISTRY=http://localhost:8080
 
 # Windows PowerShell:
@@ -647,19 +647,19 @@ export SKILLHUB_REGISTRY=http://localhost:8080
 # Windows CMD:
 # set SKILLHUB_REGISTRY=http://localhost:8080
 
-# 4. 測試命令
+# 4. 测试命令
 skillhub search test
 skillhub install example-skill --agent codex
 skillhub list
 ```
 
-## 相關連結
+## 相关链接
 
-- [SkillHub 主頁](https://skill.xfyun.cn)
-- [GitHub 倉庫](https://github.com/iflytek/skillhub)
-- [問題反饋](https://github.com/iflytek/skillhub/issues)
+- [SkillHub 主页](https://skill.xfyun.cn)
+- [GitHub 仓库](https://github.com/iflytek/skillhub)
+- [问题反馈](https://github.com/iflytek/skillhub/issues)
 
-## 許可證
+## 许可证
 
 Apache-2.0
 

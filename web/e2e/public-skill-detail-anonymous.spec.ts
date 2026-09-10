@@ -11,6 +11,10 @@ function latestSeed(seed: PreparedSearchSeed) {
   }
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
 let seeded: PreparedSearchSeed | undefined
 
 test.describe('Public Skill Detail Anonymous Access (Real API)', () => {
@@ -44,11 +48,15 @@ test.describe('Public Skill Detail Anonymous Access (Real API)', () => {
     await expect(skillNameHeadings).toHaveCount(2)
     await expect(skillNameHeadings.first()).toBeVisible()
     await expect(page.getByText('Install', { exact: true })).toBeVisible()
+    const clawhubTarget = current.skill.namespace === 'global'
+      ? current.skill.slug
+      : `${current.skill.namespace}--${current.skill.slug}`
     const skillhubCoordinate = `@${current.skill.namespace}/${current.skill.slug}`
     const registryUrl = new URL(page.url()).origin
 
+    await expect(page.getByRole('tab', { name: 'SkillHub CLI' })).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByText(
-      `npx @neobards/skillhub@latest install ${skillhubCoordinate} --version ${current.skill.version} --registry ${registryUrl}`,
+      `npx @astron-team/skillhub@latest install ${skillhubCoordinate} --version ${current.skill.version} --registry ${registryUrl}`,
       { exact: true },
     )).toBeVisible()
     await expect(page.getByRole('button', { name: 'Copy' }).first()).toBeVisible()
@@ -62,6 +70,10 @@ test.describe('Public Skill Detail Anonymous Access (Real API)', () => {
     expect(agentPrompt).not.toContain('explain why and stop')
     expect(agentPrompt).not.toContain('do not use another source')
     expect(agentPrompt).not.toContain('fallback')
-    await expect(page.getByText(/npx clawhub install/)).toHaveCount(0)
+
+    await page.getByRole('tab', { name: 'ClawHub CLI' }).click()
+
+    await expect(page.getByRole('tab', { name: 'ClawHub CLI' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByText(new RegExp(`npx clawhub install ${escapeRegExp(clawhubTarget)} --registry`))).toBeVisible()
   })
 })

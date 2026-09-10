@@ -1,45 +1,45 @@
 ---
-title: 路線圖
+title: 路线图
 sidebar_position: 4
-description: 未來發展路線圖
+description: 未来发展路线图
 ---
 
-# 路線圖
+# 路线图
 
-## Phase 1: 基礎能力 ✅
+## Phase 1: 基础能力 ✅
 
-- GitHub OAuth 登入
+- GitHub OAuth 登录
 - Session 管理
-- RBAC 許可權體系
+- RBAC 权限体系
 
 ## Phase 2: 技能核心 ✅
 
-- 名稱空間管理
-- 技能發布與下載
+- 命名空间管理
+- 技能发布与下载
 - 版本管理
-- PostgreSQL 全文搜尋
+- PostgreSQL 全文搜索
 
-## Phase 3: 稽核與 CLI
+## Phase 3: 审核与 CLI
 
-- 稽核流程
-- 技能提升到全域性
+- 审核流程
+- 技能提升到全局
 - CLI 工具
-- 收藏與評分
+- 收藏与评分
 
-## Phase 4: 運維與完善
+## Phase 4: 运维与完善
 
-- 審計日誌
-- 管理後臺
-- 可觀測性
-- 部署最佳化
+- 审计日志
+- 管理后台
+- 可观测性
+- 部署优化
 
-## Phase 5: 高階特性
+## Phase 5: 高级特性
 
-- 評論與舉報
-- 自動安全掃描
-- 向量搜尋
+- 评论与举报
+- 自动安全扫描
+- 向量搜索
 - Webhook 通知
 
 ## 下一步
 
-- [快速開始](../getting-started/quick-start) - 開始使用
+- [快速开始](../getting-started/quick-start) - 开始使用
