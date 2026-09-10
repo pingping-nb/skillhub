@@ -120,9 +120,9 @@ if printf '%s' "$guide" | sed -n '/skillhub upgrade @global\/skillhub-registry \
   echo 'helper upgrade must cover all installed Agent targets' >&2
   exit 1
 fi
-printf '%s' "$guide" | grep -F 'skillhub search "<query>" --registry https://skill.xfyun.cn --json' >/dev/null
-printf '%s' "$guide" | grep -F 'npx --yes clawhub search "<query>"' >/dev/null
-printf '%s' "$guide" | grep -F 'skillhub login --token <token> --registry https://skill.example.com/skillhub' >/dev/null
+printf '%s' "$guide" | grep -F 'skillhub search "<query>" \' >/dev/null
+printf '%s' "$guide" | grep -F 'read -rsp "SkillHub token: " SKILLHUB_TOKEN && echo' >/dev/null
+printf '%s' "$guide" | grep -F 'skillhub login --registry <registry>' >/dev/null
 legacy_guide=$(curl -fsS "$base/skillhub/registry/skill.md")
 if [ "$guide" != "$legacy_guide" ]; then
   echo 'preferred and compatibility Agent guides must have identical content' >&2
