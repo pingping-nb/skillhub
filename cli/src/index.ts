@@ -9,6 +9,7 @@ import { logoutCommand } from './commands/logout'
 import { publishCommand, type PublishCommandOptions } from './commands/publish'
 import { removeCommand, type RemoveCommandOptions } from './commands/remove'
 import { searchCommand } from './commands/search'
+import { suiteCommand, type SuiteCommandOptions } from './commands/suite'
 import { syncDiffCommand, syncPullCommand, syncPushCommand, syncStatusCommand, type SyncCommonOptions, type SyncPullOptions, type SyncPushOptions } from './commands/sync'
 import { updateCommand } from './commands/update'
 import { upgradeCommand, type UpgradeCommandOptions } from './commands/upgrade'
@@ -246,6 +247,24 @@ cli
   .option('--json', 'Output JSON')
   .action((slug: string, options: InstallCommandOptions & { agent?: string | string[] }) => {
     return runCommand(() => installCommand(slug, { ...options, agent: toArray(options.agent) }), Boolean(options.json))
+  })
+
+cli
+  .command('suite <action> <coordinate>', 'Manage Skill Suites on compatible registries')
+  .option('--version <v>', 'Exact Suite version for install')
+  .option('--scope <scope>', 'Install scope: user or project')
+  .option('--agent <profile>', 'Agent profile (repeatable)')
+  .option('--dir <path>', 'Install directory')
+  .option('--force', 'Replace local changes during install or upgrade')
+  .option('--check', 'Show an upgrade plan without writing')
+  .option('--registry <url>', 'Registry URL')
+  .option('--token <token>', 'API token')
+  .option('--json', 'Output JSON')
+  .action((action: string, coordinate: string, options: SuiteCommandOptions & { agent?: string | string[] }) => {
+    return runCommand(
+      () => suiteCommand(action, coordinate, { ...options, agent: toArray(options.agent) }),
+      Boolean(options.json)
+    )
   })
 
 cli

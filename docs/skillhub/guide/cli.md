@@ -150,6 +150,9 @@ skillhub install pdf-parser --version 1.2.0
 # 安裝到指定 Agent
 skillhub install pdf-parser --agent codex
 
+# 安裝到 AStudio 的固定使用者級目錄
+skillhub install pdf-parser --agent astudio
+
 # 安裝到多個 Agent
 skillhub install pdf-parser --agent codex --agent claude-code
 
@@ -178,10 +181,11 @@ CLI 按以下邏輯確定安裝位置：
 
 ### 安裝路徑
 
-每個 Agent 有專案級和使用者級兩個 skills 目錄。`--scope user|project` 決定使用哪一個。
+每個 Agent 有專案級和使用者級兩個 skills 目錄。`--scope user|project` 決定使用哪一個。AStudio 僅使用固定的使用者級目錄。
 
 | Agent | 專案級路徑 | 使用者級路徑 |
 |-------|-----------|-----------|
+| `astudio`（AStudio） | 不支持 | `~/.acode/skills/` |
 | `claude-code` | `<project>/.claude/skills/` | `~/.claude/skills/` |
 | `codex` | `<project>/.codex/skills/` | `~/.codex/skills/` |
 | `cursor` | `<project>/.cursor/skills/` | `~/.cursor/skills/` |
@@ -198,7 +202,7 @@ CLI 按以下邏輯確定安裝位置：
 | `kilo` | `<project>/.kilo/skills/` | `~/.kilo/skills/` |
 | _fallback_ | `<project>/.agents/skills/` | `~/.agents/skills/` |
 
-對於自定義路徑或不在列表中的 Agent 目錄，使用 `--dir` 顯式指定安裝路徑。互動式 user scope 下會與已探測 Agent 目標一同提供 `generic` 目標；當 `--scope user|project` 找不到匹配的 agent 目錄時，CLI 會回退到上表的 `_fallback_` 行。
+對於自定義路徑或不在列表中的 Agent 目錄，使用 `--dir` 顯式指定安裝路徑。互動式 user scope 下會與已探測 Agent 目標一同提供 `generic` 目標；當 `~/.acode/skills/` 存在時，選擇器會顯示 AStudio。當 `--scope user|project` 找不到匹配的 agent 目錄時，CLI 會回退到上表的 `_fallback_` 行。
 
 ### 安裝後的檔案結構
 
@@ -460,6 +464,9 @@ skillhub login --token <token> [--registry <url>] [--json]
 ```
 
 儲存 token 和 registry 配置。
+
+CLI 以非破坏方式更新 `~/.skillhub/credentials.json` 和 `~/.skillhub/config.json`：只修改
+自己使用的 `tokens` 和 `registry` 字段，保留其他兼容工具写入的未知字段。
 
 ### logout
 

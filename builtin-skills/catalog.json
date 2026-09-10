@@ -112,6 +112,16 @@
       }
     },
     {
+      "slug": "skillhub-cli",
+      "version": "2.0.2",
+      "license": "Apache-2.0",
+      "upstream": {
+        "repository": "https://github.com/iflytek/skillhub",
+        "commit": "42a0e423f4ac01e5e7e0801c786735cdd4a818cf",
+        "path": "web/src/docs/skill.md"
+      }
+    },
+    {
       "slug": "storytelling-advisor",
       "version": "1.0.0",
       "license": "MIT",
@@ -159,6 +169,16 @@
         "repository": "https://github.com/openclaw/openclaw",
         "commit": "62cbbcc800214f05cdc4b97debdf7339bfa7c5f4",
         "path": "skills/weather"
+      }
+    },
+    {
+      "slug": "zero-slop",
+      "version": "2.10.2",
+      "license": "MIT",
+      "upstream": {
+        "repository": "https://github.com/manavmishra/ZeroSlop",
+        "commit": "f936fbaf7f162073299ed5f9bc1c536a2ba29caa",
+        "path": "."
       }
     }
   ]

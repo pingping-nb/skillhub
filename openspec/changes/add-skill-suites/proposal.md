@@ -11,7 +11,7 @@ SkillHub 当前只能逐个发布和安装 Skill，无法把一组已经发布�
 - 新增 `skillhub suite install/check/upgrade/remove`，成员继续安装为标准 Agent Skill；Suite 本身不生成同名 `SKILL.md`。
 - Suite 安装采用完整预检、全部暂存、fingerprint 校验和整体提交/回滚，避免部分安装。
 - CLI inventory 记录 Suite 快照以及每个成员的直接安装和 Suite 来源，安全处理共享成员的卸载。
-- 新增人类可编辑的 `suite.yaml`，仅作为 Suite 定义和发布输入，不改变现有单 Skill ZIP 协议。
+- 定义人类可编辑的 `suite.yaml` 交换格式，为后续 CLI 导入预留稳定边界；v1 仍通过 Web/API 创作，不改变现有单 Skill ZIP 协议。
 
 ## Decision Relative to Issue #715
 

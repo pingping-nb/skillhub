@@ -22,12 +22,17 @@
 
 ### Requirement: SuiteVersion SHALL reference immutable published Skill versions
 
-系统 SHALL 只允许 SuiteVersion 引用同一 Registry 中状态为 PUBLISHED 的精确 SkillVersion，并 SHALL 保存成员坐标、版本和 fingerprint 快照。一个 SuiteVersion SHALL 最多包含 100 个不同 Skill。
+系统 SHALL 只允许 SuiteVersion 引用同一 Registry 中状态为 PUBLISHED 的精确 SkillVersion。创作请求 SHALL 携带候选接口返回的 `skillVersionId`，服务端 SHALL 按该 ID 读取版本并校验随请求提交的坐标与版本一致，避免同名 Skill 被重新解析到其他所有者。系统 SHALL 保存成员坐标、版本和 fingerprint 快照。一个 SuiteVersion SHALL 最多包含 100 个不同 Skill。
 
 #### Scenario: Create a valid SuiteVersion
 - **WHEN** 管理者提交不超过 100 个不同的已发布 SkillVersion
 - **THEN** 系统创建 DRAFT SuiteVersion
 - **AND** 每个 Member 保存精确 SkillVersion ID、坐标、版本、fingerprint 和顺序
+
+#### Scenario: Reject mismatched member identity
+- **WHEN** 请求中的 `skillVersionId` 与同时提交的坐标或版本不一致
+- **THEN** 系统拒绝该 SuiteVersion 定义
+- **AND** 不按坐标重新解析到另一个同名 SkillVersion
 
 #### Scenario: Add a Member without choosing a version
 - **WHEN** 作者添加一个 Skill 且没有显式选择版本
@@ -55,9 +60,9 @@
 - **THEN** 系统拒绝该定义
 - **AND** 不创建部分成员关系
 
-### Requirement: Entry Skill SHALL be an explicit optional Member
+### Requirement: Entry Skill SHALL be one explicit ordinary Member
 
-SuiteVersion MAY 指定一个 Entry Skill。指定时，Entry Skill SHALL 精确指向该 SuiteVersion 的一个 Member；系统 SHALL NOT 根据 Suite 和 Skill 的同名关系推断入口。
+SuiteVersion SHALL 指定且仅指定一个 Entry Skill。Entry Skill SHALL 精确指向该 SuiteVersion 的一个普通 Member，保留完整 Skill 包和独立安装能力；系统 SHALL NOT 根据 Suite 和 Skill 的同名关系推断入口，也 SHALL NOT 要求 Entry 与 Suite 属于同一 Namespace。
 
 #### Scenario: Valid Entry Skill
 - **WHEN** SuiteVersion 将一个现有 Member 指定为 Entry Skill
@@ -69,9 +74,13 @@ SuiteVersion MAY 指定一个 Entry Skill。指定时，Entry Skill SHALL 精确
 - **THEN** 系统拒绝该 SuiteVersion
 
 #### Scenario: Suite has no Entry Skill
-- **WHEN** Suite 仅表示安装集合
-- **THEN** 系统允许 Entry Skill 为空
-- **AND** 安装后不生成额外的编排 Skill
+- **WHEN** 提交的 SuiteVersion 没有指定 Entry Skill
+- **THEN** 系统拒绝该 SuiteVersion
+
+#### Scenario: Public cross-Namespace Entry Skill
+- **WHEN** SuiteVersion 将其他 Namespace 中符合目标受众规则的 PUBLIC Member 指定为 Entry Skill
+- **THEN** 系统允许该 Entry Skill
+- **AND** 引用不改变该 Skill 的所有权或生命周期
 
 ### Requirement: Member candidates SHALL be filtered by the Server
 
@@ -264,6 +273,18 @@ CLI SHALL 在修改目标目录前完成全部成员和全部 Agent 目标的解
 - **AND** 恢复备份和安装前 inventory
 - **AND** 无法完成的回滚必须保留备份路径并明确报告
 
+#### Scenario: Concurrent operations target the same local Suite
+- **WHEN** 两个 CLI 进程并发安装、升级或卸载同一 registry 和 Suite 坐标
+- **THEN** CLI 通过 Suite 级本地锁只允许一个操作进入事务
+- **AND** 另一个操作明确报告繁忙，不得基于旧 inventory 提交
+
+#### Scenario: Existing Member has local changes
+- **WHEN** Suite 安装或升级将复用或替换一个已登记但 fingerprint 已变化的 Member 目录
+- **AND** 用户未明确传入 `--force`
+- **THEN** CLI 在写入任何目标或 inventory 前拒绝该操作
+- **AND** 保留本地文件和现有 inventory
+- **AND** 只有用户显式传入 `--force` 时才允许覆盖本地修改
+
 ### Requirement: Suite installation SHALL preserve Agent Skills compatibility
 
 CLI SHALL 将每个 Member 作为普通 Skill 安装到 Agent 已支持的 Skill 根目录。CLI SHALL NOT 为 Suite 创建同名 `SKILL.md` 或要求 Agent 理解 Suite 协议。
@@ -292,6 +313,11 @@ CLI inventory SHALL 记录已安装 SuiteVersion、精确成员快照，以及�
 - **WHEN** CLI 读取升级前的 inventory schema
 - **THEN** CLI 将缺失的 Suite 和来源集合按空值处理
 - **AND** 已安装 Skill 记录和目标路径保持不变
+
+#### Scenario: Same Suite coordinate is installed from different registries
+- **WHEN** 两个 Registry 各自安装了相同 Namespace 和 slug 的 Suite
+- **THEN** inventory 按 Registry 分别记录 Suite 与 Member 来源
+- **AND** 移除其中一个 Registry 的 Suite 不得修改另一个 Registry 的来源或文件
 
 ### Requirement: Suite removal SHALL be ownership-safe
 
@@ -360,6 +386,44 @@ Suite SHALL 有独立 API 和 Web URL。新的类型化资源发现结果中，�
 - **WHEN** 授权用户通过 Suite 专用接口解析某个版本
 - **THEN** 响应包含 SuiteVersion 身份以及有序的精确 Member 版本、fingerprint 和可下载状态
 
+#### Scenario: Skill detail shows visible Suite entry references
+- **WHEN** 当前 Skill 是一个或多个最新 PUBLISHED SuiteVersion 的 Entry Skill
+- **THEN** Skill 详情返回当前查看者有权读取的 Suite 摘要、精确版本和成员数量
+- **AND** Web 将其表达为“被套件用作入口”并链接到完整 Suite
+- **AND** Skill 仍保留普通的独立安装入口
+- **AND** 系统不返回对当前查看者不可见、已隐藏或已归档的 Suite 信息
+
+### Requirement: Suite authors SHALL have a complete Web management flow
+
+Web SHALL expose only the Suite actions authorized by the Server. An authorized author SHALL be
+able to create and inspect a Suite, edit a DRAFT, reopen a REJECTED version before editing, and
+create a new immutable version from a published snapshot. Namespace administrators SHALL additionally
+be able to yank a published version, hide or restore discovery, archive or restore the Suite container,
+and delete a Suite when no review is pending. These actions SHALL NOT modify Member Skills.
+
+#### Scenario: Author manages editable and immutable versions
+- **WHEN** an authorized author opens a DRAFT, REJECTED, PUBLISHED, or YANKED SuiteVersion
+- **THEN** Web shows only actions permitted for that actor and state
+- **AND** REJECTED is explicitly reopened before editing
+- **AND** PUBLISHED and YANKED versions remain immutable and changes create a new version
+
+#### Scenario: Administrator governs or deletes a Suite
+- **WHEN** a Namespace administrator yanks, hides, restores, archives, unarchives, or deletes a Suite
+- **THEN** Web requires confirmation for destructive container or publication actions
+- **AND** a yank requires an audit reason
+- **AND** deletion is unavailable while a review is pending
+- **AND** hard deletion removes Suite-owned review tasks while retaining the deletion audit record
+- **AND** no Member Skill lifecycle or content changes
+
+#### Scenario: Public reader views a manageable Suite
+- **WHEN** an unauthenticated or unauthorized reader opens a public Suite detail page
+- **THEN** Web shows the Suite summary and its author-provided Markdown overview as separate information levels
+- **AND** Web shows every ordered Member as a Skill card with its exact pinned version, Entry Skill marker, and current availability
+- **AND** an available Member exposes live display metadata and links to Skill detail only when the current viewer can read that Skill
+- **AND** a viewer-restricted or deleted Member remains a non-navigable snapshot without exposing live display metadata
+- **AND** Web does not display edit, version creation, governance, or deletion controls
+- **AND** Server authorization remains the enforcement boundary
+
 ### Requirement: Suite operations SHALL be authorized and audited
 
 Suite 创建、编辑、提交、审核、发布、下架、隐藏、恢复、归档和删除 SHALL 使用现有 Namespace 与平台角色原则，并 SHALL 产生包含 Suite 类型、Suite ID、SuiteVersion ID、操作者和变更摘要的审计记录。
@@ -384,6 +448,11 @@ Suite 创建、编辑、提交、审核、发布、下架、隐藏、恢复、�
 - **WHEN** 用户访问 PUBLISHED PUBLIC SuiteVersion
 - **THEN** 用户可以查看 Suite 公开元数据
 - **AND** 只有全部 Member 仍公开且可安装时才能获得完整安装计划
+
+#### Scenario: Anonymous user accesses a Suite in an archived Namespace
+- **WHEN** Namespace 已归档且匿名用户访问其中的 PUBLISHED PUBLIC SuiteVersion
+- **THEN** 系统拒绝查看和安装
+- **AND** Namespace 成员和平台管理员仍按现有归档 Namespace 规则访问
 
 #### Scenario: Namespace member accesses a namespace Suite
 - **WHEN** 当前 Namespace MEMBER 访问 PUBLISHED NAMESPACE_ONLY SuiteVersion
@@ -413,15 +482,26 @@ REJECTED SuiteVersion MAY 由有权限的管理者退回 DRAFT、修改并重新
 - **THEN** 系统拒绝修改
 - **AND** 提示创建新的 SuiteVersion
 
-### Requirement: Suite download metrics SHALL remain attributable and idempotent
+#### Scenario: A stale draft edit races with publication
+- **WHEN** 一个请求读取 DRAFT 后，另一事务先将同一 SuiteVersion 发布
+- **AND** 旧请求随后尝试保存编辑结果
+- **THEN** 系统拒绝旧请求的并发更新
+- **AND** 已发布状态、发布时间和发布内容保持不变
 
-一次 Suite 安装计划 SHALL 使用服务端生成的唯一 operation ID 关联 Suite 请求与 Member 下载。服务端成功签发完整安装计划后，SHALL 记录一次 Suite 安装请求，并 SHALL 按现有下载口径为计划内每个 Member SkillVersion 记录一次来源为 SUITE 的下载。同一 operation ID 的重试 SHALL NOT 重复计数。该指标 SHALL 表示服务端计划/下载签发，不得标记为 CLI 本地安装成功。
+### Requirement: Suite plan and Member download metrics SHALL remain attributable and idempotent
+
+客户端 SHALL 为一次安装计划生成独立的 idempotency key，并在安全重试时复用；服务端 SHALL 按调用者隔离该 key，并生成 operation ID 关联该计划的审计记录。服务端成功签发完整计划后 SHALL 记录一次 Suite 安装请求，但 SHALL NOT 在此时预增 Member 下载数。每个 Member 继续通过现有 Skill 下载接口按实际下载请求计数，避免计划签发与文件下载对同一 Member 重复计数。这些指标表示服务端计划签发和实际下载请求，不表示 CLI 本地安装成功。
 
 #### Scenario: Issue a complete Suite install plan
 - **WHEN** 服务端完成 Suite 和全部 Member 的权限、状态及可下载性预检并签发完整安装计划
 - **THEN** Suite 安装请求数增加一次
-- **AND** 每个计划内 Member SkillVersion 下载数按现有口径增加一次并记录 Suite 来源
+- **AND** 此时不增加 Member SkillVersion 下载数
 - **AND** 相关审计记录共享同一个 operation ID
+
+#### Scenario: Download an exact Member from the issued plan
+- **WHEN** CLI 使用安装计划中的下载地址请求某个精确 Member SkillVersion
+- **THEN** 现有 Skill 下载接口按原有口径记录一次该 Member 的下载
+- **AND** 同一 Member 不因此前签发安装计划而重复计数
 
 #### Scenario: Suite plan preflight fails
 - **WHEN** 服务端因权限、状态或成员不可用而无法签发完整安装计划
@@ -430,13 +510,20 @@ REJECTED SuiteVersion MAY 由有权限的管理者退回 DRAFT、修改并重新
 
 #### Scenario: Local installation fails after plan issuance
 - **WHEN** CLI 在服务端签发计划后因下载、校验或文件提交失败并回滚
-- **THEN** 服务端已记录的计划和下载计数保持不变
+- **THEN** 服务端已记录的计划计数保持不变
+- **AND** 仅实际发出的 Member 下载请求按现有口径保留计数
 - **AND** 系统不将这些计数描述为本地安装成功数
 
-#### Scenario: Retry an already recorded operation
-- **WHEN** 客户端使用相同 operation ID 安全重试已经记录成功的安装
-- **THEN** 系统返回已有计划或幂等成功
-- **AND** Suite 和 Member 统计不重复增加
+#### Scenario: Retry an already issued plan
+- **WHEN** 客户端因网络或响应读取失败，使用相同 idempotency key 重试安装计划请求
+- **THEN** 服务端返回同一 operation ID 对应的计划或幂等成功
+- **AND** Suite 安装请求数和审计记录不重复增加
+- **AND** 该重试保证至少覆盖服务端约定的 24 小时幂等窗口
+
+#### Scenario: Anonymous callers reuse the same client key
+- **WHEN** 两个匿名调用者对 Suite 安装计划使用相同的 idempotency key
+- **THEN** 服务端使用经过哈希的调用者上下文和 Suite 坐标隔离幂等记录
+- **AND** 不在幂等 actor key 中保存原始 IP 或 User-Agent
 
 ### Requirement: Existing Skill workflows SHALL remain compatible
 
@@ -490,7 +577,13 @@ Suite 能力 SHALL 以增量方式提供。旧 CLI 使用新 Server 时 SHALL �
 - **THEN** 新版本应用仍按原 SkillVersion 读取和处理该任务
 - **AND** 其审核决定、权限和审计语义保持不变
 
+#### Scenario: Enable Suite review in a non-overlapping deployment
+- **WHEN** 用户通过官方单实例 Compose 或本地 profile 运行 Server
+- **THEN** Suite 审核写入默认可用
+- **AND** 用户无需修改环境变量或数据库才能提交 Suite 审核
+
 #### Scenario: Mixed application versions during rollout
 - **WHEN** 部署期间同时存在支持和不支持 Suite subject 的应用实例
 - **THEN** 现有 Skill 审核流程保持可用
+- **AND** 数据库为旧版实例写入的 Skill 审核补全类型化 subject
 - **AND** Suite 审核写入只在所有处理实例均支持类型化 subject 后启用
