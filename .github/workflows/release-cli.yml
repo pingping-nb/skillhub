@@ -165,7 +165,7 @@ jobs:
       - name: Check if version exists on npm
         id: check_npm
         env:
-          NPM_REGISTRY: ${{ vars.NPM_REGISTRY || 'https://registry.npmjs.org' }}
+          NPM_REGISTRY: ${{ vars.NPM_REGISTRY || 'http://192.168.22.27:4873' }}
         run: |
           PACKAGE_NAME="${{ needs.build-and-test.outputs.package_name }}"
           VERSION="${{ needs.build-and-test.outputs.version }}"
@@ -202,7 +202,7 @@ jobs:
       - name: Configure npm authentication
         if: steps.check_npm.outputs.exists == 'false'
         env:
-          NPM_REGISTRY: ${{ vars.NPM_REGISTRY || 'https://registry.npmjs.org' }}
+          NPM_REGISTRY: ${{ vars.NPM_REGISTRY || 'http://192.168.22.27:4873' }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           REGISTRY_HOST="${NPM_REGISTRY#http://}"
@@ -219,7 +219,7 @@ jobs:
         if: steps.check_npm.outputs.exists == 'false'
         working-directory: cli
         env:
-          NPM_REGISTRY: ${{ vars.NPM_REGISTRY || 'https://registry.npmjs.org' }}
+          NPM_REGISTRY: ${{ vars.NPM_REGISTRY || 'http://192.168.22.27:4873' }}
         run: |
           npm publish --access public --registry "$NPM_REGISTRY"
           echo "Published ${{ needs.build-and-test.outputs.package_name }}@${{ needs.build-and-test.outputs.version }}"

@@ -132,7 +132,7 @@ curl -H "X-Mock-User-Id: local-admin" http://localhost:8080/api/v1/auth/me
 
 ```bash
 # 安裝並配置 SkillHub 註冊中心地址
-npm install -g @astron-team/skillhub
+npm install -g @neobards/skillhub
 export SKILLHUB_REGISTRY=http://localhost:8080
 
 # 搜尋技能包

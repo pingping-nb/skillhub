@@ -136,10 +136,10 @@ curl -fsSL https://imageless.oss-cn-beijing.aliyuncs.com/runtime.sh | sh -s -- u
 
 ```bash
 # 安裝 CLI
-npm install -g @astron-team/skillhub
+npm install -g @neobards/skillhub
 
 # 或直接執行
-npx @astron-team/skillhub@latest version
+npx @neobards/skillhub@latest version
 
 # 登入
 skillhub login --token sk_xxx --registry https://skill.xfyun.cn
@@ -403,7 +403,7 @@ git clone https://github.com/anthropics/skills
 # ……並將其發布到你的私有 SkillHub 註冊中心
 export SKILLHUB_REGISTRY=https://skillhub.your-company.com
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
-npx @astron-team/skillhub@latest publish ./skills/<分類>/<技能名>
+npx @neobards/skillhub@latest publish ./skills/<分類>/<技能名>
 ```
 
 > ⚖️ **許可提示**：轉發布時請遵守每個技能各自的許可證。`anthropics/skills` 中大多數技能
@@ -435,7 +435,7 @@ npx clawhub install my-namespace--my-skill
 # 發布請使用第一方 SkillHub CLI
 export SKILLHUB_REGISTRY=https://skillhub.your-company.com
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
-npx @astron-team/skillhub@latest publish ./my-skill --namespace my-space
+npx @neobards/skillhub@latest publish ./my-skill --namespace my-space
 ```
 
 其中 `my-space--my-skill` 是相容層使用的 canonical slug，SkillHub 會將其解析為

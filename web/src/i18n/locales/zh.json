@@ -118,7 +118,7 @@
       },
       "cli": {
         "description": "安裝 SkillHub CLI 到本地，後續可執行 skillhub install 安裝技能",
-        "command": "npm i -g @astron-team/skillhub"
+        "command": "npm i -g @neobards/skillhub --registry http://192.168.22.27:4873"
       },
       "agent": {
         "description": "傳送提示詞給你的 Agent，以設定 SkillHub Registry",
@@ -127,8 +127,8 @@
       },
       "human": {
         "description": "使用 SkillHub CLI 搜尋和安裝技能",
-        "command": "npx @astron-team/skillhub@latest search <keyword> --registry https://www.example.com",
-        "commandTemplate": "npx @astron-team/skillhub@latest search <keyword> --registry {{url}}"
+        "command": "npx @neobards/skillhub@latest search <keyword> --registry https://www.example.com",
+        "commandTemplate": "npx @neobards/skillhub@latest search <keyword> --registry {{url}}"
       },
       "steps": {
         "configureEnv": {

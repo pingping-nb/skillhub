@@ -68,7 +68,7 @@ npx clawhub install my-skill
 # 發布技能包（ClawHub CLI 的發布協議不相容 SkillHub）
 export SKILLHUB_REGISTRY=http://your-skillhub-host:8080
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
-npx @astron-team/skillhub@latest publish ./my-skill
+npx @neobards/skillhub@latest publish ./my-skill
 ```
 
 ## Q: 如何配置 HTTPS？

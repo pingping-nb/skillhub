@@ -1,7 +1,7 @@
 import { EXIT, CLI_PACKAGE_NAME } from '../shared/constants'
 import { CliError } from '../shared/errors'
 
-const DEFAULT_NPM_REGISTRY = 'https://registry.npmjs.org'
+const DEFAULT_NPM_REGISTRY = 'http://192.168.22.27:4873'
 
 function readEnv(env: NodeJS.ProcessEnv, name: string): string | undefined {
   const exactValue = env[name]?.trim()

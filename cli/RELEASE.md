@@ -18,13 +18,13 @@ After the PR is merged, you manually tag and push — the tag triggers [`release
 Configure in GitHub repository → Settings → Secrets and variables → Actions:
 
 - `NPM_TOKEN`: npm token with publish permissions
-  - Generate at https://www.npmjs.com/settings/YOUR_USERNAME/tokens
+  - Generate at http://192.168.22.27:4873 (internal registry) or https://www.npmjs.com/settings/YOUR_USERNAME/tokens
   - Use **Classic Automation Token** (bypasses 2FA automatically), or
   - **Granular Access Token** with "Allow bypass 2FA" enabled, scoped to the package
 
 ### Repository Variables (optional)
 
-- `NPM_REGISTRY`: npm registry URL (default: `https://registry.npmjs.org`)
+- `NPM_REGISTRY`: npm registry URL (default: `http://192.168.22.27:4873`)
 
 ### Local Environment
 
@@ -39,7 +39,7 @@ In [`cli/package.json`](./package.json):
 
 ```json
 {
-  "name": "@astron-team/skillhub",
+  "name": "@neobards/skillhub",
   "publishConfig": {
     "access": "public"
   }
@@ -108,7 +108,7 @@ Pushing the tag triggers CI which builds, publishes to npm, and creates a GitHub
 
 - Workflow: https://github.com/iflytek/skillhub/actions/workflows/release-cli.yml
 - Release: https://github.com/iflytek/skillhub/releases
-- npm: `npm view @astron-team/skillhub@<version>`
+- npm: `npm view @neobards/skillhub@<version>`
 
 ## Release Audit Trail
 
@@ -165,7 +165,7 @@ A previous release attempt left a stale branch. Delete it locally and/or on orig
 ### npm Publish Fails
 
 - **403 with 2FA message**: `NPM_TOKEN` is not an Automation Token, or bypass 2FA is not enabled — regenerate with the correct type
-- **403 Forbidden**: Package scope doesn't match token permissions — confirm publish rights for the `@astron-team` org
+- **403 Forbidden**: Package scope doesn't match token permissions — confirm publish rights for the `@neobards` org
 - **E404**: The registry doesn't host this scope — check `NPM_REGISTRY`
 
 ### Build / Test Fails

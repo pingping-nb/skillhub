@@ -10,7 +10,7 @@ backend**, a **React web UI**, a **security scanner**, and a **ClawHub CLI compa
 |------------|------------------------------------------------------------|
 | Backend    | Spring Boot 3.2.3, Java 21, Maven multi-module (7 modules) |
 | Frontend   | React 19, TypeScript, Vite, pnpm                           |
-| CLI        | TypeScript + Bun (`cli/`, npm: `@astron-team/skillhub`)     |
+| CLI        | TypeScript + Bun (`cli/`, npm: `@neobards/skillhub`)     |
 | Scanner    | Python (FastAPI), port 8000                                |
 | Database   | PostgreSQL 16 (Flyway migrations)                          |
 | Cache      | Redis 7 (sessions, distributed locks, idempotency)         |
@@ -147,7 +147,7 @@ skillhub/
 │   ├── tests/                       # Scanner tests
 │   └── Dockerfile                   # Scanner container build
 │
-├── cli/                             # SkillHub CLI (TypeScript + Bun, npm: @astron-team/skillhub)
+├── cli/                             # SkillHub CLI (TypeScript + Bun, npm: @neobards/skillhub)
 │   ├── src/                         # CLI source (commands/, services/, clients/, stores/)
 │   ├── test/                        # Bun tests
 │   └── package.json                 # Bun scripts: build, test, lint, typecheck

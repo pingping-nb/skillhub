@@ -24,10 +24,10 @@ Do not change the user's default registry during a one-off install. An explicit 
 Use the published CLI without a global installation:
 
 ```bash
-npx --yes @astron-team/skillhub@latest version
+npx --yes @neobards/skillhub@latest version
 ```
 
-Replace `skillhub` in every command below with `npx --yes @astron-team/skillhub@latest`.
+Replace `skillhub` in every command below with `npx --yes @neobards/skillhub@latest`.
 
 Do not replace the CLI with raw HTTP download and extraction. The CLI verifies the resolved version, package fingerprint, destination ownership, and local changes.
 

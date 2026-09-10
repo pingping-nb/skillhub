@@ -46,7 +46,7 @@ export function buildSkillhubInstallCommand(
   }
   const coordinate = buildSkillhubCoordinate(namespace, slug)
   const versionArg = version ? ` --version ${version}` : ''
-  return `npx @astron-team/skillhub@latest install ${coordinate}${versionArg} --scope ${scope} --registry ${baseUrl}`
+  return `npx @neobards/skillhub@latest install ${coordinate}${versionArg} --scope ${scope} --registry ${baseUrl}`
 }
 
 export function buildSkillhubUpgradeCommand(
@@ -55,7 +55,7 @@ export function buildSkillhubUpgradeCommand(
   baseUrl: string,
 ): string {
   const coordinate = buildSkillhubCoordinate(namespace, slug)
-  return `npx @astron-team/skillhub@latest upgrade ${coordinate} --registry ${baseUrl}`
+  return `npx @neobards/skillhub@latest upgrade ${coordinate} --registry ${baseUrl}`
 }
 
 export function buildSkillhubRemoveCommand(
@@ -64,7 +64,7 @@ export function buildSkillhubRemoveCommand(
   baseUrl: string,
 ): string {
   const coordinate = buildSkillhubCoordinate(namespace, slug)
-  return `npx @astron-team/skillhub@latest remove ${coordinate} --all --registry ${baseUrl}`
+  return `npx @neobards/skillhub@latest remove ${coordinate} --all --registry ${baseUrl}`
 }
 
 interface CommandBlockProps {

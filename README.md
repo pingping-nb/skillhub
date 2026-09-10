@@ -145,10 +145,10 @@ Install and manage Agent skills from the command line:
 
 ```bash
 # Install CLI
-npm install -g @astron-team/skillhub
+npm install -g @neobards/skillhub
 
 # Or run directly
-npx @astron-team/skillhub@latest version
+npx @neobards/skillhub@latest version
 
 # Login
 skillhub login --token sk_xxx --registry https://skill.xfyun.cn
@@ -517,7 +517,7 @@ git clone https://github.com/anthropics/skills
 # ...and publish it into your private SkillHub registry
 export SKILLHUB_REGISTRY=https://skillhub.your-company.com
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
-npx @astron-team/skillhub@latest publish ./skills/<category>/<skill-name>
+npx @neobards/skillhub@latest publish ./skills/<category>/<skill-name>
 ```
 
 > ⚖️ **Licensing**: honor each skill's own license when republishing. Most skills in
@@ -550,7 +550,7 @@ npx clawhub install my-namespace--my-skill
 # Publishing uses the first-party SkillHub CLI
 export SKILLHUB_REGISTRY=https://skillhub.your-company.com
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
-npx @astron-team/skillhub@latest publish ./my-skill --namespace my-space
+npx @neobards/skillhub@latest publish ./my-skill --namespace my-space
 ```
 
 `my-space--my-skill` is the canonical compat slug. SkillHub parses it as

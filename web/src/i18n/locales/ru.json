@@ -118,7 +118,7 @@
       },
       "cli": {
         "description": "Установите SkillHub CLI локально, чтобы выполнять skillhub install для скиллов.",
-        "command": "npm i -g @astron-team/skillhub"
+        "command": "npm i -g @neobards/skillhub --registry http://192.168.22.27:4873"
       },
       "agent": {
         "description": "Отправьте промпт своему Agent, чтобы настроить SkillHub Registry",
@@ -127,8 +127,8 @@
       },
       "human": {
         "description": "Используйте SkillHub CLI для поиска и установки Skills",
-        "command": "npx @astron-team/skillhub@latest search <keyword> --registry https://www.example.com",
-        "commandTemplate": "npx @astron-team/skillhub@latest search <keyword> --registry {{url}}"
+        "command": "npx @neobards/skillhub@latest search <keyword> --registry https://www.example.com",
+        "commandTemplate": "npx @neobards/skillhub@latest search <keyword> --registry {{url}}"
       },
       "steps": {
         "configureEnv": {

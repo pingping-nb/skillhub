@@ -59,32 +59,32 @@ describe('install-command', () => {
   it('builds a one-line SkillHub npx command for the global namespace', () => {
     expect(buildSkillhubCoordinate('global', 'my-skill')).toBe('@global/my-skill')
     expect(buildSkillhubInstallCommand('global', 'my-skill', 'https://skill.xfyun.cn', '1.2.3')).toBe(
-      'npx @astron-team/skillhub@latest install @global/my-skill --version 1.2.3 --scope user --registry https://skill.xfyun.cn',
+      'npx @neobards/skillhub@latest install @global/my-skill --version 1.2.3 --scope user --registry https://skill.xfyun.cn',
     )
   })
 
   it('builds a one-line SkillHub npx command with namespace for team skills', () => {
     expect(buildSkillhubCoordinate('team-alpha', 'my-skill')).toBe('@team-alpha/my-skill')
     expect(buildSkillhubInstallCommand('team-alpha', 'my-skill', 'https://skill.xfyun.cn')).toBe(
-      'npx @astron-team/skillhub@latest install @team-alpha/my-skill --scope user --registry https://skill.xfyun.cn',
+      'npx @neobards/skillhub@latest install @team-alpha/my-skill --scope user --registry https://skill.xfyun.cn',
     )
   })
 
   it('builds a command with an explicit project scope', () => {
     expect(buildSkillhubInstallCommand('team-alpha', 'my-skill', 'https://skill.xfyun.cn', '1.0.0', 'project')).toBe(
-      'npx @astron-team/skillhub@latest install @team-alpha/my-skill --version 1.0.0 --scope project --registry https://skill.xfyun.cn',
+      'npx @neobards/skillhub@latest install @team-alpha/my-skill --version 1.0.0 --scope project --registry https://skill.xfyun.cn',
     )
   })
 
   it('builds a full upgrade command', () => {
     expect(buildSkillhubUpgradeCommand('team-alpha', 'my-skill', 'https://skill.xfyun.cn')).toBe(
-      'npx @astron-team/skillhub@latest upgrade @team-alpha/my-skill --registry https://skill.xfyun.cn',
+      'npx @neobards/skillhub@latest upgrade @team-alpha/my-skill --registry https://skill.xfyun.cn',
     )
   })
 
   it('builds a full remove command', () => {
     expect(buildSkillhubRemoveCommand('team-alpha', 'my-skill', 'https://skill.xfyun.cn')).toBe(
-      'npx @astron-team/skillhub@latest remove @team-alpha/my-skill --all --registry https://skill.xfyun.cn',
+      'npx @neobards/skillhub@latest remove @team-alpha/my-skill --all --registry https://skill.xfyun.cn',
     )
   })
 
@@ -141,7 +141,7 @@ describe('install-command', () => {
       version: '2.0.0',
     }))
 
-    expect(html).toContain('npx @astron-team/skillhub@latest install @team-alpha/meeting-minutes-generator --version 2.0.0 --scope user --registry https://app.example.com')
+    expect(html).toContain('npx @neobards/skillhub@latest install @team-alpha/meeting-minutes-generator --version 2.0.0 --scope user --registry https://app.example.com')
     expect(html).not.toContain('skillDetail.installMethodClawhub')
     expect(html).not.toContain('skillDetail.installMethodSkillhub')
     expect(html).not.toContain('npx clawhub install team-alpha--meeting-minutes-generator --registry https://app.example.com')

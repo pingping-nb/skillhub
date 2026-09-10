@@ -62,10 +62,10 @@ export SKILLHUB_REGISTRY=http://localhost:8080
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
 
 # 發布到預設名稱空間
-npx @astron-team/skillhub@latest publish ./my-skill
+npx @neobards/skillhub@latest publish ./my-skill
 
 # 發布到指定名稱空間
-npx @astron-team/skillhub@latest publish ./my-skill --namespace my-team
+npx @neobards/skillhub@latest publish ./my-skill --namespace my-team
 ```
 
 > ClawHub CLI 的發布與同步協議與 SkillHub 不相容。發布請使用上面的 SkillHub CLI。

@@ -27,7 +27,7 @@ test.describe('Landing Quick Start CLI Tab (Real API)', () => {
     await expect(
       page.getByText('Install the SkillHub CLI locally to run skillhub install for skills.'),
     ).toBeVisible()
-    await expect(page.getByText('npm i -g @astron-team/skillhub', { exact: true })).toBeVisible()
+    await expect(page.getByText('npm i -g @neobards/skillhub --registry http://192.168.22.27:4873', { exact: true })).toBeVisible()
   })
 
   test('agent and human tabs expose the current SkillHub guidance', async ({ page }) => {
@@ -63,7 +63,7 @@ test.describe('Landing Quick Start CLI Tab (Real API)', () => {
     await expect(humanTab).toHaveAttribute('aria-pressed', 'true')
     await expect(
       page.getByText(
-        'npx @astron-team/skillhub@latest search <keyword> --registry http://127.0.0.1:3000',
+        'npx @neobards/skillhub@latest search <keyword> --registry http://127.0.0.1:3000',
         { exact: true },
       ),
     ).toBeVisible()

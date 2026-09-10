@@ -120,8 +120,8 @@ The ClawHub CLI `0.23.3` publishing protocol is not compatible with SkillHub. Us
 ```bash
 export SKILLHUB_REGISTRY=https://skillhub.your-company.com
 export SKILLHUB_TOKEN=YOUR_API_TOKEN
-npx @astron-team/skillhub@latest publish ./my-skill --namespace global
-npx @astron-team/skillhub@latest publish ./my-skill --namespace my-space
+npx @neobards/skillhub@latest publish ./my-skill --namespace global
+npx @neobards/skillhub@latest publish ./my-skill --namespace my-space
 ```
 
 Notes:

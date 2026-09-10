@@ -9,7 +9,7 @@
 | 元件 | 已驗證版本 | 說明 |
 |------|------------|------|
 | SkillHub Server | `v0.2.13` | 公開或自託管 registry |
-| SkillHub CLI | `0.1.8` | npm 包 `@astron-team/skillhub` |
+| SkillHub CLI | `0.1.8` | npm 包 `@neobards/skillhub` |
 | Hermes Agent | `0.18.2` | 上游 tag [`v2026.7.7.2`](https://github.com/NousResearch/hermes-agent/tree/v2026.7.7.2) |
 
 驗證日期：2026-07-17。
@@ -31,7 +31,7 @@ SkillHub registry
 2. 已安裝 SkillHub CLI：
 
 ```bash
-npm install -g @astron-team/skillhub
+npm install -g @neobards/skillhub
 
 skillhub version
 hermes version
