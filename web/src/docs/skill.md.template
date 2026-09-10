@@ -34,13 +34,21 @@ Do not change the user's default registry during a one-off install. An explicit 
 
 ## Use The First-Party CLI
 
+The CLI package `@neobards/skillhub` is published to the npm registry at `${SKILLHUB_CLI_NPM_REGISTRY}`. Always install it from that registry; do not use the public npm registry.
+
 Use the published CLI without a global installation:
 
 ```bash
-npx --yes @neobards/skillhub@latest version
+npx --yes --registry ${SKILLHUB_CLI_NPM_REGISTRY} @neobards/skillhub@latest version
 ```
 
-Replace `skillhub` in every command below with `npx --yes @neobards/skillhub@latest`.
+Replace `skillhub` in every command below with `npx --yes --registry ${SKILLHUB_CLI_NPM_REGISTRY} @neobards/skillhub@latest`.
+
+If you prefer a global installation, install from the same registry:
+
+```bash
+npm install -g @neobards/skillhub --registry ${SKILLHUB_CLI_NPM_REGISTRY}
+```
 
 Do not replace the CLI with raw HTTP download and extraction. The CLI verifies the resolved version, package fingerprint, destination ownership, and local changes.
 

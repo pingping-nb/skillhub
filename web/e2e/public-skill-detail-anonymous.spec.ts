@@ -56,7 +56,7 @@ test.describe('Public Skill Detail Anonymous Access (Real API)', () => {
 
     await expect(page.getByRole('tab', { name: 'SkillHub CLI' })).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByText(
-      `npx @astron-team/skillhub@latest install ${skillhubCoordinate} --version ${current.skill.version} --registry ${registryUrl}`,
+      `npx --registry https://registry.npmjs.org @neobards/skillhub@latest install ${skillhubCoordinate} --version ${current.skill.version} --registry ${registryUrl}`,
       { exact: true },
     )).toBeVisible()
     await expect(page.getByRole('button', { name: 'Copy' }).first()).toBeVisible()

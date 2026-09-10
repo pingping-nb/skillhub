@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Check, ChevronRight, Copy, Download, FileText, Search } from 'lucide-react'
 import { buildApiUrl, WEB_API_PREFIX } from '@/api/client'
 import { copyToClipboard, useCopyToClipboard } from '@/shared/lib/clipboard'
-import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
+import { resolvePublicRegistryUrl, getCliNpmRegistry } from '@/shared/lib/registry-url'
 import { toast } from '@/shared/lib/toast'
 
 type AccessMode = 'agent' | 'cli' | 'web'
@@ -132,6 +132,7 @@ function CliAccessPanel() {
   const { t } = useTranslation()
   const [copiedIdx, setCopiedIdx] = useState(-1)
   const registryUrl = useMemo(getRegistryUrl, [])
+  const cliNpmRegistry = getCliNpmRegistry()
 
   const handleCopy = (text: string, idx: number) => {
     void copyToClipboard(text)
@@ -170,10 +171,10 @@ function CliAccessPanel() {
           <div className="flex items-start gap-2">
             <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
             <div className="flex-1">
-              <span className="text-neutral-800 dark:text-neutral-200">npx -y @astron-team/skillhub@0.1.12 --version</span>
+              <span className="text-neutral-800 dark:text-neutral-200">npx -y --registry {cliNpmRegistry} @neobards/skillhub@0.1.12 --version</span>
               <button
                 type="button"
-                onClick={() => handleCopy('npx -y @astron-team/skillhub@0.1.12 --version', 0)}
+                onClick={() => handleCopy(`npx -y --registry ${cliNpmRegistry} @neobards/skillhub@0.1.12 --version`, 0)}
                 className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
               >
                 {copiedIdx === 0 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -189,10 +190,10 @@ function CliAccessPanel() {
           <div className="flex items-start gap-2">
             <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
             <div className="flex-1">
-              <span className="text-neutral-800 dark:text-neutral-200">npx -y @astron-team/skillhub@0.1.12 search weather \</span>
+              <span className="text-neutral-800 dark:text-neutral-200">npx -y --registry {cliNpmRegistry} @neobards/skillhub@0.1.12 search weather \</span>
               <button
                 type="button"
-                onClick={() => handleCopy(`npx -y @astron-team/skillhub@0.1.12 search weather --registry ${registryUrl} --limit 5`, 1)}
+                onClick={() => handleCopy(`npx -y --registry ${cliNpmRegistry} @neobards/skillhub@0.1.12 search weather --registry ${registryUrl} --limit 5`, 1)}
                 className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
               >
                 {copiedIdx === 1 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
@@ -228,10 +229,10 @@ function CliAccessPanel() {
           <div className="flex items-start gap-2">
             <span className="select-none font-bold text-emerald-600 dark:text-emerald-400">$</span>
             <div className="flex-1">
-              <span className="text-neutral-800 dark:text-neutral-200">npx -y @astron-team/skillhub@0.1.12 install @global/weather \</span>
+              <span className="text-neutral-800 dark:text-neutral-200">npx -y --registry {cliNpmRegistry} @neobards/skillhub@0.1.12 install @global/weather \</span>
               <button
                 type="button"
-                onClick={() => handleCopy(`npx -y @astron-team/skillhub@0.1.12 install @global/weather --dir ./skills --registry ${registryUrl}`, 2)}
+                onClick={() => handleCopy(`npx -y --registry ${cliNpmRegistry} @neobards/skillhub@0.1.12 install @global/weather --dir ./skills --registry ${registryUrl}`, 2)}
                 className="ml-2 inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] text-muted-foreground align-middle transition-[color,background-color,transform] hover:bg-neutral-100 hover:text-foreground active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-neutral-800"
               >
                 {copiedIdx === 2 ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
