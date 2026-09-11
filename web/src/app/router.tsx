@@ -83,7 +83,6 @@ function createRoleProtectedRouteComponent<TModule extends Record<string, unknow
   }
 }
 
-const LandingPage = createLazyRouteComponent(() => import('@/pages/landing'), 'LandingPage')
 const HomePage = createLazyRouteComponent(() => import('@/pages/home'), 'HomePage')
 const LoginPage = createLazyRouteComponent(() => import('@/pages/login'), 'LoginPage')
 const RegisterPage = createLazyRouteComponent(() => import('@/pages/register'), 'RegisterPage')
@@ -221,7 +220,7 @@ const requireAuth = createRequireAuth(getCurrentUser)
 const landingRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
-  component: LandingPage,
+  component: HomePage,
 })
 
 const skillsRoute = createRoute({

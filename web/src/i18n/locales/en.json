@@ -135,17 +135,17 @@
       "steps": {
         "configureEnv": {
           "title": "1. Configure Environment Variables",
-          "description": "Configure ClawHub CLI to connect to SkillHub"
+          "description": "Install the SkillHub CLI and connect it to SkillHub"
         },
         "installSkills": {
           "title": "2. Install Skills",
           "description": "Search and install the skills you need",
-          "code": "# Search skills\nclawhub search <keyword>\n\n# Install skill\nclawhub install <skill>"
+          "code": "# Search skills\nskillhub search <keyword>\n\n# Install skill\nskillhub install <skill>"
         },
         "publishSkills": {
           "title": "3. Publish Skills",
           "description": "Share your skills with the team",
-          "code": "# Publish skill\nclawhub publish\n\n# Or use web interface\n# Click \"Publish Skill\""
+          "code": "# Publish skill\nskillhub publish\n\n# Or use web interface\n# Click \"Publish Skill\""
         }
       }
     },
@@ -281,17 +281,17 @@
       "steps": {
         "configureEnv": {
           "title": "1. Configure Environment Variables",
-          "description": "Configure ClawHub CLI to connect to SkillHub"
+          "description": "Install the SkillHub CLI and connect it to SkillHub"
         },
         "installSkills": {
           "title": "2. Install Skills",
           "description": "Search and install the skills you need",
-          "code": "# Search skills\nclawhub search <keyword>\n\n# Install skill\nclawhub install <skill>"
+          "code": "# Search skills\nskillhub search <keyword>\n\n# Install skill\nskillhub install <skill>"
         },
         "publishSkills": {
           "title": "3. Publish Skills",
           "description": "Share your skills with the team",
-          "code": "# Publish skill\nclawhub publish\n\n# Or use web interface\n# Click \"Publish Skill\""
+          "code": "# Publish skill\nskillhub publish\n\n# Or use web interface\n# Click \"Publish Skill\""
         }
       }
     }

@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Check, Copy, Settings, Download, Upload } from 'lucide-react'
 import { useMemo } from 'react'
 import { useCopyToClipboard } from '@/shared/lib/clipboard'
-import { resolvePublicRegistryUrl } from '@/shared/lib/registry-url'
+import { resolvePublicRegistryUrl, getCliNpmRegistry } from '@/shared/lib/registry-url'
 
 function getAppBaseUrl(): string {
   if (typeof window === 'undefined') {
@@ -62,11 +62,11 @@ function CodeLine({ line }: { line: string }) {
       </>
     )
   }
-  if (line.startsWith('clawhub')) {
+  if (line.startsWith('skillhub')) {
     return (
       <>
-        <span style={{ color: 'var(--code-keyword, #5EEAD4)' }}>clawhub</span>
-        <span>{line.slice(7)}</span>
+        <span style={{ color: 'var(--code-keyword, #5EEAD4)' }}>skillhub</span>
+        <span>{line.slice(8)}</span>
       </>
     )
   }
@@ -128,21 +128,24 @@ interface QuickStartProps {
 export function QuickStartSection({ variant = 'page', ns = 'landing' }: QuickStartProps) {
   const { t } = useTranslation()
   const baseUrl = useMemo(() => getAppBaseUrl(), [])
+  const cliNpmRegistry = useMemo(() => getCliNpmRegistry(), [])
 
-  const envCode = `# Linux/macOS
-export CLAWHUB_SITE=${baseUrl}
-export CLAWHUB_REGISTRY=${baseUrl}
+  const envCode = `# 1. Install the SkillHub CLI
+npm install -g @neobards/skillhub --registry ${cliNpmRegistry}
+
+# 2. Point the CLI at this registry
+# Linux/macOS
+export SKILLHUB_REGISTRY=${baseUrl}
 
 # Windows PowerShell
-$env:CLAWHUB_SITE = '${baseUrl}'
-$env:CLAWHUB_REGISTRY = '${baseUrl}'`
+$env:SKILLHUB_REGISTRY = '${baseUrl}'`
 
   const installCode = t(`${ns}.quickStart.steps.installSkills.code`, {
-    defaultValue: '# 搜索技能\nclawhub search <keyword>\n\n# 安装技能\nclawhub install <skill>',
+    defaultValue: '# 搜索技能\nskillhub search <keyword>\n\n# 安装技能\nskillhub install <skill>',
   })
 
   const publishCode = t(`${ns}.quickStart.steps.publishSkills.code`, {
-    defaultValue: '# 发布技能\nclawhub publish\n\n# 或使用网页界面\n# 点击"发布技能"',
+    defaultValue: '# 发布技能\nskillhub publish\n\n# 或使用网页界面\n# 点击"发布技能"',
   })
 
   const steps: CodeBlockProps[] = [

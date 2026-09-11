@@ -135,17 +135,17 @@
       "steps": {
         "configureEnv": {
           "title": "1. Настройте переменные окружения",
-          "description": "Настройте ClawHub CLI для подключения к SkillHub"
+          "description": "Установите SkillHub CLI и подключите его к SkillHub"
         },
         "installSkills": {
           "title": "2. Установите скиллы",
           "description": "Найдите и установите нужные скиллы",
-          "code": "# Поиск скиллов\nclawhub search <keyword>\n\n# Установить скилл\nclawhub install <skill>"
+          "code": "# Поиск скиллов\nskillhub search <keyword>\n\n# Установить скилл\nskillhub install <skill>"
         },
         "publishSkills": {
           "title": "3. Опубликуйте скиллы",
           "description": "Делитесь скиллами с командой",
-          "code": "# Опубликовать скилл\nclawhub publish\n\n# Или через веб-интерфейс\n# Нажмите «Опубликовать скилл»"
+          "code": "# Опубликовать скилл\nskillhub publish\n\n# Или через веб-интерфейс\n# Нажмите «Опубликовать скилл»"
         }
       }
     },
@@ -281,17 +281,17 @@
       "steps": {
         "configureEnv": {
           "title": "1. Настройте переменные окружения",
-          "description": "Настройте ClawHub CLI для подключения к SkillHub"
+          "description": "Установите SkillHub CLI и подключите его к SkillHub"
         },
         "installSkills": {
           "title": "2. Установите скиллы",
           "description": "Найдите и установите нужные скиллы",
-          "code": "# Поиск скиллов\nclawhub search <keyword>\n\n# Установить скилл\nclawhub install <skill>"
+          "code": "# Поиск скиллов\nskillhub search <keyword>\n\n# Установить скилл\nskillhub install <skill>"
         },
         "publishSkills": {
           "title": "3. Опубликуйте скиллы",
           "description": "Делитесь скиллами с командой",
-          "code": "# Опубликовать скилл\nclawhub publish\n\n# Или через веб-интерфейс\n# Нажмите «Опубликовать скилл»"
+          "code": "# Опубликовать скилл\nskillhub publish\n\n# Или через веб-интерфейс\n# Нажмите «Опубликовать скилл»"
         }
       }
     }

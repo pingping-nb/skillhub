@@ -133,17 +133,17 @@
       "steps": {
         "configureEnv": {
           "title": "1. 配置環境變數",
-          "description": "設定 ClawHub CLI 連線到 SkillHub"
+          "description": "設定 SkillHub CLI 連線到 SkillHub"
         },
         "installSkills": {
           "title": "2. 安裝技能",
           "description": "搜尋並安裝你需要的技能",
-          "code": "# 搜尋技能\nclawhub search <keyword>\n\n# 安裝技能\nclawhub install <skill>"
+          "code": "# 搜尋技能\nskillhub search <keyword>\n\n# 安裝技能\nskillhub install <skill>"
         },
         "publishSkills": {
           "title": "3. 發布技能",
           "description": "分享你的技能給團隊使用",
-          "code": "# 發布技能\nclawhub publish\n\n# 或使用網頁介面\n# 點選\"發布技能\""
+          "code": "# 發布技能\nskillhub publish\n\n# 或使用網頁介面\n# 點選\"發布技能\""
         }
       }
     }
@@ -166,17 +166,17 @@
       "steps": {
         "configureEnv": {
           "title": "1. 配置環境變數",
-          "description": "設定 ClawHub CLI 連線到 SkillHub"
+          "description": "設定 SkillHub CLI 連線到 SkillHub"
         },
         "installSkills": {
           "title": "2. 安裝技能",
           "description": "搜尋並安裝你需要的技能",
-          "code": "# 搜尋技能\nclawhub search <keyword>\n\n# 安裝技能\nclawhub install <skill>"
+          "code": "# 搜尋技能\nskillhub search <keyword>\n\n# 安裝技能\nskillhub install <skill>"
         },
         "publishSkills": {
           "title": "3. 發布技能",
           "description": "分享你的技能給團隊使用",
-          "code": "# 發布技能\nclawhub publish\n\n# 或使用網頁介面\n# 點選\"發布技能\""
+          "code": "# 發布技能\nskillhub publish\n\n# 或使用網頁介面\n# 點選\"發布技能\""
         }
       }
     }

@@ -133,17 +133,17 @@
       "steps": {
         "configureEnv": {
           "title": "1. Configurer les variables d'environnement",
-          "description": "Configurez la CLI ClawHub pour qu'elle se connecte à SkillHub"
+          "description": "Installez la CLI SkillHub et connectez-la à SkillHub"
         },
         "installSkills": {
           "title": "2. Installer des compétences",
           "description": "Recherchez et installez les compétences dont vous avez besoin",
-          "code": "# Rechercher des compétences\nclawhub search <keyword>\n\n# Installer une compétence\nclawhub install <skill>"
+          "code": "# Rechercher des compétences\nskillhub search <keyword>\n\n# Installer une compétence\nskillhub install <skill>"
         },
         "publishSkills": {
           "title": "3. Publier des compétences",
           "description": "Partagez vos compétences avec l'équipe",
-          "code": "# Publier une compétence\nclawhub publish\n\n# Ou via l'interface web\n# Cliquez sur « Publier une compétence »"
+          "code": "# Publier une compétence\nskillhub publish\n\n# Ou via l'interface web\n# Cliquez sur « Publier une compétence »"
         }
       }
     }
@@ -166,17 +166,17 @@
       "steps": {
         "configureEnv": {
           "title": "1. Configurer les variables d'environnement",
-          "description": "Configurez la CLI ClawHub pour qu'elle se connecte à SkillHub"
+          "description": "Installez la CLI SkillHub et connectez-la à SkillHub"
         },
         "installSkills": {
           "title": "2. Installer des compétences",
           "description": "Recherchez et installez les compétences dont vous avez besoin",
-          "code": "# Rechercher des compétences\nclawhub search <keyword>\n\n# Installer une compétence\nclawhub install <skill>"
+          "code": "# Rechercher des compétences\nskillhub search <keyword>\n\n# Installer une compétence\nskillhub install <skill>"
         },
         "publishSkills": {
           "title": "3. Publier des compétences",
           "description": "Partagez vos compétences avec l'équipe",
-          "code": "# Publier une compétence\nclawhub publish\n\n# Ou via l'interface web\n# Cliquez sur « Publier une compétence »"
+          "code": "# Publier une compétence\nskillhub publish\n\n# Ou via l'interface web\n# Cliquez sur « Publier une compétence »"
         }
       }
     }
