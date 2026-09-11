@@ -1,4 +1,4 @@
-﻿{
+{
   "compliance": {
     "title": "合規宣告",
     "mappingCount": "{{count}} 項",
@@ -18,7 +18,9 @@
     "dashboard": "控制檯",
     "mySkills": "我的技能",
     "publish": "發布",
-    "login": "登入"
+    "login": "登入",
+    "mySuites": "我的套件",
+    "suites": "技能套件"
   },
   "landing": {
     "hero": {
@@ -146,6 +148,144 @@
           "code": "# 發布技能\nskillhub publish\n\n# 或使用網頁介面\n# 點選\"發布技能\""
         }
       }
+    },
+    "experience": {
+      "heroBadge": "Agent 技能管理平台",
+      "heroTitle": "把團隊的專業能力，沉澱成 Agent 可用的技能",
+      "heroDescription": "讓 AI 能力從個人經驗變成可複用、可管理、可信賴的組織資產。",
+      "browseAll": "瀏覽全部",
+      "marketplace": "技能市場",
+      "latest": "最新發布",
+      "demoSkills": {
+        "weather": "查詢全球城市即時天氣",
+        "gitHelper": "智慧 Git 操作輔助",
+        "diagramMaker": "生成流程圖和架構圖",
+        "codeReviewer": "自動程式碼審查",
+        "caption": "介面預覽 · 4 個範例技能"
+      },
+      "highlights": {
+        "selfHosted": "自託管 Registry",
+        "governance": "審核與治理",
+        "multiClient": "Agent、CLI、Web 接入",
+        "traceable": "版本可追溯"
+      },
+      "capabilities": {
+        "eyebrow": "核心能力",
+        "title": "從註冊到分發，管理完整的技能生命週期",
+        "description": "不只是技能儲存庫，而是一套覆蓋發布、審核、分發和治理的平台。"
+      },
+      "enterprise": {
+        "title": "為團隊和企業而建",
+        "description": "在一個 Registry 中提供自託管、權限控制、審核流程與審計能力。",
+        "clientLayer": "接入端",
+        "serviceLayer": "服務層",
+        "storageLayer": "儲存層",
+        "networkBoundary": "部署在企業環境中，自主管理 Registry 資料",
+        "deployment": {
+          "title": "自託管部署",
+          "description": "使用 Docker Compose 或儲存庫提供的 Kubernetes 清單部署 SkillHub，並選擇本地或 S3 相容物件儲存。"
+        },
+        "security": {
+          "title": "驗證與審核",
+          "description": "通過技能包驗證、安全掃描和審核流程，幫助團隊在發布前評估技能。"
+        },
+        "rbac": {
+          "title": "分層 RBAC",
+          "description": "平台角色與命名空間角色分離全域管理和團隊所有權。"
+        },
+        "access": {
+          "title": "靈活接入",
+          "description": "瀏覽器支援 OAuth2 和本地帳號登入，API Token 用於程式化存取。"
+        },
+        "audit": {
+          "title": "審計記錄",
+          "description": "關鍵的發布、下載、刪除和授權操作都有審計記錄，便於追溯。"
+        },
+        "openSource": {
+          "title": "開源透明",
+          "description": "程式碼採用 Apache-2.0 許可證，可用於檢查、自託管和社群貢獻。"
+        }
+      },
+      "cta": {
+        "title": "建構團隊自己的技能 Registry",
+        "description": "檢視原始碼和部署檔案，然後在自己的環境中執行 SkillHub。",
+        "deploy": "檢視原始碼",
+        "docs": "檢視檔案"
+      },
+      "quickStart": {
+        "title": "選擇接入方式",
+        "description": "通過 Agent、CLI 或 Web 介面使用同一個技能 Registry。",
+        "copy": "複製",
+        "copied": "已複製",
+        "copyErrorTitle": "複製失敗",
+        "modes": {
+          "agent": {
+            "title": "Agent 自動接入",
+            "description": "設定一次 Registry，按需發現技能"
+          },
+          "cli": {
+            "title": "CLI 命令列",
+            "description": "搜尋、取得和發布技能"
+          },
+          "web": {
+            "title": "Web 介面",
+            "description": "視覺化瀏覽、閱讀並下載技能"
+          }
+        },
+        "agent": {
+          "tablist": "Agent 接入演示",
+          "registryTab": "Registry 設定",
+          "discoveryTab": "隱式發現",
+          "live": "Agent 即時",
+          "instruction": "閱讀 {{url}}，並按照說明完成 SkillHub Skills Registry 的設定",
+          "instructionLead": "複製以下指令，傳送給 Agent 即可完成設定",
+          "instructionPrefix": "閱讀",
+          "instructionSuffix": "，並按照說明完成 SkillHub Skills Registry 的設定。",
+          "copyInstruction": "複製指令",
+          "copyErrorDescription": "請手動選擇並複製這條 Registry 設定指令。",
+          "steps": {
+            "read": "讀取檔案",
+            "configure": "設定 Registry",
+            "discover": "按需發現技能"
+          },
+          "prompt": "幫我查下合肥今天的天氣",
+          "discovery": {
+            "intentTitle": "識別任務意圖",
+            "intentDescription": "需要即時天氣與出行建議",
+            "searchTitle": "檢索 SkillHub Registry",
+            "searchDescription": "匹配 @global/weather · v1.3.0",
+            "readTitle": "讀取技能說明",
+            "readDescription": "確認輸入格式和呼叫方式"
+          },
+          "answerLead": "合肥今天多雲，26°C",
+          "answerTail": "，下午可能有短時陣雨，外出建議攜帶雨具。"
+        },
+        "cli": {
+          "copyErrorDescription": "請手動選擇並複製這條 CLI 命令。",
+          "skillsFound": "範例結果：",
+          "forecastSummary": "7 天天氣預報",
+          "installed": "@global/weather 已安裝到 ./skills/global/weather",
+          "connected": "已連線",
+          "docs": "CLI 檔案"
+        },
+        "web": {
+          "marketplace": "技能市場",
+          "publicSkills": "公開技能",
+          "search": "搜尋技能",
+          "status": "公開 · 可用",
+          "summary": "查詢即時天氣、未來預報和出行資訊",
+          "download": "下載 ZIP",
+          "readTitle": "先閱讀，再使用",
+          "readDescription": "閱讀 SKILL.md 中的用途、輸入要求和執行方式，確認適合目前任務後再取得完整技能包。",
+          "version": "版本",
+          "files": "檔案",
+          "format": "格式",
+          "browse": "瀏覽與搜尋",
+          "preview": "內容預覽",
+          "versions": "檔案與版本",
+          "favorites": "收藏和訂閱"
+        }
+      }
     }
   },
   "home": {
@@ -216,8 +356,6 @@
     "subtitle": "選擇一個方式登入以繼續",
     "tabPassword": "賬號密碼",
     "tabOAuth": "OAuth",
-    "providerLabel": "登入方式",
-    "providerLocal": "本地賬號",
     "username": "使用者名稱",
     "password": "密碼",
     "usernamePlaceholder": "輸入使用者名稱",
@@ -337,10 +475,6 @@
     "viewSubscriptions": "檢視我的訂閱",
     "mySkillsTitle": "我的技能",
     "openMySkills": "檢視我的技能",
-    "reviewProgressTitle": "我的審核進度",
-    "viewReviewProgress": "檢視審核進度",
-    "myNamespacesTitle": "我的命名空間",
-    "openMyNamespaces": "檢視我的命名空間",
     "mySkillsPreviewDescription": "展示最近的 5 個技能，可進入詳情或前往“我的技能”檢視全部。",
     "mySkillsPreviewEmpty": "你還沒有發布任何技能",
     "credentials": "訪問憑證",
@@ -352,7 +486,8 @@
     "viewReports": "檢視技能舉報",
     "previewMore": "...",
     "previewMoreLabel": "檢視全部",
-    "userId": "使用者 ID"
+    "userId": "使用者 ID",
+    "overview": "概覽"
   },
   "mySkills": {
     "title": "我的技能",
@@ -886,13 +1021,6 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "SkillHub CLI",
     "installCommandUnsafeVersion": "該版本號無法安全地生成跨平台命令，請聯絡發布者修正版本號。",
-    "installScopeLabel": "安裝範圍",
-    "installScope": {
-      "user": "使用者",
-      "project": "專案"
-    },
-    "upgradeCommandLabel": "升級既有安裝",
-    "removeCommandLabel": "重新安裝前清除陳舊條目",
     "download": "下載",
     "labelsSectionTitle": "標籤管理",
     "labelsSectionDescription": "為這個技能掛載或移除推薦標籤，幫助使用者篩選和發現。",
@@ -1071,7 +1199,10 @@
       "button": "安裝到 Agent",
       "copied": "安裝指令已複製",
       "prompt": "請根據 {{guideUrl}} 接入 SkillHub，並從該 SkillHub 安裝 {{skill}} 的 {{version}} 版本。"
-    }
+    },
+    "suiteEntryTitle": "被套件用作入口",
+    "suiteEntryDescription": "此技能是以下技能套件的入口。如需使用完整套件，請安裝對應技能套件。",
+    "suiteEntryMemberCount": "檢視完整套件（{{count}} 個技能）"
   },
   "skillCompare": {
     "pageTitle": "版本對比",
@@ -1274,7 +1405,9 @@
     "folderHint": "或選擇資料夾，自動打包上傳"
   },
   "layout": {
-    "footerDescription": "技能註冊中心，為開發者提供高效的技能管理和分發平臺。"
+    "footerDescription": "技能註冊中心，為開發者提供高效的技能管理和分發平臺。",
+    "openNavigation": "開啟導航選單",
+    "closeNavigation": "關閉導航選單"
   },
   "nsReviews": {
     "title": "命名空間審核",
@@ -1356,7 +1489,8 @@
     "restored": "評價已恢復",
     "moderationFailed": "評價可見性更新失敗",
     "previous": "上一頁",
-    "next": "下一頁"
+    "next": "下一頁",
+    "count_one": "{{count}} review"
   },
   "createToken": {
     "title": "建立 API Token",
@@ -1399,14 +1533,9 @@
     "unstarTitle": "取消收藏",
     "unstarDescription": "確定要取消收藏技能“{{name}}”嗎？",
     "unstarConfirm": "取消收藏",
-    "relativeTime": {
-      "justNow": "剛剛",
-      "minutesAgo": "{{count}}分鐘前",
-      "hoursAgo": "{{count}}小時前",
-      "daysAgo": "{{count}}天前",
-      "monthsAgo": "{{count}}個月前",
-      "yearsAgo": "{{count}}年前"
-    }
+    "downloads": "下載 {{value}}",
+    "stars": "收藏 {{count}}",
+    "rating": "評分 {{rating}}"
   },
   "copyButton": {
     "copied": "已複製",
@@ -1417,7 +1546,8 @@
     "next": "下一頁",
     "pagePrefix": "第",
     "pageSuffix": "頁",
-    "goToPage": "第 {{page}} 頁"
+    "goToPage": "第 {{page}} 頁",
+    "label": "分頁導航"
   },
   "user": {
     "menu": {
@@ -1449,7 +1579,13 @@
     "community": "社群",
     "privacy": "隱私政策",
     "terms": "服務條款",
-    "copyright": "© 2026 SkillHub. 保留所有權利。"
+    "copyright": "© 2026 SkillHub. 保留所有權利。",
+    "product": "產品",
+    "marketplace": "技能市場",
+    "publish": "發布技能",
+    "developers": "開發者",
+    "project": "專案",
+    "codeOfConduct": "行為準則"
   },
   "publish": {
     "title": "發布技能",
@@ -1757,5 +1893,169 @@
     "unfreezeErrorTitle": "解凍命名空間失敗",
     "archiveErrorTitle": "封存命名空間失敗",
     "restoreErrorTitle": "恢復命名空間失敗"
+  },
+  "sidebar": {
+    "account": "帳號管理",
+    "profile": "個人設定",
+    "security": "安全設定",
+    "notifications": "通知設定",
+    "skillsAndData": "技能與資料",
+    "mySkills": "我的技能",
+    "publish": "技能發布",
+    "namespaces": "命名空間",
+    "stars": "我的收藏",
+    "subscriptions": "我的訂閱",
+    "tokens": "Token 憑證",
+    "reviewProgress": "我的審核進度",
+    "admin": "管理員",
+    "governance": "審核與治理",
+    "reports": "舉報管理"
+  },
+  "overview": {
+    "mySkills": "我的技能",
+    "mySkillsDesc": "檢視和管理你發布的所有技能",
+    "publish": "技能發布",
+    "publishDesc": "上傳併發布新的技能到平台",
+    "tokens": "Token 憑證",
+    "tokensDesc": "管理 API 存取令牌",
+    "stars": "我的收藏",
+    "starsDesc": "檢視你收藏和評分的技能",
+    "profile": "個人設定",
+    "profileDesc": "編輯你的展示名稱和個人資訊",
+    "security": "安全設定",
+    "securityDesc": "修改密碼和帳號安全選項"
+  },
+  "suite": {
+    "listTitle": "技能套件",
+    "listDescription": "一次安裝一組經過版本鎖定的技能。",
+    "create": "建立套件",
+    "searchPlaceholder": "搜尋套件名稱或說明",
+    "emptyTitle": "暫無可用套件",
+    "emptyDescription": "建立第一個套件，組合可複用的技能工作流。",
+    "noSummary": "暫無簡介",
+    "unavailable": "目前不可安裝",
+    "notFound": "套件不存在或目前帳號無權檢視。",
+    "published": "套件已發布",
+    "submitted": "套件已提交審核",
+    "actionFailed": "操作失敗",
+    "editDraft": "編輯草稿",
+    "publishDirectly": "直接發布",
+    "submitReview": "提交審核",
+    "version": "版本",
+    "status": "狀態",
+    "visibility": "可見性",
+    "installStatus": "安裝狀態",
+    "available": "可用",
+    "degraded": "已降級",
+    "installCommand": "安裝命令",
+    "copyInstallCommand": "複製安裝命令",
+    "detailsSidebar": "套件資訊與操作",
+    "commandCopied": "已複製安裝命令",
+    "degradedDescription": "成員失效或權限發生變化，恢復所有成員後才能安裝。",
+    "membersTitle": "包含的技能（{{count}}）",
+    "overviewTab": "概述",
+    "membersTab": "技能模組（{{count}}）",
+    "overviewTitle": "套件概述",
+    "noOverview": "作者暫未提供詳細概述。",
+    "viewMember": "檢視技能：{{name}}",
+    "pinnedVersion": "固定版本 v{{version}}",
+    "entrySkill": "入口技能",
+    "startWithEntry": "從入口技能開始",
+    "startWithEntryDescription": "安裝套件後將獲得 {{count}} 個固定版本的技能。先開啟入口技能，瞭解這組技能的主要使用方式。",
+    "viewEntrySkill": "檢視入口技能",
+    "versionHistory": "版本歷史",
+    "validationRequired": "請填寫必填項並至少選擇一個技能",
+    "draftUpdated": "套件草稿已更新",
+    "draftCreated": "套件草稿已建立",
+    "saveFailed": "儲存失敗",
+    "editTitle": "編輯技能套件",
+    "createTitle": "建立技能套件",
+    "newVersionTitle": "建立套件新版本",
+    "newVersionPlaceholder": "輸入新版本號，例如 1.1.0",
+    "sourceLoadFailed": "無法讀取套件來源版本，請返回詳情頁後重試。",
+    "editorAccessDenied": "目前帳號不能編輯此套件版本。",
+    "editorDescription": "選擇已發布的精確技能版本；套件發布後不會自動漂移到最新版本。",
+    "namespace": "命名空間",
+    "slug": "標識",
+    "selectNamespace": "選擇命名空間",
+    "name": "名稱",
+    "namePlaceholder": "營銷活動工作流",
+    "overview": "概述（Markdown）",
+    "overviewHint": "說明套件的使用場景、成員協作順序、輸入輸出和注意事項。",
+    "visibilityPublic": "公開",
+    "visibilityNamespace": "僅命名空間",
+    "visibilityPrivate": "私有",
+    "summary": "簡介",
+    "changelog": "版本說明",
+    "selectSkills": "選擇技能",
+    "searchSkills": "搜尋可用技能",
+    "noCandidates": "沒有符合目前可見性要求的已發布版本。",
+    "selectedMembers": "套件成員（{{count}}/100）",
+    "setEntry": "設為入口技能",
+    "entryRequired": "請選擇一個入口技能",
+    "confirmVersionUpdateTitle": "確認更換固定版本",
+    "confirmVersionUpdateDescription": "{{coordinate}} 將從 v{{from}} 更換為 v{{to}}。儲存後仍固定到新版本，不會自動升級。",
+    "confirmVersionUpdate": "確認更換",
+    "moveMemberUp": "上移 {{name}}",
+    "moveMemberDown": "下移 {{name}}",
+    "removeMember": "移除 {{name}}",
+    "setEntryFor": "將 {{name}} 設為入口技能",
+    "addMemberHint": "從左側新增至少一個技能。",
+    "cancel": "取消",
+    "saveDraft": "儲存草稿",
+    "resourceType": "型別",
+    "allTypes": "全部",
+    "reviewSnapshot": "套件成員快照",
+    "reviewSnapshotDescription": "審核的是以下精確 Skill 版本，發布後不會自動升級。",
+    "publishable": "可發布",
+    "reviewSnapshotFailed": "無法讀取套件審核快照。",
+    "myTitle": "我的技能套件",
+    "myDescription": "管理草稿、審核中和已發布的套件版本。",
+    "view": "檢視",
+    "myEmpty": "還沒有技能套件",
+    "myEmptyDescription": "建立套件後，可在這裡繼續編輯和檢視審核狀態。",
+    "updatePinnedVersion": "更新固定版本",
+    "resourceTypeSuite": "技能套件",
+    "resourceTypeSkill": "技能",
+    "managementTitle": "套件管理",
+    "managementDescription": "管理新版本、發布狀態和套件容器；這些操作不會改變成員技能。",
+    "reopenDraft": "退回草稿並編輯",
+    "reopened": "已恢復為草稿",
+    "createVersion": "建立新版本",
+    "yankVersion": "下架目前版本",
+    "yanked": "目前版本已下架",
+    "yankConfirmTitle": "下架套件版本",
+    "yankConfirmDescription": "下架 v{{version}} 後，新使用者不能再安裝該版本。成員技能不會受到影響。",
+    "yankReasonPlaceholder": "填寫下架原因",
+    "hide": "隱藏套件",
+    "restore": "恢復展示",
+    "archive": "封存套件",
+    "unarchive": "恢復套件",
+    "delete": "刪除套件",
+    "deleted": "套件已刪除",
+    "hideSuccess": "套件已隱藏",
+    "restoreSuccess": "套件已恢復展示",
+    "archiveSuccess": "套件已封存",
+    "unarchiveSuccess": "套件已恢復",
+    "hideConfirmTitle": "隱藏套件",
+    "hideConfirmDescription": "“{{name}}”將不再出現在一般發現結果中。",
+    "restoreConfirmTitle": "恢復套件展示",
+    "restoreConfirmDescription": "“{{name}}”將重新按其可見性規則展示。",
+    "archiveConfirmTitle": "封存套件",
+    "archiveConfirmDescription": "封存“{{name}}”後不能建立新版本，已有成員技能不受影響。",
+    "unarchiveConfirmTitle": "恢復已封存套件",
+    "unarchiveConfirmDescription": "恢復“{{name}}”後可繼續建立新版本。",
+    "deleteConfirmTitle": "刪除套件",
+    "deleteConfirmDescription": "永久刪除“{{name}}”及其版本記錄，但不會刪除成員技能。此操作不可撤銷。",
+    "deletePendingReviewHint": "審核中的套件不能刪除",
+    "blockingReasons": {
+      "DELETED": "成員已刪除",
+      "NAMESPACE_ARCHIVED": "成員命名空間已封存",
+      "NAMESPACE_FROZEN": "成員命名空間已凍結",
+      "SKILL_HIDDEN": "技能已隱藏",
+      "SKILL_ARCHIVED": "技能已封存",
+      "VERSION_UNAVAILABLE": "版本不可用",
+      "VISIBILITY_INCOMPATIBLE": "可見性不相容"
+    }
   }
 }

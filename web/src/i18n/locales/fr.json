@@ -18,7 +18,9 @@
     "dashboard": "Tableau de bord",
     "mySkills": "Mes compétences",
     "publish": "Publier",
-    "login": "Connexion"
+    "login": "Connexion",
+    "mySuites": "Mes suites",
+    "suites": "Skill Suites"
   },
   "landing": {
     "hero": {
@@ -146,6 +148,144 @@
           "code": "# Publier une compétence\nskillhub publish\n\n# Ou via l'interface web\n# Cliquez sur « Publier une compétence »"
         }
       }
+    },
+    "experience": {
+      "heroBadge": "Plateforme de gestion des compétences des agents",
+      "heroTitle": "Transformer l'expertise de l'équipe en compétences prêtes à l'emploi",
+      "heroDescription": "Rendre le savoir-faire individuel en IA réutilisable, gérable et fiable dans toute l'organisation.",
+      "browseAll": "Tout parcourir",
+      "marketplace": "Place de marché",
+      "latest": "Dernier",
+      "demoSkills": {
+        "weather": "Interrogez la météo en temps réel pour les villes du monde",
+        "gitHelper": "Flux de travail Git assistés",
+        "diagramMaker": "Générer des organigrammes et des diagrammes d'architecture",
+        "codeReviewer": "Examen automatisé du code",
+        "caption": "Aperçu de l'interface · 4 exemples de compétences"
+      },
+      "highlights": {
+        "selfHosted": "Registre auto-hébergé",
+        "governance": "Examen et gouvernance",
+        "multiClient": "Agent, CLI et accès Web",
+        "traceable": "Versions traçables"
+      },
+      "capabilities": {
+        "eyebrow": " ",
+        "title": "Gérer le cycle de vie complet des compétences, de l'inscription à la distribution",
+        "description": "Plus qu'un référentiel de paquets : une plate-forme unique pour la publication, la révision, la distribution et la gouvernance."
+      },
+      "enterprise": {
+        "title": "Conçu pour les équipes et les entreprises",
+        "description": "Auto-hébergement, contrôle d'accès, flux de travail d'examen et auditabilité dans un seul registre.",
+        "clientLayer": "Ils nous font confiance",
+        "serviceLayer": "Service",
+        "storageLayer": "Stockage",
+        "networkBoundary": "Déployer au sein de votre organisation et conserver le contrôle des données du registre",
+        "deployment": {
+          "title": "Déploiement auto-hébergé",
+          "description": "Exécutez SkillHub sur votre infrastructure avec Docker Compose ou les manifestes Kubernetes fournis, en utilisant un stockage d'objets local ou compatible S3."
+        },
+        "security": {
+          "title": "Validation et révision",
+          "description": "La validation des packages, l'analyse de la sécurité et les flux de travail de révision aident les équipes à évaluer les compétences avant la publication."
+        },
+        "rbac": {
+          "title": "RBAC en couches",
+          "description": "Les rôles de plateforme et d'espace de noms séparent l'administration à l'échelle de l'organisation de la propriété de l'"
+        },
+        "access": {
+          "title": "Accès flexible",
+          "description": "OAuth2 et les comptes locaux prennent en charge la connexion du navigateur, tandis que les jetons API permettent l'accès programmatique."
+        },
+        "audit": {
+          "title": "Piste d' audit",
+          "description": "Les enregistrements d'audit permettent de tracer les opérations de publication, de téléchargement, de suppression et d'autorisation des clés."
+        },
+        "openSource": {
+          "title": "Open source",
+          "description": "Le code est disponible sous Apache-2.0 pour l'inspection, l'auto-hébergement et la contribution de la communauté."
+        }
+      },
+      "cta": {
+        "title": "Créez votre registre de compétences d'équipe",
+        "description": "Passez en revue le guide de source et de déploiement, puis exécutez SkillHub dans votre propre environnement.",
+        "deploy": "Voir la source",
+        "docs": "Lire les docs"
+      },
+      "quickStart": {
+        "title": "Choisir une méthode d'accès",
+        "description": "Utilisez le même registre via un agent, la CLI ou l'interface Web.",
+        "copy": "Copier",
+        "copied": "Copié",
+        "copyErrorTitle": "Échec de la copie",
+        "modes": {
+          "agent": {
+            "title": "Intégration des agents",
+            "description": "Configurez le registre une fois et découvrez des compétences au besoin"
+          },
+          "cli": {
+            "title": "CLI",
+            "description": "Rechercher, installer et publier des compétences"
+          },
+          "web": {
+            "title": "Interface web",
+            "description": "Parcourir, lire et télécharger les compétences visuellement"
+          }
+        },
+        "agent": {
+          "tablist": "Démo d'intégration de l'agent",
+          "registryTab": "Configuration du registre",
+          "discoveryTab": "Découverte implicite",
+          "live": "Agent en direct",
+          "instruction": "Lisez {{url}} et suivez-le pour configurer le registre des compétences SkillHub",
+          "instructionLead": "Copiez cette instruction et envoyez-la à votre agent",
+          "instructionPrefix": "Lu",
+          "instructionSuffix": "et suivez-le pour configurer le registre des compétences SkillHub.",
+          "copyInstruction": "Copier l'instruction",
+          "copyErrorDescription": "Sélectionnez et copiez manuellement l'instruction de configuration du Registre.",
+          "steps": {
+            "read": "Lire la documentation",
+            "configure": "Configurer le registre",
+            "discover": "Découvrez des compétences à la demande"
+          },
+          "prompt": "Quel temps fait-il à Hefei aujourd'hui ?",
+          "discovery": {
+            "intentTitle": "Identifier la tâche",
+            "intentDescription": "Des conseils météorologiques et de voyage en temps réel sont nécessaires",
+            "searchTitle": "Rechercher dans le registre SkillHub",
+            "searchDescription": "Match @global/weather · v1.3.0",
+            "readTitle": "Lire les instructions de compétence",
+            "readDescription": "Confirmer le contrat de saisie et d'invocation"
+          },
+          "answerLead": "Hefei est nuageux aujourd'hui, 26°C",
+          "answerTail": ", avec de brèves averses possibles cet après-midi. Il est recommandé de transporter des équipements de pluie."
+        },
+        "cli": {
+          "copyErrorDescription": "Sélectionnez et copiez la commande CLI manuellement.",
+          "skillsFound": "Résultats des analyses effectuées sur les échantillons de nourriture",
+          "forecastSummary": "Prévisions météorologiques sur sept jours",
+          "installed": "@global/météo installée à ./skills/global/weather",
+          "connected": "connecté",
+          "docs": "Documents CLI"
+        },
+        "web": {
+          "marketplace": "Marché des compétences",
+          "publicSkills": "Compétences publiques",
+          "search": "Rechercher des compétences",
+          "status": "Public · Disponible",
+          "summary": "Météo en temps réel, prévisions et informations sur les voyages",
+          "download": "Télécharger ZIP",
+          "readTitle": "À lire avant utilisation",
+          "readDescription": "Passez en revue l'objectif, les entrées et les instructions d'exécution dans SKILL.md avant de télécharger le package complet.",
+          "version": "Utilisation optimale de tous les propulseurs",
+          "files": "Limes",
+          "format": "Format",
+          "browse": "Parcourir et rechercher",
+          "preview": "Prévisualisation du contenu.",
+          "versions": "Fichiers et versions",
+          "favorites": "Étoiles et abonnements"
+        }
+      }
     }
   },
   "home": {
@@ -216,8 +356,6 @@
     "subtitle": "Choisissez une méthode pour continuer",
     "tabPassword": "Mot de passe",
     "tabOAuth": "OAuth",
-    "providerLabel": "Méthode de connexion",
-    "providerLocal": "Compte local",
     "username": "Nom d'utilisateur",
     "password": "Mot de passe",
     "usernamePlaceholder": "Saisir le nom d'utilisateur",
@@ -337,10 +475,6 @@
     "viewSubscriptions": "Voir mes abonnements",
     "mySkillsTitle": "Mes compétences",
     "openMySkills": "Voir mes compétences",
-    "reviewProgressTitle": "Ma progression de revue",
-    "viewReviewProgress": "Voir le statut des revues",
-    "myNamespacesTitle": "Mes espaces de noms",
-    "openMyNamespaces": "Voir mes espaces de noms",
     "mySkillsPreviewDescription": "Affichage de vos 5 compétences les plus récentes. Ouvrez une compétence ou allez dans Mes compétences pour tout voir.",
     "mySkillsPreviewEmpty": "Vous n'avez encore publié aucune compétence",
     "credentials": "Jetons API",
@@ -352,7 +486,8 @@
     "viewReports": "Voir les signalements de compétences",
     "previewMore": "...",
     "previewMoreLabel": "Tout voir",
-    "userId": "ID utilisateur"
+    "userId": "ID utilisateur",
+    "overview": "Présentation"
   },
   "mySkills": {
     "title": "Mes compétences",
@@ -886,13 +1021,6 @@
     "installMethodClawhub": "CLI ClawHub",
     "installMethodSkillhub": "CLI SkillHub",
     "installCommandUnsafeVersion": "Cette version ne peut pas être représentée de manière sûre dans une commande multiplateforme. Demandez à l'éditeur de la corriger.",
-    "installScopeLabel": "Portée d'installation",
-    "installScope": {
-      "user": "Utilisateur",
-      "project": "Projet"
-    },
-    "upgradeCommandLabel": "Mettre à niveau une installation existante",
-    "removeCommandLabel": "Nettoyer les entrées obsolètes avant de réinstaller",
     "download": "Télécharger",
     "labelsSectionTitle": "Étiquettes",
     "labelsSectionDescription": "Ajoutez ou retirez des étiquettes recommandées qui aident les utilisateurs à filtrer et découvrir cette compétence.",
@@ -1071,7 +1199,10 @@
       "button": "Installer pour l'agent",
       "copied": "Requête de l'agent copiée",
       "prompt": "Suivez {{guideUrl}} pour connecter SkillHub et installer la version {{version}} de {{skill}} depuis ce SkillHub."
-    }
+    },
+    "suiteEntryTitle": "Utilisé comme entrée de suite",
+    "suiteEntryDescription": "Cette compétence est le point d'entrée pour les ensembles de compétences suivants. Installez une suite ci-dessous pour utiliser toutes ses compétences incluses.",
+    "suiteEntryMemberCount": "Afficher la suite complète (compétences {{count}})"
   },
   "skillCompare": {
     "pageTitle": "Comparaison de versions",
@@ -1274,7 +1405,9 @@
     "folderHint": "Ou sélectionnez un dossier à compresser et à téléverser"
   },
   "layout": {
-    "footerDescription": "Registre de compétences offrant une gestion et une distribution efficaces des compétences pour les développeurs."
+    "footerDescription": "Registre de compétences offrant une gestion et une distribution efficaces des compétences pour les développeurs.",
+    "openNavigation": "Ouvrir le menu de navigation",
+    "closeNavigation": "Fermer le menu de navigation"
   },
   "nsReviews": {
     "title": "Revues d'espaces de noms",
@@ -1400,14 +1533,9 @@
     "unstarTitle": "Retirer des favoris",
     "unstarDescription": "Êtes-vous sûr de vouloir retirer « {{name}} » de vos compétences favorites ?",
     "unstarConfirm": "Retirer",
-    "relativeTime": {
-      "justNow": "À l'instant",
-      "minutesAgo": "Il y a {{count}} minute{{plural}}",
-      "hoursAgo": "Il y a {{count}} heure{{plural}}",
-      "daysAgo": "Il y a {{count}} jour{{plural}}",
-      "monthsAgo": "Il y a {{count}} mois",
-      "yearsAgo": "Il y a {{count}} an{{plural}}"
-    }
+    "downloads": "{{value}} téléchargements",
+    "stars": "{{count}} étoiles",
+    "rating": "Note {{rating}}"
   },
   "copyButton": {
     "copied": "Copié",
@@ -1418,7 +1546,8 @@
     "next": "Suivant",
     "pagePrefix": "Page",
     "pageSuffix": "",
-    "goToPage": "Aller à la page {{page}}"
+    "goToPage": "Aller à la page {{page}}",
+    "label": "Pagination"
   },
   "user": {
     "menu": {
@@ -1450,7 +1579,13 @@
     "community": "Communauté",
     "privacy": "Politique de confidentialité",
     "terms": "Conditions d'utilisation",
-    "copyright": "© 2026 SkillHub. Tous droits réservés."
+    "copyright": "© 2026 SkillHub. Tous droits réservés.",
+    "product": "Produit",
+    "marketplace": "Marché des compétences",
+    "publish": "Publier la compétence",
+    "developers": "Développeurs",
+    "project": "Projet",
+    "codeOfConduct": "Code de conduite"
   },
   "publish": {
     "title": "Publier une compétence",
@@ -1758,5 +1893,169 @@
     "unfreezeErrorTitle": "Échec du dégel de l'espace de noms",
     "archiveErrorTitle": "Échec de l'archivage de l'espace de noms",
     "restoreErrorTitle": "Échec de la restauration de l'espace de noms"
+  },
+  "sidebar": {
+    "account": "Client en Compte",
+    "profile": "Profil",
+    "security": "Sécurité&#10;",
+    "notifications": "Notifications",
+    "skillsAndData": "Données sur les compétences",
+    "mySkills": "Mes matières",
+    "publish": "Publier",
+    "namespaces": "Espaces de noms",
+    "stars": "Mes étoiles",
+    "subscriptions": "Abonnements",
+    "tokens": "Clé API",
+    "reviewProgress": "2. Suivi du progrès",
+    "admin": "Admin",
+    "governance": "Gouvernance",
+    "reports": "Rapports"
+  },
+  "overview": {
+    "mySkills": "Mes matières",
+    "mySkillsDesc": "Afficher et gérer toutes vos compétences publiées",
+    "publish": "Publier",
+    "publishDesc": "Téléchargez et publiez une nouvelle compétence",
+    "tokens": "Clé API",
+    "tokensDesc": "Gérez vos jetons d'accès API",
+    "stars": "Mes étoiles",
+    "starsDesc": "Affichez vos compétences marquées d'étoiles et notées",
+    "profile": "Profil",
+    "profileDesc": "Modifiez votre nom d'affichage et vos informations personnelles",
+    "security": "Sécurité&#10;",
+    "securityDesc": "Modifier le mot de passe et les options de sécurité du compte"
+  },
+  "suite": {
+    "listTitle": "Skill Suites",
+    "listDescription": "Installez une collection de compétences épinglée en version en une seule opération.",
+    "create": "Créer une suite",
+    "searchPlaceholder": "Rechercher des noms ou des descriptions de suites",
+    "emptyTitle": "Aucune suite disponible",
+    "emptyDescription": "Créez la première suite pour regrouper un flux de travail de compétences réutilisables.",
+    "noSummary": "Pas de description",
+    "unavailable": "Indisponible",
+    "notFound": "La suite n'existe pas ou votre compte ne peut pas y accéder.",
+    "published": "Suite publiée",
+    "submitted": "Suite soumise pour examen",
+    "actionFailed": "L'opération a échouée ",
+    "editDraft": "Editer brouillon",
+    "publishDirectly": "Publier",
+    "submitReview": "Soumettre pour validation",
+    "version": "Utilisation optimale de tous les propulseurs",
+    "status": "Statut",
+    "visibility": "Visibilité",
+    "installStatus": "Install status",
+    "available": "Disponible",
+    "degraded": "Dégradé",
+    "installCommand": "commande d'installation",
+    "copyInstallCommand": "commande d'installation",
+    "detailsSidebar": "Informations et actions de la suite",
+    "commandCopied": "Commande d'installation copiée",
+    "degradedDescription": "Un membre ou son accès a changé. Restaurez chaque membre avant d'installer cette suite.",
+    "membersTitle": "Compétences incluses ({{count}})",
+    "overviewTab": "Présentation",
+    "membersTab": "Modules de compétences ({{count}})",
+    "overviewTitle": "Aperçu de la suite",
+    "noOverview": "L'auteur n'a pas fourni de vue d'ensemble détaillée.",
+    "viewMember": "Afficher la compétence : {{name}}",
+    "pinnedVersion": "Version épinglée v{{version}}",
+    "entrySkill": "Compétences d'entrée",
+    "startWithEntry": "Commencez par la compétence d'entrée",
+    "startWithEntryDescription": "L'installation de cette suite vous donne {{count}} compétences épinglées en version. Ouvrez d'abord la compétence d'entrée pour comprendre la principale façon de les utiliser ensemble.",
+    "viewEntrySkill": "Afficher la compétence d'entrée",
+    "versionHistory": "Historique des versions",
+    "validationRequired": "Remplissez les champs obligatoires et sélectionnez au moins une compétence",
+    "draftUpdated": "Version préliminaire de la suite mise à",
+    "draftCreated": "Version préliminaire de la suite créée",
+    "saveFailed": "Echec de l’enregistrement",
+    "editTitle": "Modifier la suite de compétences",
+    "createTitle": "Créer une suite de compétences",
+    "newVersionTitle": "Créer une version de suite",
+    "newVersionPlaceholder": "Entrez une nouvelle version, par exemple 1.1.0",
+    "sourceLoadFailed": "Impossible de charger la version de la suite source. Revenez à sa page de détails et réessayez.",
+    "editorAccessDenied": "Votre compte ne peut pas modifier cette version de Suite.",
+    "editorDescription": "Sélectionnez les versions exactes des compétences publiées. Les suites publiées ne dérivent jamais automatiquement vers des versions plus récentes.",
+    "namespace": "Namespace (espace de noms)",
+    "slug": "Slug",
+    "selectNamespace": "Sélectionner un espace de noms",
+    "name": "Nom ",
+    "namePlaceholder": "Flux de travail de l'événement marketing",
+    "overview": "Aperçu (Markdown)",
+    "overviewHint": "Expliquez le cas d'utilisation, la séquence des membres, les entrées, les sorties et les contraintes importantes.",
+    "visibilityPublic": "Partenariat public-privé",
+    "visibilityNamespace": "Espace de noms uniquement",
+    "visibilityPrivate": "P",
+    "summary": "Description",
+    "changelog": "Note de réalisation",
+    "selectSkills": "Sélectionner une matière",
+    "searchSkills": "Rechercher des compétences éligibles",
+    "noCandidates": "Aucune version publiée ne satisfait la visibilité sélectionnée.",
+    "selectedMembers": "Membres de la suite ({{count}}/100)",
+    "setEntry": "Définir comme compétence d'entrée",
+    "entryRequired": "Sélectionner une compétence d'entrée",
+    "confirmVersionUpdateTitle": "Confirmer le changement de version épinglée",
+    "confirmVersionUpdateDescription": "{{coordinate}} passera de v{{from}} à v{{to}}. La Suite reste épinglée à la nouvelle version et ne sera pas mise à jour automatiquement.",
+    "confirmVersionUpdate": "Modifier la version",
+    "moveMemberUp": "Déplacer {{name}} vers le haut",
+    "moveMemberDown": "Déplacer {{name}} vers le bas",
+    "removeMember": "Supprimer {{name}}",
+    "setEntryFor": "Définir {{name}} comme compétence d'entrée",
+    "addMemberHint": "Ajoutez au moins une compétence à partir de la gauche.",
+    "cancel": "Annuler",
+    "saveDraft": "Enregistrer le brouillon",
+    "resourceType": "Type",
+    "allTypes": "Tous",
+    "reviewSnapshot": "Instantané du membre de la suite",
+    "reviewSnapshotDescription": "Passez en revue ces versions exactes des compétences. Ils ne seront pas mis à niveau automatiquement après la publication.",
+    "publishable": "Publiable",
+    "reviewSnapshotFailed": "Impossible de charger le snapshot de révision de la suite.",
+    "myTitle": "Mes suites de compétences",
+    "myDescription": "Gérez les versions préliminaires, en attente de révision et publiées de la suite.",
+    "view": "Afficher",
+    "myEmpty": "Aucune suite de compétences pour le moment",
+    "myEmptyDescription": "Créez une suite pour continuer à la modifier et suivez son statut de commentaire ici.",
+    "updatePinnedVersion": "Mettre à jour la version épinglée",
+    "resourceTypeSuite": "Suite",
+    "resourceTypeSkill": "Compétence",
+    "managementTitle": "Gestion des suites",
+    "managementDescription": "Gérer les versions, l'état de publication et le conteneur de la suite. Les compétences des membres ne sont jamais modifiées.",
+    "reopenDraft": "Rouvrir et modifier le brouillon",
+    "reopened": "Version de la suite rouverte en tant que brouillon",
+    "createVersion": "Créer une nouvelle version",
+    "yankVersion": "Version actuelle",
+    "yanked": "Version de la suite tirée",
+    "yankConfirmTitle": "Version de la suite Yank",
+    "yankConfirmDescription": "Une fois que v{{version}} est retiré, les nouveaux utilisateurs ne peuvent pas l'installer. Les compétences des membres ne sont pas affectées.",
+    "yankReasonPlaceholder": "Raison du retrait de cette version",
+    "hide": "Masquer la suite",
+    "restore": "Rétablir la visibilité",
+    "archive": "Suite d'archives",
+    "unarchive": "Restaurer la suite",
+    "delete": "Supprimer la suite",
+    "deleted": "Suite supprimée",
+    "hideSuccess": "Suite cachée",
+    "restoreSuccess": "Visibilité de la suite restaurée",
+    "archiveSuccess": "Suite archivée",
+    "unarchiveSuccess": "Suite restaurée",
+    "hideConfirmTitle": "Masquer la suite",
+    "hideConfirmDescription": "« {{name}} » n'apparaîtra plus dans les résultats de découverte normaux.",
+    "restoreConfirmTitle": "Restaurer la visibilité de la suite",
+    "restoreConfirmDescription": "« {{name}} » sera à nouveau détectable en fonction de sa visibilité.",
+    "archiveConfirmTitle": "Suite d'archives",
+    "archiveConfirmDescription": "L'archivage de « {{name}} » empêche les nouvelles versions. Les compétences des membres ne sont pas affectées.",
+    "unarchiveConfirmTitle": "Restaurer la suite archivée",
+    "unarchiveConfirmDescription": "La restauration de « {{name}} » autorise à nouveau les nouvelles versions.",
+    "deleteConfirmTitle": "Supprimer la suite",
+    "deleteConfirmDescription": "Supprimez définitivement « {{name}} » et ses versions sans supprimer les compétences des membres. Cela ne peut pas être annulé.",
+    "deletePendingReviewHint": "Une suite en cours de révision ne peut pas être supprimée",
+    "blockingReasons": {
+      "DELETED": "Membre supprimé",
+      "NAMESPACE_ARCHIVED": "Espace de noms des membres archivé",
+      "NAMESPACE_FROZEN": "Espace de noms des membres gelé",
+      "SKILL_HIDDEN": "Compétence cachée",
+      "SKILL_ARCHIVED": "Compétence archivée",
+      "VERSION_UNAVAILABLE": "Version indisponible",
+      "VISIBILITY_INCOMPATIBLE": "Visibilité incompatible"
+    }
   }
 }
