@@ -58,6 +58,7 @@ test.describe('Landing access methods (Real API)', () => {
       'removing the trailing `/registry/skill.md` from the URL used to fetch this guide',
     )
     expect(guide).not.toContain('${SKILLHUB_PUBLIC_BASE_URL}')
+    expect(guide).not.toContain('${SKILLHUB_CLI_NPM_REGISTRY}')
     expect(guideResponse.headers()['cache-control']).toContain('no-cache')
     const extensionHostResponse = await page.request.get('/registry/skill.md', {
       headers: { Host: 'chrome-extension:evil;echo_injected' },

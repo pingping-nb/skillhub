@@ -345,6 +345,20 @@ grep -Fq 'key: web-base-path' "$TMP_DIR/subpath.yaml" \
 grep -Fq 'key: web-api-base-url' "$TMP_DIR/subpath.yaml" \
   || fail "web deployment must source SKILLHUB_WEB_API_BASE_URL from the config map"
 
+# The CLI npm registry flows from values into the config map and the web
+# deployment so the UI and the served registry guide agree on one source.
+grep -Fq 'cli-npm-registry: ""' "$TMP_DIR/default.yaml" \
+  || fail "default config map cli-npm-registry must be empty to fall back to public npm"
+render cli-npm-registry "$CHART_DIR" \
+  --set web.cliNpmRegistry=http://192.168.22.27:4873/ >"$TMP_DIR/cli-npm-registry.yaml"
+grep -Fq 'cli-npm-registry: "http://192.168.22.27:4873/"' "$TMP_DIR/cli-npm-registry.yaml" \
+  || fail "config map must expose the configured CLI npm registry"
+grep -Fq 'name: SKILLHUB_CLI_NPM_REGISTRY' "$TMP_DIR/cli-npm-registry.yaml" \
+  || fail "web deployment must set SKILLHUB_CLI_NPM_REGISTRY"
+grep -Fq 'key: cli-npm-registry' "$TMP_DIR/cli-npm-registry.yaml" \
+  || fail "web deployment must source SKILLHUB_CLI_NPM_REGISTRY from the config map"
+assert_rejected cli-npm-registry-no-host --set-string web.cliNpmRegistry=not-a-url
+
 # A sub-path base must be consistent with publicBaseUrl and be a normalized path.
 assert_rejected subpath-public-mismatch \
   --set web.basePath=/portal/ \

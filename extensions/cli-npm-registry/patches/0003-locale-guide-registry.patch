@@ -1,0 +1,21 @@
+diff --git a/web/src/i18n/landing-quick-start-locale.test.ts b/web/src/i18n/landing-quick-start-locale.test.ts
+index d192ec84..470471cd 100644
+--- a/web/src/i18n/landing-quick-start-locale.test.ts
++++ b/web/src/i18n/landing-quick-start-locale.test.ts
+@@ -50,6 +50,16 @@ describe('landing quick start locales', () => {
+     }
+   })
+ 
++  it('pins every CLI install command in the guide to the runtime npm registry', () => {
++    for (const guide of [skillGuide, skillGuideTemplate]) {
++      // The served guide is rendered by the web entrypoint, which substitutes
++      // this placeholder with SKILLHUB_CLI_NPM_REGISTRY. A hardcoded registry
++      // here would drift from the runtime config used by the UI.
++      expect(guide).toContain('--registry ${SKILLHUB_CLI_NPM_REGISTRY}')
++      expect(guide).not.toMatch(/--registry https?:\/\//)
++    }
++  })
++
+   it('exposes CLI install command in both locales', () => {
+     expect(zh.landing.quickStart.tabs.cli).toBe('CLI')
+     expect(zh.landing.quickStart.cli.command).toBe('npm i -g @astron-team/skillhub')
