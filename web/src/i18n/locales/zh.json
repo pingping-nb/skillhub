@@ -347,6 +347,8 @@
     "register": "立即注册",
     "oauthHint": "使用 OAuth 登录时，认证完成后会自动返回当前站点。",
     "passwordCompatHint": "当前部署已启用账号密码兼容接入层。表单将路由到 {{name}}，而不是固定使用本地账号接口。",
+    "providerLabel": "登录方式",
+    "providerLocal": "本地账号",
     "enterpriseSsoTitle": "企业单点登录",
     "enterpriseSsoHint": "当前部署已启用兼容接入层。若浏览器中已存在 {{name}} 会话，可直接尝试建立 SkillHub 登录态。",
     "enterpriseSsoAutoHint": "当前部署已启用自动 {{name}} 探测。若未成功，你仍可继续使用现有登录方式。",
@@ -1034,6 +1036,13 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "SkillHub CLI",
     "installCommandUnsafeVersion": "该版本号无法安全地生成跨平台命令，请联系发布者修正版本号。",
+    "installScopeLabel": "安装范围",
+    "installScope": {
+      "user": "用户",
+      "project": "项目"
+    },
+    "upgradeCommandLabel": "升级",
+    "removeCommandLabel": "卸载",
     "download": "下载",
     "labelsSectionTitle": "标签管理",
     "labelsSectionDescription": "为这个技能挂载或移除推荐标签，帮助用户筛选和发现。",
@@ -1544,7 +1553,15 @@
     "starredAction": "点击取消收藏",
     "unstarTitle": "取消收藏",
     "unstarDescription": "确定要取消收藏技能“{{name}}”吗？",
-    "unstarConfirm": "取消收藏"
+    "unstarConfirm": "取消收藏",
+    "relativeTime": {
+      "justNow": "刚刚",
+      "minutesAgo_other": "{{count}} 分钟前",
+      "hoursAgo_other": "{{count}} 小时前",
+      "daysAgo_other": "{{count}} 天前",
+      "monthsAgo_other": "{{count}} 个月前",
+      "yearsAgo_other": "{{count}} 年前"
+    }
   },
   "copyButton": {
     "copied": "已复制",

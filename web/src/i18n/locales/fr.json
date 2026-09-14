@@ -371,6 +371,8 @@
     "register": "Inscrivez-vous maintenant",
     "oauthHint": "Après l'authentification OAuth, vous serez automatiquement redirigé vers ce site.",
     "passwordCompatHint": "Ce déploiement a activé la couche de compatibilité par mot de passe. Le formulaire pointera vers {{name}} au lieu du point de terminaison de compte local fixe.",
+    "providerLabel": "Méthode de connexion",
+    "providerLocal": "Compte local",
     "enterpriseSsoTitle": "SSO d'entreprise",
     "enterpriseSsoHint": "Ce déploiement a activé la couche de compatibilité. Si votre navigateur dispose déjà d'une session {{name}}, vous pouvez essayer d'établir directement une session SkillHub.",
     "enterpriseSsoAutoHint": "Ce déploiement a activé la détection automatique de {{name}}. En cas d'échec, vous pouvez continuer avec les méthodes de connexion standard.",
@@ -1021,6 +1023,13 @@
     "installMethodClawhub": "CLI ClawHub",
     "installMethodSkillhub": "CLI SkillHub",
     "installCommandUnsafeVersion": "Cette version ne peut pas être représentée de manière sûre dans une commande multiplateforme. Demandez à l'éditeur de la corriger.",
+    "installScopeLabel": "Portée d'installation",
+    "installScope": {
+      "user": "Utilisateur",
+      "project": "Projet"
+    },
+    "upgradeCommandLabel": "Mettre à jour",
+    "removeCommandLabel": "Supprimer",
     "download": "Télécharger",
     "labelsSectionTitle": "Étiquettes",
     "labelsSectionDescription": "Ajoutez ou retirez des étiquettes recommandées qui aident les utilisateurs à filtrer et découvrir cette compétence.",
@@ -1535,7 +1544,20 @@
     "unstarConfirm": "Retirer",
     "downloads": "{{value}} téléchargements",
     "stars": "{{count}} étoiles",
-    "rating": "Note {{rating}}"
+    "rating": "Note {{rating}}",
+    "relativeTime": {
+      "justNow": "à l'instant",
+      "minutesAgo_one": "il y a {{count}} minute",
+      "minutesAgo_other": "il y a {{count}} minutes",
+      "hoursAgo_one": "il y a {{count}} heure",
+      "hoursAgo_other": "il y a {{count}} heures",
+      "daysAgo_one": "il y a {{count}} jour",
+      "daysAgo_other": "il y a {{count}} jours",
+      "monthsAgo_one": "il y a {{count}} mois",
+      "monthsAgo_other": "il y a {{count}} mois",
+      "yearsAgo_one": "il y a {{count}} an",
+      "yearsAgo_other": "il y a {{count}} ans"
+    }
   },
   "copyButton": {
     "copied": "Copié",

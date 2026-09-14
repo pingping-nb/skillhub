@@ -37,7 +37,7 @@ vi.mock('react-i18next', () => ({
   useTranslation: () => ({
     t: (key: string, values?: Record<string, number | string>) => {
       const count = values?.count ?? ''
-      const plural = values?.plural ?? ''
+      const plural = Number(count) > 1 ? 's' : ''
       switch (key) {
         case 'skillCard.relativeTime.justNow':
           return 'just now'

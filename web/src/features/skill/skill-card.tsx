@@ -30,14 +30,14 @@ function formatRelativeTime(dateString: string, t: TFunction): string {
   const diffMonths = Math.floor(diffDays / 30)
   const diffYears = Math.floor(diffDays / 365)
 
-  const plural = (count: number) => (count > 1 ? 's' : '')
-
+  // Rely on i18next native pluralization (`_one` / `_other` / `_few` / `_many`)
+  // so each locale follows its own plural rules.
   if (diffSeconds < 60) return t('skillCard.relativeTime.justNow')
-  if (diffMinutes < 60) return t('skillCard.relativeTime.minutesAgo', { count: diffMinutes, plural: plural(diffMinutes) })
-  if (diffHours < 24) return t('skillCard.relativeTime.hoursAgo', { count: diffHours, plural: plural(diffHours) })
-  if (diffDays < 30) return t('skillCard.relativeTime.daysAgo', { count: diffDays, plural: plural(diffDays) })
-  if (diffMonths < 12) return t('skillCard.relativeTime.monthsAgo', { count: diffMonths, plural: plural(diffMonths) })
-  return t('skillCard.relativeTime.yearsAgo', { count: diffYears, plural: plural(diffYears) })
+  if (diffMinutes < 60) return t('skillCard.relativeTime.minutesAgo', { count: diffMinutes })
+  if (diffHours < 24) return t('skillCard.relativeTime.hoursAgo', { count: diffHours })
+  if (diffDays < 30) return t('skillCard.relativeTime.daysAgo', { count: diffDays })
+  if (diffMonths < 12) return t('skillCard.relativeTime.monthsAgo', { count: diffMonths })
+  return t('skillCard.relativeTime.yearsAgo', { count: diffYears })
 }
 
 /**

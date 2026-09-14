@@ -347,6 +347,8 @@
     "register": "Sign up now",
     "oauthHint": "After OAuth authentication, you will be automatically redirected back to this site.",
     "passwordCompatHint": "This deployment has the password compatibility layer enabled. The form will route to {{name}} instead of the fixed local account endpoint.",
+    "providerLabel": "Login method",
+    "providerLocal": "Local account",
     "enterpriseSsoTitle": "Enterprise SSO",
     "enterpriseSsoHint": "This deployment has the compatibility layer enabled. If your browser already has a {{name}} session, you can try establishing a SkillHub session directly.",
     "enterpriseSsoAutoHint": "This deployment has automatic {{name}} probing enabled. If it does not succeed, you can continue with the standard login methods.",
@@ -1034,6 +1036,13 @@
     "installMethodClawhub": "ClawHub CLI",
     "installMethodSkillhub": "SkillHub CLI",
     "installCommandUnsafeVersion": "This version cannot be represented safely in a cross-platform command. Ask the publisher to correct it.",
+    "installScopeLabel": "Install scope",
+    "installScope": {
+      "user": "User",
+      "project": "Project"
+    },
+    "upgradeCommandLabel": "Upgrade",
+    "removeCommandLabel": "Remove",
     "download": "Download",
     "labelsSectionTitle": "Labels",
     "labelsSectionDescription": "Attach or remove recommended labels that help users filter and discover this skill.",
@@ -1545,7 +1554,20 @@
     "starredAction": "Click to unstar",
     "unstarTitle": "Remove from starred",
     "unstarDescription": "Are you sure you want to remove \"{{name}}\" from your starred skills?",
-    "unstarConfirm": "Remove"
+    "unstarConfirm": "Remove",
+    "relativeTime": {
+      "justNow": "just now",
+      "minutesAgo_one": "{{count}} minute ago",
+      "minutesAgo_other": "{{count}} minutes ago",
+      "hoursAgo_one": "{{count}} hour ago",
+      "hoursAgo_other": "{{count}} hours ago",
+      "daysAgo_one": "{{count}} day ago",
+      "daysAgo_other": "{{count}} days ago",
+      "monthsAgo_one": "{{count}} month ago",
+      "monthsAgo_other": "{{count}} months ago",
+      "yearsAgo_one": "{{count}} year ago",
+      "yearsAgo_other": "{{count}} years ago"
+    }
   },
   "copyButton": {
     "copied": "Copied",
