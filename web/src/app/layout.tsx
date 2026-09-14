@@ -113,7 +113,8 @@ export function Layout() {
 
       {/* Header */}
       <header className={getAppHeaderClassName(isHeaderElevated)} style={{ borderColor: 'hsl(var(--border))' }}>
-        <Link to="/" className="text-xl font-semibold tracking-tight flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>
+        <Link to="/" className="flex items-center gap-2 text-xl font-semibold tracking-tight flex-shrink-0" style={{ color: 'hsl(var(--foreground))' }}>
+          <BrandMark className="h-7 w-7 rounded-lg bg-background ring-1 ring-border/70" alt={BRAND_NAME} />
           {BRAND_NAME}
         </Link>
 
