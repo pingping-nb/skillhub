@@ -16,6 +16,11 @@ DEV_PROCESS := bash scripts/dev-process.sh
 DEV_SERVER_PREPARE := true
 DEV_SERVER_CMD := ./scripts/run-dev-app.sh
 DEV_SERVER_SCANNER_ENV := SKILLHUB_SECURITY_SCANNER_ENABLED=true SKILLHUB_SECURITY_SCANNER_URL=$(DEV_SCANNER_URL) SKILLHUB_SECURITY_SCANNER_MODE=upload
+# Extra environment for the Vite dev server. `make` turns variables sourced from
+# the shell into make variables, which are NOT exported to child processes, so
+# they must be passed explicitly here. VITE_ALLOWED_HOSTS is required whenever
+# the dev server is reached through a hostname other than localhost.
+DEV_WEB_ENV := VITE_ALLOWED_HOSTS=$(VITE_ALLOWED_HOSTS) SKILLHUB_CLI_NPM_REGISTRY=$(SKILLHUB_CLI_NPM_REGISTRY)
 BACKEND_TEST_JAVA_OPTIONS ?= -XX:+EnableDynamicAgentLoading
 PARALLEL_BASE_REF ?= origin/main
 PARALLEL_WORKTREE_ROOT ?=
@@ -49,7 +54,7 @@ dev-all: ## 一键启动本地开发环境（依赖 + scanner + 后端 + 前端�
 		echo "Frontend already running with PID $$(cat $(DEV_WEB_PID))"; \
 	else \
 		echo "Starting frontend..."; \
-		$(DEV_PROCESS) start --pid-file $(DEV_WEB_PID) --log-file $(DEV_WEB_LOG) --cwd web -- pnpm exec vite --host $(DEV_WEB_HOST) --strictPort >/dev/null; \
+		$(DEV_PROCESS) start --pid-file $(DEV_WEB_PID) --log-file $(DEV_WEB_LOG) --cwd web -- env $(DEV_WEB_ENV) pnpm exec vite --host $(DEV_WEB_HOST) --strictPort >/dev/null; \
 	fi
 	@echo "Waiting for backend on $(DEV_API_URL) ..."
 	@backend_ready=0; \
@@ -247,7 +252,7 @@ web-install-ci: ## 以 CI 方式安装前端依赖
 	cd web && CI=true pnpm install --frozen-lockfile
 
 dev-web: ## 启动前端开发服务器
-	cd web && pnpm exec vite --host $(DEV_WEB_HOST)
+	cd web && env $(DEV_WEB_ENV) pnpm exec vite --host $(DEV_WEB_HOST)
 
 build-frontend: web-deps ## 构建前端
 	cd web && pnpm run build

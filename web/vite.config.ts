@@ -11,6 +11,25 @@ const guideTemplate = readFileSync(path.resolve(__dirname, 'src/docs/skill.md.te
 const safeHostPattern = /^(?:[A-Za-z0-9.-]+|\[[0-9A-Fa-f:.]+\])(?::[0-9]{1,5})?$/
 
 /**
+ * Extra hostnames the dev server accepts, from a comma-separated
+ * `VITE_ALLOWED_HOSTS` (e.g. `skillhub.bards.neobards.com,dev.example.com`).
+ *
+ * Returns `undefined` when the variable is unset or contains no usable entry so
+ * that `server.allowedHosts` is omitted entirely and Vite's default host check
+ * is preserved. Passing an empty array would reject every host instead.
+ */
+function parseAllowedHosts(value: string | undefined): string[] | undefined {
+  const hosts = (value ?? '')
+    .split(',')
+    .map((host) => host.trim())
+    .filter(Boolean)
+
+  return hosts.length > 0 ? hosts : undefined
+}
+
+const allowedHosts = parseAllowedHosts(process.env.VITE_ALLOWED_HOSTS)
+
+/**
  * The served registry guide carries a `${SKILLHUB_CLI_NPM_REGISTRY}` placeholder
  * that the production entrypoint substitutes at container startup. The Vite dev
  * server and the static build bypass that entrypoint, so substitute it here too
@@ -94,6 +113,9 @@ export default defineConfig({
   },
   server: {
     port: 3000,
+    // Omitted when VITE_ALLOWED_HOSTS is unset/empty so Vite's default host
+    // check stays in effect (an empty array would block every host).
+    allowedHosts,
     watch: {
       usePolling: true,
       interval: 150,
@@ -104,6 +126,14 @@ export default defineConfig({
         changeOrigin: true,
       },
       '/oauth2': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/login/oauth2': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+      },
+      '/.well-known': {
         target: 'http://localhost:8080',
         changeOrigin: true,
       },
