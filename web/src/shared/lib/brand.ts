@@ -6,4 +6,4 @@
  *
  * To revert to the upstream name, change this value back to "SkillHub".
  */
-export const BRAND_NAME = 'NeoBards'
+export const BRAND_NAME = 'NeoBards Skillhub'
