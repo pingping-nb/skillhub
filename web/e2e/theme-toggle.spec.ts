@@ -120,6 +120,7 @@ test.describe('Light and dark theme', () => {
     await page.goto('/')
     await expect(page.locator('html')).not.toHaveClass(/dark/)
     const header = page.locator('header')
+    await expect(header.locator('a').first()).toContainText('NeoBards')
     const lightHeaderBackground = await header.evaluate((element) => getComputedStyle(element).backgroundColor)
 
     const themeSwitch = page.getByRole('switch', { name: 'Dark theme' })
@@ -161,7 +162,7 @@ test.describe('Light and dark theme', () => {
     await page.reload()
     await expect(page.locator('html')).toHaveClass(/dark/)
     await expect(page.getByRole('switch', { name: 'Dark theme' })).toHaveAttribute('aria-checked', 'true')
-    await expect(page.getByRole('heading', { name: 'Neobards SkillHub' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'NeoBards' })).toBeVisible()
     await expect.poll(() => page.evaluate(() => (
       window as Window & { __themeAtFirstReactContent?: boolean }
     ).__themeAtFirstReactContent)).toBe(true)
